@@ -4,12 +4,10 @@
 /* A type that fits into one register on the target. */
 typedef unsigned long imp_archreg_t;
 
-#define ARCH_REG_LENGTH (sizeof(imp_archreg_t) * 8)
-
 /* Internal details on how we store the data... */
 struct imp_num_t {
+    unsigned int length; /* Available bits count */
     imp_archreg_t *bits; /* Actual bits */
-    unsigned int length; /* Allocated length, in bits */
 };
 
 

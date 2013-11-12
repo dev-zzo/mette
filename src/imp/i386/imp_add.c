@@ -2,7 +2,7 @@
 
 void imp_add(const struct imp_num_t *lo, const struct imp_num_t *ro, struct imp_num_t *res)
 {
-	char overflow = 0;
+	char carry = 0;
 	__asm__ __volatile__ (
 		"movl %1, %%ebx" "\n\t"
 		"clc" "\n\t"
@@ -15,8 +15,8 @@ void imp_add(const struct imp_num_t *lo, const struct imp_num_t *ro, struct imp_
 		"leal (%%ebx,%%esi,), %%esi" "\n\t"
 		"loop 1b" "\n\t"
 		"setc %%al" "\n\t"
-		: "=a" (overflow)
-		: "i" (sizeof(imp_archreg_t)), "S" (lo->bits), "D" (ro->bits), "d" (res->bits), "c" (lo->length / ARCH_REG_LENGTH)
+		: "=a" (carry)
+		: "i" (sizeof(imp_archreg_t)), "S" (lo->bits), "D" (ro->bits), "d" (res->bits), "c" (lo->length / ARCH_REG_LENGTH_BITS)
 		: "memory", "%ebx"
     );
 }

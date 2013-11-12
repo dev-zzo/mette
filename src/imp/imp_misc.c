@@ -10,7 +10,7 @@ void imp_num_load1(struct imp_num_t *num, imp_archreg_t value)
 
 void imp_num_print(struct imp_num_t *num)
 {
-	imp_archreg_t *ptr = num->bits + (num->length / ARCH_REG_LENGTH);
+	imp_archreg_t *ptr = num->bits + (num->length / ARCH_REG_LENGTH_BITS);
 	do {
 		--ptr;
 		printf("%08X ", *ptr);

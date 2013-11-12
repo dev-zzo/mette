@@ -19,7 +19,7 @@ void imp_sub(const struct imp_num_t *lo, const struct imp_num_t *ro, struct imp_
 		"popf" "\n\t"
 		"setc %%al" "\n\t"
 		: "=a" (underflow)
-		: "i" (sizeof(imp_archreg_t)), "S" (lo->bits), "D" (ro->bits), "d" (res->bits), "c" (lo->length / ARCH_REG_LENGTH)
+		: "i" (sizeof(imp_archreg_t)), "S" (lo->bits), "D" (ro->bits), "d" (res->bits), "c" (lo->length / ARCH_REG_LENGTH_BITS)
 		: "memory"
     );
 }

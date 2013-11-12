@@ -20,6 +20,6 @@ $(TARGET_ARCH)/imp-$(TARGET_ARCH).a:
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 clean:
-	rm -f *.o
+	rm -f *.o imp
 	$(MAKE) -C $(TARGET_ARCH) clean
 
