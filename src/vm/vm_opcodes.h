@@ -36,15 +36,19 @@ typedef enum {
 	VMOP_CC_B	= 0x15,
 	VMOP_CC_AE	= 0x16,
 	VMOP_CC_BE	= 0x17,
+	VMOP_CC_EQ	= 0x18,
+	VMOP_CC_NE	= 0x19,
 	
 	/* Push a zero on the stack. */
 	VMOP_LD0	= 0xC0,
 	/* Push an one on the stack. */
 	VMOP_LD1	= 0xC1,
-	/* Push an usigned 8-bit constant on the stack. */
+	/* Push an unsigned 8-bit constant on the stack. */
 	VMOP_LDU8	= 0xC8,
 	/* Push a signed 8-bit constant on the stack. */
 	VMOP_LDS8	= 0xC9,
+	/* Push an unsigned 32-bit constant on the stack. */
+	VMOP_LD32	= 0xCA,
 	
 	/* Push a value from the memory */
 	VMOP_LDMU8	= 0xD0,
@@ -59,14 +63,21 @@ typedef enum {
 	VMOP_STMS16 = 0xDB,
 	VMOP_STM32	= 0xDC,
 	
-	/* Duplicate another stack entry. */
-	VMOP_DUP	= 0xE4,
-	VMOP_DUPV	= 0xE5,
-	
+	/* Duplicate the topmost stack entry. */
+	VMOP_DUP	= 0xE0,
+	/* Duplicate the nth stack entry. */
+	VMOP_DUPV	= 0xE1,
+	/* Swap the two topmost entries. */
+	VMOP_SWAP	= 0xE2,
+	/* Swap the topmost and nth entry. */
+	VMOP_SWAPV	= 0xE3,
+	/* Discard the topmost entry. */
 	VMOP_POP	= 0xEF,
 	
-	/* Branch unconditinally */
-	VMOP_BRU	= 0xF0,
+	/* Branch short unconditinally */
+	VMOP_BRS	= 0xF0,
+	/* Branch long unconditionally */
+	VMOP_BRL	= 0xF1,
 	/* Branch conditionally */
 	VMOP_BRC	= 0xF4, /* if true (nonzero) */
 	VMOP_BRNC	= 0xF5, /* if false (zero) */

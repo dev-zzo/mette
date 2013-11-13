@@ -5,11 +5,13 @@
 
 /* Integration defines... */
 
+#include <malloc.h>
+
 #define vm_alloc malloc
 #define vm_free free
 
-typedef intptr_t vm_operand_t;
-typedef uintptr_t vm_uoperand_t;
+typedef intptr_t vm_soperand_t;
+typedef uintptr_t vm_operand_t;
 
 /* VM memory chunks, used for stack management. */
 
@@ -28,10 +30,12 @@ typedef struct _vm_stack {
 	int top_index; /* signed. */
 } vm_stack_t;
 
-#define VM_STACK(s, i) ((s)->top_chunk->entries[(s)->top_index + (i)])
-
-extern void vm_stack_push(vm_stack_t *s, vm_operand_t v);
-extern vm_operand_t vm_stack_pop(vm_stack_t *s);
+/* Push the entry onto the stack */
+extern void vm_stack_push(vm_stack_t *stack, vm_operand_t value);
+/* Pop the entry from the stack */
+extern vm_operand_t vm_stack_pop(vm_stack_t *stack);
+/* Find a stack entry with the given index from the top */
+extern vm_operand_t *vm_stack_ptr(vm_stack_t *stack, int index);
 
 /* VM context -- where all the state is. */
 

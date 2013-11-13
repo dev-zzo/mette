@@ -1,9 +1,11 @@
 
-.PHONY: all imp
+SUBTARGETS:=imp vm
 
-all: imp
+.PHONY: all $(SUBTARGETS)
 
-imp:
+all: $(SUBTARGETS)
+
+$(SUBTARGETS):
 	$(MAKE) -C $@ all
 
 clean:
