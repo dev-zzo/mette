@@ -16,28 +16,34 @@ Note it is possible to return multiple values from a subroutine.
 */
 
 typedef enum {
-	VMOP_ADD	= 0x00,	/* calcstack[0] = calcstack[0] + calcstack[1] */
-	VMOP_SUB	= 0x01,	/* calcstack[0] = calcstack[0] - calcstack[1] */
+	VMOP_ADD	= 0x00,	/* a b -- sum */
+	VMOP_SUB	= 0x01,	/* a b -- diff */
 	
-	VMOP_MUL	= 0x04,	/* calcstack[0/1] = calcstack[0] * calcstack[1] */
-	VMOP_DIV	= 0x06,	/* calcstack[0/1] = calcstack[0] / calcstack[1] */
+	VMOP_UMUL	= 0x04,	/* a b -- hi lo */
+	VMOP_SMUL	= 0x05,	/* a b -- hi lo */
+	VMOP_UDIV	= 0x06,	/* a b -- mod div */
+	VMOP_SDIV	= 0x07,	/* a b -- mod div */
 	
 	/* Bitwise operations */
-	VMOP_AND	= 0x08,
-	VMOP_OR		= 0x09,
-	VMOP_XOR	= 0x0A,
-	VMOP_NOT	= 0x0B,
+	VMOP_AND	= 0x10,
+	VMOP_OR		= 0x11,
+	VMOP_XOR	= 0x12,
+	VMOP_NOT	= 0x13,
+	VMOP_LSL	= 0x18,
+	VMOP_LSR	= 0x19,
+	VMOP_ASR	= 0x1A,
 	
-	VMOP_CC_LT	= 0x10,
-	VMOP_CC_GT	= 0x11,
-	VMOP_CC_LE	= 0x12,
-	VMOP_CC_GE	= 0x13,
-	VMOP_CC_A	= 0x14,
-	VMOP_CC_B	= 0x15,
-	VMOP_CC_AE	= 0x16,
-	VMOP_CC_BE	= 0x17,
-	VMOP_CC_EQ	= 0x18,
-	VMOP_CC_NE	= 0x19,
+	/* Conditionals */
+	VMOP_CC_LT	= 0x40,
+	VMOP_CC_GT	= 0x41,
+	VMOP_CC_LE	= 0x42,
+	VMOP_CC_GE	= 0x43,
+	VMOP_CC_A	= 0x44,
+	VMOP_CC_B	= 0x45,
+	VMOP_CC_AE	= 0x46,
+	VMOP_CC_BE	= 0x47,
+	VMOP_CC_EQ	= 0x48,
+	VMOP_CC_NE	= 0x49,
 	
 	/* Push a zero on the stack. */
 	VMOP_LD0	= 0xC0,
@@ -72,7 +78,12 @@ typedef enum {
 	/* Swap the topmost and nth entry. */
 	VMOP_SWAPV	= 0xE3,
 	/* Discard the topmost entry. */
-	VMOP_POP	= 0xEF,
+	VMOP_POP	= 0xE4,
+	
+	/* Allocate host memory */
+	VMOP_ALLOC	= 0xE8,
+	/* Release host memory */
+	VMOP_FREE	= 0xEC,
 	
 	/* Branch short unconditinally */
 	VMOP_BRS	= 0xF0,
@@ -83,10 +94,10 @@ typedef enum {
 	VMOP_BRNC	= 0xF5, /* if false (zero) */
 	/* Call a VM subroutine */
 	VMOP_CALL	= 0xF8,
-	/* Call a native subroutine */
-	VMOP_NCALL	= 0xF9,
 	/* Return from a subroutine */
-	VMOP_RET	= 0xFC,
+	VMOP_RET	= 0xFA,
+	/* Call a native subroutine */
+	VMOP_NCALL	= 0xFC,
 } vm_opcode_t;
 
 #endif // __mette_vm_opcodes_h_included

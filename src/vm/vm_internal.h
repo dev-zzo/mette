@@ -10,8 +10,9 @@
 #define vm_alloc malloc
 #define vm_free free
 
-typedef intptr_t vm_soperand_t;
-typedef uintptr_t vm_operand_t;
+typedef  intptr_t vm_soperand_t;
+typedef uintptr_t vm_uoperand_t;
+typedef vm_uoperand_t vm_operand_t;
 
 /* VM memory chunks, used for stack management. */
 

@@ -82,6 +82,33 @@ void vm_step(vm_context_t *ctx)
 			break;
 		}
 		
+		case VMOP_LSL: {
+			vm_uoperand_t lhs, rhs, result;
+			lhs = vm_stack_pop(&ctx->dstack);
+			rhs = vm_stack_pop(&ctx->dstack);
+			result = lhs << rhs;
+			vm_stack_push(&ctx->dstack, result);
+			break;
+		}
+		
+		case VMOP_LSR: {
+			vm_uoperand_t lhs, rhs, result;
+			lhs = vm_stack_pop(&ctx->dstack);
+			rhs = vm_stack_pop(&ctx->dstack);
+			result = lhs >> rhs;
+			vm_stack_push(&ctx->dstack, result);
+			break;
+		}
+		
+		case VMOP_ASR: {
+			vm_soperand_t lhs, rhs, result;
+			lhs = vm_stack_pop(&ctx->dstack);
+			rhs = vm_stack_pop(&ctx->dstack);
+			result = lhs >> rhs;
+			vm_stack_push(&ctx->dstack, result);
+			break;
+		}
+		
 		case VMOP_LD0: {
 			vm_stack_push(&ctx->dstack, 0);
 			break;
