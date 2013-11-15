@@ -10,4 +10,5 @@ $(SUBTARGETS):
 
 clean:
 	$(MAKE) -C imp clean
+	$(MAKE) -C vm clean
 

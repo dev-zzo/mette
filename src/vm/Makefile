@@ -6,11 +6,18 @@ OBJECTS:= \
 	vm_stack.o \
 
 TARGETS:= \
-	mette-vm.a
+	mette-vm.a \
+
+GENERATORS:= \
+	vm_gen_opcodes \
+
+GENERATED:= \
+	vm_opcodes_traits.tab \
+	vm_opcodes_switch.tab \
 
 .PHONY: all
 
-all: $(TARGETS)
+all: $(GENERATORS) $(TARGETS)
 
 mette-vm.a: $(OBJECTS)
 	$(AR) rcs $@ $^
@@ -18,8 +25,18 @@ mette-vm.a: $(OBJECTS)
 
 $(OBJECTS): %.o: %.c
 	$(CC) -c $(CFLAGS) -o $@ $<
+	$(SIZE) $@
+
+vm_core.o: vm_opcodes_traits.tab vm_opcodes_switch.tab
+
+vm_opcodes_traits.tab vm_opcodes_switch.tab: vm_gen_opcodes
+	./vm_gen_opcodes
+
+vm_gen_opcodes: vm_gen_opcodes.c vm_opcodes.in vm_opcodes_traits.h
+	$(HOST_CC) $(HOST_CFLAGS) -o $@ $<
 
 clean:
 	rm -f $(OBJECTS)
 	rm -f $(TARGETS)
+	rm -f $(GENERATORS) $(GENERATED)
 
