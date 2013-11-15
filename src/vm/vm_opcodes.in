@@ -217,6 +217,10 @@ static const vm_opcode_info_t opcodes[] = {
 		"RET", "Return from the subroutine",
 		0xF9, 0, 0,
 	},
+	{
+		"NCALL", "Call a native subroutine",
+		0xFC, 0, 0,
+	},
 };
 
 

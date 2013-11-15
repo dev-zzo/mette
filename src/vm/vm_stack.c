@@ -45,6 +45,13 @@ vm_operand_t vm_stack_pop(vm_stack_t *stack)
 	return value;
 }
 
+void vm_stack_popn(vm_stack_t *stack, size_t n, vm_operand_t *dst)
+{
+	while (n--) {
+		*dst++ = vm_stack_pop(stack);
+	}
+}
+
 vm_operand_t *vm_stack_ptr(vm_stack_t *stack, int index)
 {
 	vm_chunk_t *chunk = stack->top_chunk;

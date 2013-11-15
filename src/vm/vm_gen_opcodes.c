@@ -1,11 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
+#include "vm_internal.h"
 #include "vm_opcodes.in"
 #include "vm_opcodes_traits.h"
-
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-#endif
 
 static vm_opcode_traits_t traits[256];
 static const char *mnemonics[256];

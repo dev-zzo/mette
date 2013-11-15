@@ -4,6 +4,8 @@ CFLAGS+=-I./
 OBJECTS:= \
 	vm_core.o \
 	vm_stack.o \
+	vm_thunks.o \
+	vm_loader.o \
 
 TARGETS:= \
 	mette-vm.a \

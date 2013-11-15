@@ -3,12 +3,17 @@
 
 #include <stdint.h>
 
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#endif
+
 /* Integration defines... */
 
 #include <malloc.h>
 
 #define vm_alloc malloc
 #define vm_free free
+#define vm_read read
 
 typedef  intptr_t vm_soperand_t;
 typedef uintptr_t vm_uoperand_t;
@@ -33,8 +38,10 @@ typedef struct _vm_stack {
 
 /* Push the entry onto the stack */
 extern void vm_stack_push(vm_stack_t *stack, vm_operand_t value);
-/* Pop the entry from the stack */
+/* Pop an entry from the stack */
 extern vm_operand_t vm_stack_pop(vm_stack_t *stack);
+/* Pop n entries from the stack */
+extern void vm_stack_popn(vm_stack_t *stack, size_t n, vm_operand_t *dst);
 /* Find a stack entry with the given index from the top */
 extern vm_operand_t *vm_stack_ptr(vm_stack_t *stack, int index);
 
@@ -49,7 +56,9 @@ typedef struct _vm_context {
 
 /* Miscellaneous VM functions */
 
-extern void vm_panic(const char *format, ...);
+extern void vm_verify_ptr(const void * const ptr);
+
+extern void __attribute__((noreturn)) vm_panic(const char *format, ...);
 
 #endif // __mette_vm_internal_h_included
 

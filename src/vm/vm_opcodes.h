@@ -96,6 +96,8 @@ typedef enum {
 	VMOP_CALL		= 0xF8, /* 0 -> 0 */
 	/* Return from the subroutine */
 	VMOP_RET		= 0xF9, /* 0 -> 0 */
+	/* Call a native subroutine */
+	VMOP_NCALL		= 0xFC, /* 0 -> 0 */
 } vm_opcode_t;
 
 #endif // __mette_vm_opcodes_h_included
