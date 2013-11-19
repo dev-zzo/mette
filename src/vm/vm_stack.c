@@ -1,4 +1,5 @@
-#include "vm_internal.h"
+#include "vm_stack.h"
+#include "vm_sysdeps.h"
 
 void vm_stack_push(vm_stack_t *stack, vm_operand_t value)
 {

@@ -14,7 +14,7 @@ export RANLIB:=ranlib
 export SIZE:=size
 
 # Build options
-CFLAGS:=-Os 
+CFLAGS:=-Os -std=c99
 export CFLAGS
 LDFLAGS:=-s
 export LDFLAGS
