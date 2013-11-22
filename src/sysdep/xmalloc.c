@@ -14,10 +14,8 @@
  */
 
 struct slot {
-	unsigned int units : 24;
-	unsigned int is_free : 1;
-	unsigned int reserved : 7;
-	void *next_free;
+	struct slot *next_slot; /* Keeping a pointer here eliminates some ops */
+	struct slot *next_free;
 	/* User data area */
 };
 
@@ -31,82 +29,76 @@ static void *arena_brk;
 /* Linker-defined, marks the end of the program's data area. */
 extern char end;
 
-/* Verify pointer validity. */
-static int xmem_is_valid(struct slot *this)
-{
-	return this >= arena_start && this < arena_brk;
-}
-
 /* Allocates with getting some system memory. */
-static void *xmem_grow(size_t units)
+static void *xmem_grow(size_t units, struct slot *last_free)
 {
 	/* TODO: write something. */
 }
 
 void *xmalloc(size_t size)
 {
-	struct slot *free_slot, *free_prev;
+	struct slot *curr_free, *prev_free;
 	size_t units;
 	
 	/* Make up the total alloc size */
 	units = ALIGN(size, 8) / 8 + 1;
 	
-	/* Don't bother if cannot allocate that much */
+	/* Don't bother -- cannot allocate that much */
 	if (units > 0xFFFFFFU) {
 		return NULL;
 	}
 	
 	/* Walk the free list, see if anything useful in there. */
-	free_prev = NULL;
-	free_slot = free_anchor;
-	while (free_slot) {
-		/* Does it match perfectly? */
-		if (free_slot->units == units) {
-			/* Remove it from the list. */
-			if (free_prev) {
-				free_prev->next_free = free_slot->next_free;
-			} else {
-				free_anchor = free_slot->next_free;
-			}
-			/* Keep it clean. */
-			free_slot->next_free = NULL;
-			/* Delivered. */
-			return free_slot + 1;
+	prev_free = NULL;
+	curr_free = free_anchor;
+	while (curr_free) {
+		struct slot *new_slot = curr_free + units;
+		/* Check for an overflow */
+		if (new_slot <= curr_free)
+			return NULL;
+		/* Too small. */
+		if (curr_free->next_slot < new_slot) {
+			/* Advance to the next item. */
+			free_prev = free_slot;
+			free_slot = free_slot->next_free;
+			continue;
 		}
-		
 		/* Is it bigger, so it can be split? */
-		if (free_slot->units >= units + 1 ) {
-			struct slot *new_slot;
+		if (curr_free->next_slot >= new_slot + 1 ) {
 			/* Fill in the newly formed slot. */
-			new_slot = free_slot + units;
-			new_slot->units = free_slot->units - units;
-			new_slot->next_free = free_slot->next_free;
+			new_slot->next_slot = curr_free->next_slot;
+			new_slot->next_free = curr_free->next_free;
 			/* Update this slot. */
-			free_slot->units = units;
-			/* Remove it from the list. */
-			if (free_prev) {
-				free_prev->next_free = new_slot;
-			} else {
-				free_anchor = new_slot;
-			}
-			/* Keep it clean. */
-			free_slot->next_free = NULL;
-			/* Delivered. */
-			return free_slot + 1;
+			curr_free->next_slot = new_slot;
+			curr_free->next_free = new_slot;
 		}
-		
-		/* Advance to the next item. */
-		free_prev = free_slot;
-		free_slot = free_slot->next_free;
+		/* Remove it from the list. */
+		if (prev_free) {
+			prev_free->next_free = curr_free->next_free;
+		} else {
+			free_anchor = curr_free->next_free;
+		}
+		/* Delivered. */
+		curr_free->next_free = NULL;
+		return curr_free + 1;
 	}
 	
 	/* Nothing useful was found. Try to allocate some memory from the system. */
-	return xmem_grow(units);
+	return xmem_grow(units, prev_free);
 }
 
 void *xrealloc(void *ptr, size_t size)
 {
 	struct slot *this = (struct slot *)ptr - 1;
+	
+	if (!ptr)
+		return xmalloc(size);
+	if (!size) {
+		xfree(ptr);
+		return NULL;
+	}
+	
+	/* TODO: write this up. */
 
 	return NULL;
 }
@@ -114,50 +106,38 @@ void *xrealloc(void *ptr, size_t size)
 void xfree(void *ptr)
 {
 	struct slot *this = (struct slot *)ptr - 1;
-	struct slot *prev;
-	struct slot *next = this + this->units;
-	int merged = 0;
+	struct slot *prev_free;
+	struct slot *next_free;
 	
-	/* NOTE: Since we do a merge each time free() is called, there may be
-	 * at most one free slot on each side of this one.
-	 */
-	 
-	/* NOTE: Can be optimized if we assume that free list is sorted. */
+	if (!ptr)
+		return;
 	
-	/*
-	 * Merge upwards.
-	 * Walk the free list, see if there is any slot that is near this one.
-	 * If so, we can simply eat {this} slot.
-	 */
-	for (prev = free_anchor; prev; prev = prev->next_free) {
-		if (prev + prev->units == this) {
-			prev->units += this->units;
-			this = prev;
-			merged = 1;
-			break;
-		}
+	prev_free = NULL;
+	next_free = free_anchor;
+	while (next_free < this) {
+		prev_free = next_free;
+		next_free = next_free->next_free;
 	}
 	
-	/* Merge downwards. */
-	if (xmem_is_valid(next) && next->is_free) {
-		this->next_free = next->next_free;
-		this->units += next->units;
-		if (free_anchor == next) {
-			/* Replace the slot completely. */
-			free_anchor = this;
-		} else {
-			/* Fix up the free slot that points to {next}. */
-			for (prev = free_anchor; prev->next_free != next; prev = prev->next_free)
-				;
-			prev->next_free = this;
+	if (prev_free) {
+		prev_free->next_free = this;
+		if (prev_free->next_slot == this) {
+			/* Merge upwards. */
+			prev_free->next_slot = this->next_slot;
+			this = prev_free;
 		}
-		merged = 1;
-	}
-	
-	/* Add this to the free list, if have not been done so via merges. */
-	if (!merged) {
-		this->next_free = free_anchor;
+	} else {
+		/* No previous -- the first in the list. */
 		free_anchor = this;
+	}
+	
+	this->next_free = next_free;
+	if (next_free) {
+		if (this->next_slot == next_free) {
+			/* Merge downwards. */
+			this->next_slot = next_free->next_slot;
+			this->next_free = next_free->next_free;
+		}
 	}
 }
 
