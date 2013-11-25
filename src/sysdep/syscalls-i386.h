@@ -125,15 +125,13 @@
 		long __rv; \
 		__asm__ __volatile__ \
 		( \
-			"push %%ebx\n\t" \
 			"movl %2, %%ebx\n\t" \
 			__SOCKETCALL_LOAD_##nr() \
 			"int $0x80\n\t" \
 			__SOCKETCALL_RESTORE(nr) \
-			"pop %%ebx\n\t" \
 			: "=a" (__rv) \
 			: "0" (__NR_socketcall), "i" (name) __SOCKETCALL_ARGS_##nr(__VA_ARGS__) \
-			: "%ecx", "memory", "cc" \
+			: "%ebx", "%ecx", "memory", "cc" \
 		); \
 		__rv; \
 	}))

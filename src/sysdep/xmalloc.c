@@ -28,8 +28,7 @@ struct slot {
 /* Keeps the free list head */
 static struct slot *free_anchor;
 
-/* Remember where we start/end allocating. */
-static void *arena_start;
+/* Remember the program break. */
 static void *arena_brk;
 
 /* Linker-defined, marks the end of the program's data area. */
@@ -43,8 +42,7 @@ static int xmem_grow(size_t units, struct slot *last_free)
 	
 	if (!arena_brk) {
 		/* First call -- initialise the pointers */
-		arena_brk = arena_start = (void *)ALIGN((uintptr_t)&end, PAGE_SIZE);
-		sys_brk(arena_brk);
+		arena_brk = sys_brk((void *)ALIGN((uintptr_t)&end, PAGE_SIZE));
 	}
 
 	new_brk = (void *)sys_brk(arena_brk + ALIGN(units * 8, PAGE_SIZE));
