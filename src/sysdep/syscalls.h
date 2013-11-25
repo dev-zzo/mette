@@ -4,7 +4,7 @@
 // http://www.win.tue.nl/~aeb/linux/lk/lk-4.html
 
 // ==================== BEGIN ARCH-SPECIFIC CODE ==============================
-#include "mette-syscalls-i386.h"
+#include "syscalls-i386.h"
 // =================== END ARCH-SPECIFIC CODE =================================
 
 // processes

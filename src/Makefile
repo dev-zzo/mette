@@ -1,14 +1,20 @@
 
-SUBTARGETS:=imp vm
+SUBTARGETS:=imp vm sysdep
 
-.PHONY: all $(SUBTARGETS)
+.PHONY: all clean $(SUBTARGETS) $(SUBTARGETS_clean)
 
 all: $(SUBTARGETS)
 
 $(SUBTARGETS):
 	$(MAKE) -C $@ all
 
-clean:
-	$(MAKE) -C imp clean
-	$(MAKE) -C vm clean
+#
+# Clean rules
+#
+SUBTARGETS_clean:=$(addsuffix _clean, $(SUBTARGETS))
+
+clean: $(SUBTARGETS_clean)
+
+$(SUBTARGETS_clean): 
+	$(MAKE) -C $(subst _clean,,$@) clean
 

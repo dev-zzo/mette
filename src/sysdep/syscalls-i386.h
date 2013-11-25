@@ -13,7 +13,7 @@
 
 #define __SYSCALL_ARGS_0
 #define __SYSCALL_ARGS_1(arg1) \
-	__SYSCALL_ARGS_0, "i" (arg1)
+	__SYSCALL_ARGS_0, "g" (arg1)
 #define __SYSCALL_ARGS_2(arg1, arg2) \
 	__SYSCALL_ARGS_1(arg1), "c" (arg2)
 #define __SYSCALL_ARGS_3(arg1, arg2, arg3) \
