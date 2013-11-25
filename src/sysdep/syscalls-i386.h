@@ -12,8 +12,13 @@
 // http://simon.baymoo.org/universe/tools/symset/symset.txt
 
 #define __SYSCALL_ARGS_0
+#ifdef PIC
 #define __SYSCALL_ARGS_1(arg1) \
 	__SYSCALL_ARGS_0, "g" (arg1)
+#else
+#define __SYSCALL_ARGS_1(arg1) \
+	__SYSCALL_ARGS_0, "b" (arg1)
+#endif
 #define __SYSCALL_ARGS_2(arg1, arg2) \
 	__SYSCALL_ARGS_1(arg1), "c" (arg2)
 #define __SYSCALL_ARGS_3(arg1, arg2, arg3) \
@@ -26,10 +31,14 @@
 	__SYSCALL_ARGS_5(arg1, arg2, arg3, arg4, arg5), "m" (arg6)
 	
 #define LOAD_ARGS_0
+#ifdef PIC
 #define LOAD_ARGS_1 \
 	LOAD_ARGS_0 \
 	"push %%ebx\n\t" \
 	"movl %2, %%ebx\n\t"
+#else
+#define LOAD_ARGS_1 LOAD_ARGS_0
+#endif
 #define LOAD_ARGS_2 LOAD_ARGS_1
 #define LOAD_ARGS_3 LOAD_ARGS_2
 #define LOAD_ARGS_4 LOAD_ARGS_3
@@ -40,9 +49,13 @@
 	"movl %7, %%ebp\n\t"
 
 #define RESTORE_ARGS_0
+#ifdef PIC
 #define RESTORE_ARGS_1 \
 	RESTORE_ARGS_0 \
 	"pop %%ebx\n\t"
+#else
+#define RESTORE_ARGS_1 RESTORE_ARGS_0
+#endif
 #define RESTORE_ARGS_2 RESTORE_ARGS_1
 #define RESTORE_ARGS_3 RESTORE_ARGS_2
 #define RESTORE_ARGS_4 RESTORE_ARGS_3
