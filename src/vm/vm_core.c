@@ -5,27 +5,23 @@
 #include "vm_loader.h"
 #include "vm_misc.h"
 
-static uint8_t vm_fetch8(vm_context_t *ctx)
+static uint8_t vm_fetch8_pc(vm_context_t *ctx)
 {
 	uint8_t v = *ctx->pc;
 	ctx->pc += 1;
 	return v;
 }
 
-static uint16_t vm_fetch16(vm_context_t *ctx )
+static uint16_t vm_fetch16_pc(vm_context_t *ctx)
 {
-#ifdef TARGET_IS_BE
-	uint16_t v = ctx->pc[1] | (ctx->pc[0] << 8);
-#else
-	uint16_t v = ctx->pc[0] | (ctx->pc[1] << 8);
-#endif
+	uint16_t v = vm_fetch16_ua(ctx->pc);
 	ctx->pc += sizeof(uint16_t);
 	return v;
 }
 
-static uint32_t vm_fetch32(vm_context_t *ctx)
+static uint32_t vm_fetch32_pc(vm_context_t *ctx)
 {
-	uint32_t v = VM_LE32(*(uint32_t *)(ctx->pc));
+	uint32_t v = vm_fetch32_ua(ctx->pc);
 	ctx->pc += sizeof(uint32_t);
 	return v;
 }
@@ -38,7 +34,7 @@ void vm_step(vm_context_t *ctx)
 	unsigned opcount;
 	vm_opcode_t opcode;
 	
-	opcode = (vm_opcode_t)vm_fetch8(ctx);
+	opcode = (vm_opcode_t)vm_fetch8_pc(ctx);
 	opcount = opcode >> 6; /* 2 highest bits make for operand count. */
 
 	switch (opcount) {
@@ -148,13 +144,13 @@ op_LDC2:
 	op0 = 2;
 	goto push_1;
 op_LDCU8:
-	op0 = (vm_uoperand_t)(uint8_t)vm_fetch8(ctx);
+	op0 = (vm_uoperand_t)(uint8_t)vm_fetch8_pc(ctx);
 	goto push_1;
 op_LDCS8:
-	op0 = (vm_soperand_t)(int8_t)vm_fetch8(ctx);
+	op0 = (vm_soperand_t)(int8_t)vm_fetch8_pc(ctx);
 	goto push_1;
 op_LDC32:
-	op0 = vm_fetch32(ctx);
+	op0 = vm_fetch32_pc(ctx);
 	goto push_1;
 op_LDMU8:
 	op0 = (vm_uoperand_t)*(uint8_t *)(op0);
@@ -218,31 +214,31 @@ op_SWAP: {
 op_POP:
 	goto push_none;
 op_BRS: {
-	int8_t offset = (int8_t)vm_fetch8(ctx);
+	int8_t offset = (int8_t)vm_fetch8_pc(ctx);
 	ctx->pc += offset;
 	goto push_none;
 }
 op_BRL: {
-	int32_t offset = (int32_t)vm_fetch32(ctx);
+	int32_t offset = (int32_t)vm_fetch32_pc(ctx);
 	ctx->pc += offset;
 	goto push_none;
 }
 op_BRT: {
-	int8_t offset = (int8_t)vm_fetch8(ctx);
+	int8_t offset = (int8_t)vm_fetch8_pc(ctx);
 	if (op0) {
 		ctx->pc += offset;
 	}
 	goto push_none;
 }
 op_BRF: {
-	int8_t offset = (int8_t)vm_fetch8(ctx);
+	int8_t offset = (int8_t)vm_fetch8_pc(ctx);
 	if (!op0) {
 		ctx->pc += offset;
 	}
 	goto push_none;
 }
 op_CALL: {
-	int32_t offset = (int32_t)vm_fetch32(ctx);
+	int32_t offset = (int32_t)vm_fetch32_pc(ctx);
 	vm_stack_push(&ctx->cstack, (vm_operand_t)ctx->pc);
 	vm_stack_push(&ctx->cstack, (vm_operand_t)ctx->locals);
 	ctx->pc += offset;
@@ -264,7 +260,7 @@ op_IJMP: {
 	goto push_none;
 }
 op_NCALL: {
-	int index = vm_fetch16(ctx); /* thunk index */
+	int index = vm_fetch16_pc(ctx); /* thunk index */
 	vm_thunk_t thunk = (vm_thunk_t)ctx->module->ncalltab[index];
 	thunk(ctx);
 	goto push_none;

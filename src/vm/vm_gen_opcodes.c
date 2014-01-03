@@ -10,8 +10,8 @@ int main()
 	int index;
 	
 	fprintf(stdout, "Opcode count: %d\n", ARRAY_SIZE(opcodes));
-	if (ARRAY_SIZE(opcodes) > ARRAY_SIZE(mnemonics)) {
-		fprintf(stdout, "Too many opcodes: max %d\n", ARRAY_SIZE(mnemonics));
+	if (ARRAY_SIZE(opcodes) >= 64) {
+		fprintf(stdout, "Too many opcodes: max %d\n", 64);
 		return 1;
 	}
 	
