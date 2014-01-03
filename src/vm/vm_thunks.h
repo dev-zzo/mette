@@ -1,32 +1,40 @@
 #ifndef __mette_vm_thunks_h_included
 #define __mette_vm_thunks_h_included
 
-#include <stdint.h>
+#include "vm_internal.h"
 
 /*
-
 Here is defined a thunk interface between VM and native code.
 Having this metadata simplifies things a lot, though the exact 
 calling method is still platform dependent, as in C.
-
-Calling vararg functions seems to be out of question right now.
-
 */
 
-#define VM_MAX_ARGS 7
+#define VM_THUNK_ARGS_START struct {
 
-typedef vm_operand_t (*vm_thunk_rv)();
-typedef void (*vm_thunk_norv)();
+#define VM_THUNK_ARGS_END } args; \
+	vm_stack_popn(&ctx->dstack, sizeof(args) / sizeof(vm_operand_t), (vm_operand_t *)&args);
+
+#define VM_THUNK_ARG(decl) union { decl __attribute__ ((aligned (sizeof(vm_operand_t)))) ; }
+
+#define VM_THUNK_RETURN(what) \
+	vm_stack_push(&ctx->dstack, (vm_operand_t)what)
+
+typedef void (*vm_thunk_t)(vm_context_t *ctx);
 
 typedef struct {
 	uint32_t hash;
-	void *target;
-	uint32_t argc : 3;
-	uint32_t has_rv : 1;
-	/* spare bits */
-} vm_thunk_t;
+	vm_thunk_t proc;
+} vm_thunk_record_t;
 
-extern const vm_thunk_t *vm_find_thunk(uint32_t hash);
+#define VM_THUNK_DEFINE(name, hash) \
+	vm_thunk_record_t __thunkrec_##name __attribute__ ((section (".thunks"))) = { hash, __thunkproc_##name }
+
+#define VM_THUNK(name, hash) \
+	static void __thunkproc_##name(vm_context_t *ctx); \
+	VM_THUNK_DEFINE(name, hash); \
+	static void __thunkproc_##name(vm_context_t *ctx)
+
+extern vm_thunk_t vm_lookup_thunk(uint32_t hash);
 
 #endif // __mette_vm_thunks_h_included
 

@@ -13,7 +13,5 @@
 #define VM_LE32(x) (x)
 #endif
 
-#define FASTCALL __attribute__((fastcall))
-
 #endif
 

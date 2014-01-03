@@ -2,11 +2,10 @@
 typedef struct {
 	const char * const mnemonic;
 	const char * const description;
-	uint8_t opcode;
+	//uint8_t opcode;
 	uint8_t stack_in;
 	uint8_t stack_out;
 } vm_opcode_info_t;
-
 
 static const vm_opcode_info_t opcodes[] = {
 
@@ -14,212 +13,287 @@ static const vm_opcode_info_t opcodes[] = {
 
 	{
 		"ADD", "Addition",
-		0x00, 2, 1,
+		//0x00,
+		2, 1,
 	},
 	{
 		"SUB", "Subtraction",
-		0x01, 2, 1,
+		//0x01, 
+		2, 1,
 	},
 	{
-		"UMUL", "Multiplication (unsigned*unsigned)",
-		0x04, 2, 2,
+		"MULU", "Multiplication (unsigned*unsigned)",
+		//0x04, 
+		2, 2,
 	},
 	{
-		"SMUL", "Multiplication (signed*signed)",
-		0x05, 2, 2,
+		"MULS", "Multiplication (signed*signed)",
+		//0x05, 
+		2, 2,
 	},
 	{
-		"UDIV", "Division (unsigned/unsigned)",
-		0x06, 2, 2,
+		"DIVU", "Division (unsigned/unsigned)",
+		//0x06, 
+		2, 2,
 	},
 	{
-		"SDIV", "Division (signed/signed)",
-		0x07, 2, 2,
+		"DIVS", "Division (signed/signed)",
+		//0x07, 
+		2, 2,
 	},
 	
 	/* Bitwise operations */
 
 	{
 		"AND", "Bitwise AND",
-		0x10, 2, 1,
+		//0x10, 
+		2, 1,
 	},
 	{
 		"OR", "Bitwise OR",
-		0x11, 2, 1,
+		//0x11, 
+		2, 1,
 	},
 	{
 		"XOR", "Bitwise XOR",
-		0x12, 2, 1,
+		//0x12, 
+		2, 1,
 	},
 	{
 		"NOT", "Bitwise NOT",
-		0x13, 2, 1,
+		//0x13, 
+		2, 1,
 	},
 	{
 		"LSL", "Logical shirt left",
-		0x18, 2, 1,
+		//0x18, 
+		2, 1,
 	},
 	{
 		"LSR", "Logical shift right",
-		0x19, 2, 1,
+		//0x19, 
+		2, 1,
 	},
 	{
 		"ASR", "Arithmetic shift right",
-		0x1A, 2, 1,
+		//0x1A, 
+		2, 1,
 	},
 	
 	/* Conditionals */
 
 	{
 		"CC_LT", "Compare (less than)",
-		0x40, 2, 1,
+		//0x40, 
+		2, 1,
 	},
 	{
 		"CC_GT", "Compare (greater than)",
-		0x41, 2, 1,
+		//0x41, 
+		2, 1,
 	},
 	{
 		"CC_LE", "Compare (less than or equal)",
-		0x42, 2, 1,
+		//0x42, 
+		2, 1,
 	},
 	{
 		"CC_GE", "Compare (greater than or equal)",
-		0x43, 2, 1,
+		//0x43, 
+		2, 1,
 	},
 	{
 		"CC_B", "Compare (below)",
-		0x44, 2, 1,
+		//0x44, 
+		2, 1,
 	},
 	{
 		"CC_A", "Compare (above)",
-		0x45, 2, 1,
+		//0x45, 
+		2, 1,
 	},
 	{
 		"CC_BE", "Compare (below or equal)",
-		0x46, 2, 1,
+		//0x46, 
+		2, 1,
 	},
 	{
 		"CC_AE", "Compare (above or equal)",
-		0x47, 2, 1,
+		//0x47, 
+		2, 1,
 	},
 	{
 		"CC_EQ", "Compare (equal)",
-		0x48, 2, 1,
+		//0x48, 
+		2, 1,
 	},
 	{
 		"CC_NE", "Compare (not equal)",
-		0x49, 2, 1,
+		//0x49, 
+		2, 1,
 	},
 	
 	/* Constant loading */
 	
 	{
 		"LDC0", "Load 0 on the stack",
-		0xC0, 0, 1,
+		//0xC0, 
+		0, 1,
 	},
 	{
 		"LDC1", "Load 1 on the stack",
-		0xC1, 0, 1,
+		//0xC1, 
+		0, 1,
 	},
 	{
 		"LDC2", "Load 2 on the stack",
-		0xC2, 0, 1,
+		//0xC2, 
+		0, 1,
 	},
 	{
 		"LDCU8", "Load an unsigned byte on the stack",
-		0xC8, 0, 1,
+		//0xC8, 
+		0, 1,
 	},
 	{
 		"LDCS8", "Load a signed byte on the stack",
-		0xC9, 0, 1,
+		//0xC9, 
+		0, 1,
 	},
 	{
 		"LDC32", "Load a 32-bit value on the stack",
-		0xCA, 0, 1,
+		//0xCA, 
+		0, 1,
 	},
 	
 	/* Memory access: loads */
 	
 	{
 		"LDMU8", "Load a 8-bit unsigned from memory",
-		0xD0, 1, 1,
+		//0xD0, 
+		1, 1,
 	},
 	{
 		"LDMS8", "Load a 8-bit signed from memory",
-		0xD1, 1, 1,
+		//0xD1, 
+		1, 1,
 	},
 	{
 		"LDMU16", "Load a 16-bit unsigned from memory",
-		0xD2, 1, 1,
+		//0xD2, 
+		1, 1,
 	},
 	{
 		"LDMS16", "Load a 16-bit signed from memory",
-		0xD3, 1, 1,
+		//0xD3, 
+		1, 1,
 	},
 	{
 		"LDM32", "Load a 32-bit from memory",
-		0xD4, 1, 1,
+		//0xD4, 
+		1, 1,
 	},
 	
 	/* Memory access: stores */
 
 	{
 		"STM8", "Store a 8-bit to memory",
-		0xD8, 2, 0,
+		//0xD8, 
+		2, 0,
 	},
 	{
 		"STM16", "Store a 16-bit to memory",
-		0xD8, 2, 0,
+		//0xD9, 
+		2, 0,
 	},
 	{
 		"STM32", "Store a 32-bit to memory",
-		0xD8, 2, 0,
+		//0xDA, 
+		2, 0,
+	},
+	
+	/* Memory access: locals */
+	
+	{
+		"LOCALS", "Create a space for local vars",
+		//0xDC, 
+		1, 0,
+	},
+	{
+		"LDLOC", "Load a local",
+		//0xDD, 
+		1, 1,
+	},
+	{
+		"STLOC", "Store a local",
+		//0xDE, 
+		2, 0,
 	},
 	
 	/* Stack manipulations */
 	
 	{
 		"DUP", "Duplicate the topmost entry on the stack",
-		0xE0, 1, 2,
+		//0xE0, 
+		1, 2,
 	},
 	{
 		"SWAP", "Swap two entries on the top of the stack",
-		0xE2, 2, 2,
+		//0xE2, 
+		2, 2,
 	},
 	{
 		"POP", "Discard the topmost entry on the stack",
-		0xE8, 1, 0,
+		//0xE8, 
+		1, 0,
 	},
 	
 	/* Control flow insns */
 	
 	{
 		"BRS", "Branch short (8-bit offset)",
-		0xF0, 0, 0,
+		//0xF0, 
+		0, 0,
 	},
 	{
 		"BRL", "Branch long (32-bit offset)",
-		0xF1, 0, 0,
+		//0xF1, 
+		0, 0,
 	},
 	{
 		"BRT", "Branch if true (8-bit offset)",
-		0xF2, 1, 0,
+		//0xF2, 
+		1, 0,
 	},
 	{
 		"BRF", "Branch if false (8-bit offset)",
-		0xF3, 1, 0,
+		//0xF3, 
+		1, 0,
 	},
 	{
 		"CALL", "Call a subroutine (32-bit offset)",
-		0xF8, 0, 0,
+		//0xF8, 
+		0, 0,
 	},
 	{
 		"RET", "Return from the subroutine",
-		0xF9, 0, 0,
+		//0xF9, 
+		0, 0,
+	},
+	{
+		"ICALL", "Indirect call",
+		//0xFA, 
+		1, 0,
+	},
+	{
+		"IJMP", "Indirect jump",
+		//0xFB, 
+		1, 0,
 	},
 	{
 		"NCALL", "Call a native subroutine",
-		0xFC, 0, 0,
+		//0xFC, 
+		0, 0,
 	},
 };
 

@@ -1,11 +1,13 @@
 
-CFLAGS+=-I./
+CFLAGS+=-I./ -I../sysdep
 
 OBJECTS:= \
 	vm_core.o \
 	vm_stack.o \
 	vm_thunks.o \
+	vm_thunks_libc.o \
 	vm_loader.o \
+	vm_debug.o \
 
 TARGETS:= \
 	mette-vm.a \

@@ -1,20 +1,24 @@
 #ifndef __mette_vm_internal_h_included
 #define __mette_vm_internal_h_included
 
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-#endif
-
 #include "vm_stack.h"
 #include "vm_loader.h"
 
-/* VM context -- where all the state is. */
+/* Keep track of locals */
+typedef struct _vm_locals {
+	unsigned count; /* How many of them (for boundary checks) */
+	vm_operand_t data[1]; /* Can be more. */
+} vm_locals_t;
 
+/* VM context -- where all the state is. */
 typedef struct _vm_context {
-	vm_stack_t cstack; /* Stack for control flow ops */
 	vm_stack_t dstack; /* Stack for data ops */
+	vm_stack_t cstack; /* Stack for control flow ops */
 	
 	uint8_t *pc;
+	vm_locals_t *locals;
+	vm_module_t *module; /* Current module */
+	unsigned is_running : 1;
 } vm_context_t;
 
 /* Miscellaneous VM functions */

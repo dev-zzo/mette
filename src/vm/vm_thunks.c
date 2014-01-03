@@ -1,14 +1,18 @@
 #include "vm_internal.h"
 #include "vm_thunks.h"
 
-/*
-Refer to thunks array defined somewhere else.
-TODO: Make this a linker's job.
-*/
-extern vm_thunk_t vm_thunks[];
+/* Linker defined */
+extern vm_thunk_record_t __vm_thunks_start;
+extern vm_thunk_record_t __vm_thunks_end;
 
-const vm_thunk_t *vm_find_thunk(uint32_t hash)
+vm_thunk_t vm_lookup_thunk(uint32_t hash)
 {
-	return 0;
+	vm_thunk_record_t *thunk = &__vm_thunks_start;
+	while (thunk != &__vm_thunks_end) {
+		if (thunk->hash == hash) {
+			return thunk->proc;
+		}
+	}
+	return (vm_thunk_t)0;
 }
 

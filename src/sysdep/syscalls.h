@@ -2,6 +2,7 @@
 #define __mette_syscalls_included
 
 // http://www.win.tue.nl/~aeb/linux/lk/lk-4.html
+// http://syscalls.kernelgrok.com/
 
 // ==================== BEGIN ARCH-SPECIFIC CODE ==============================
 #include "syscalls-i386.h"
@@ -9,14 +10,10 @@
 
 // processes
 
-#define sys_exit(code) \
-	__SYSCALL(exit, 1, code)
-#define sys_exit_group(code) \
-	__SYSCALL(exit_group, 1, code)
-#define sys_fork(regs) \
-	__SYSCALL(fork, 1, regs)
-#define sys_getpid() \
-	__SYSCALL(getpid, 0)
+#define sys_exit(code) __SYSCALL(exit, 1, code)
+#define sys_exit_group(code) __SYSCALL(exit_group, 1, code)
+#define sys_fork(regs) __SYSCALL(fork, 1, regs)
+#define sys_getpid() __SYSCALL(getpid, 0)
 
 // signals
 
@@ -34,25 +31,22 @@
 #define sys_chdir(path) __SYSCALL(chdir, 1, path)
 #define sys_unlink(path) __SYSCALL(unlink, 1, path)
 #define sys_chmod(path, mode) __SYSCALL(chmod, 2, path, mode)
+#define sys_fchmod(fd, mode) __SYSCALL(fchmod, 2, fd, mode)
 #define sys_stat(path, sbuf) __SYSCALL(stat, 2, path, buf)
+#define sys_fstat(fd, sbuf) __SYSCALL(fstat, 2, fd, sbuf)
 #define sys_access(path, mode) __SYSCALL(access, 2, path, mode)
 #define sys_rename(pathold, pathnew) __SYSCALL(rename, 2, pathold, pathnew)
 #define sys_mkdir(path, mode) __SYSCALL(mkdir, 2, path, mode)
 #define sys_rmdir(path) __SYSCALL(rmdir, 1, path)
 #define sys_truncate(path, length) __SYSCALL(truncate, 2, path, length)
-
-// files and descriptors
-
+#define sys_ftruncate(fd, length) __SYSCALL(ftruncate, 2, fd, length)
 #define sys_open(path, flags, mode) __SYSCALL(open, 3, path, flags, mode)
 #define sys_read(fd, buf, count) __SYSCALL(read, 3, fd, buf, count)
 #define sys_write(fd, buf, count) __SYSCALL(write, 3, fd, buf, count)
 #define sys_close(fd) __SYSCALL(close, 1, fd)
 #define sys_lseek(fd, offset, origin) __SYSCALL(lseek, 2, offset, origin)
-#define sys_fstat(fd, sbuf) __SYSCALL(fstat, 2, fd, sbuf)
 #define sys_flock(fd, cmd) __SYSCALL(flock, 2, fd, cmd)
-#define sys_select(n, inp, outp, exp, tvp) __SYSCALL(select,5,  n, inp, outp, exp, tvp)
-#define sys_ftruncate(fd, length) __SYSCALL(ftruncate, 2, fd, length)
-#define sys_fchmod(fd, mode) __SYSCALL(fchmod, 2, fd, mode)
+#define sys_select(n, inp, outp, exp, tvp) __SYSCALL(select, 5, n, inp, outp, exp, tvp)
 #define sys_pipe(pipefd) __SYSCALL(pipe, 1, pipefd)
 
 // memory

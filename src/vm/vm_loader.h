@@ -4,6 +4,7 @@
 typedef struct _vm_module_t {
 	struct _vm_module_t *next;
 	void *entry;
+	void **ncalltab;
 } vm_module_t;
 
 /* Load a section from the given fd. */

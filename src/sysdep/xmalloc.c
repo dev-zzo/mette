@@ -8,44 +8,42 @@
  * http://www.cise.ufl.edu/~cop4600/cgi-bin/lxr/http/source.cgi/lib/ansi/malloc.c
  */
 
-#define ALIGN(x, a) (((x) + (a) - 1) & ((a) - 1))
+#define ALIGN(x, a) (((x) + (a) - 1) & ~((a) - 1))
 
-#define PAGE_SIZE 4096
+#define PAGE_SIZE 4096U
 #define UNIT_SIZE sizeof(struct slot)
 
 /*
- * We will be allocating with 8 byte granularity here.
- * This means, the max size of user allocation is 524280 bytes.
- * Since the target devices rarely have more than 128M of memory...
+ * We use a fixed 8-byte header here, which is twice the overhead compared to
+ * the Minix implementation of the same routines.
+ * Might want to dig deeper and optimise this later.
  */
 
 struct slot {
 	struct slot *next_slot; /* Keeping a pointer here eliminates some ops */
-	struct slot *next_free;
-	/* User data area */
+	struct slot *next_free; /* Next free block (valid only in free list. */
+	/* User data area follows */
 };
 
-/* Keeps the free list head */
+/* Keeps the free list head. The free list is sorted by address. */
 static struct slot *free_anchor;
 
 /* Remember the program break. */
 static void *arena_brk;
 
-/* Linker-defined, marks the end of the program's data area. */
-extern char end;
-
 /* Allocates with getting some system memory. */
 static int xmem_grow(size_t units, struct slot *last_free)
 {
+	extern char end; /* Linker-defined, marks the end of the program's dataseg. */
 	struct slot *new_slot;
 	void *new_brk;
 	
 	if (!arena_brk) {
 		/* First call -- initialise the pointers */
-		arena_brk = sys_brk((void *)ALIGN((uintptr_t)&end, PAGE_SIZE));
+		arena_brk = (void *)sys_brk((void *)ALIGN((uintptr_t)&end, PAGE_SIZE));
 	}
 
-	new_brk = (void *)sys_brk(arena_brk + ALIGN(units * 8, PAGE_SIZE));
+	new_brk = (void *)sys_brk(arena_brk + ALIGN(units * UNIT_SIZE, PAGE_SIZE));
 	if (new_brk == arena_brk) {
 		/* Seems that brk(2) has failed. Sorry. */
 		return 0;
@@ -53,10 +51,13 @@ static int xmem_grow(size_t units, struct slot *last_free)
 	new_slot = (struct slot *)arena_brk;
 	arena_brk = new_brk;
 	
-	/* Attach the block to the list and return to malloc. */
 	if (last_free) {
-		last_free->next_free = new_slot;
+		/* Simply extend the last free slot. */
+		last_free->next_slot = (struct slot *)new_brk;
 	} else {
+		/* This is now the list head. */
+		new_slot->next_slot = (struct slot *)new_brk;
+		new_slot->next_free = NULL;
 		free_anchor = new_slot;
 	}
 	return 1;
@@ -66,7 +67,6 @@ void *xmalloc(size_t size)
 {
 	struct slot *curr_free, *prev_free;
 	size_t units;
-	int retry = 1;
 	
 	/* Make up the total alloc size */
 	units = ALIGN(size, UNIT_SIZE) / UNIT_SIZE + 1;
@@ -95,7 +95,7 @@ void *xmalloc(size_t size)
 				continue;
 			}
 			/* Is it bigger, so it can be split? */
-			if (curr_free->next_slot >= new_slot + 1 ) {
+			if (curr_free->next_slot > new_slot + 1 ) {
 				/* Fill in the newly formed slot. */
 				new_slot->next_slot = curr_free->next_slot;
 				new_slot->next_free = curr_free->next_free;
@@ -114,11 +114,6 @@ void *xmalloc(size_t size)
 			return curr_free + 1;
 		}
 		
-		/* We've already tried; didn't help. */
-		if (!retry) {
-			break;
-		}
-
 		/* Nothing useful was found. Try to allocate some memory from the system. */
 		if (!xmem_grow(units, prev_free)) {
 			break;
@@ -186,7 +181,6 @@ void *xrealloc(void *ptr, size_t size)
 			new->next_slot = this->next_slot;
 			this->next_slot = new;
 			/* Since both are allocated memory, we can free() the leftover. */
-			/* TODO: See if it makes more sense to make this slightly faster... */
 			xfree(new);
 		}
 		return ptr;
@@ -198,9 +192,9 @@ void *xrealloc(void *ptr, size_t size)
 		return NULL;
 	}
 	
-	xmemcpy(new + 1, ptr, old_count);
+	xmemcpy(new, ptr, old_count);
 	xfree(ptr);
-	return new + 1;
+	return new;
 }
 
 void xfree(void *ptr)
@@ -212,9 +206,10 @@ void xfree(void *ptr)
 	if (!ptr)
 		return;
 	
+	/* See where to insert the newly freed block. */
 	prev_free = NULL;
 	next_free = free_anchor;
-	while (next_free < this) {
+	while (next_free && next_free < this) {
 		prev_free = next_free;
 		next_free = next_free->next_free;
 	}

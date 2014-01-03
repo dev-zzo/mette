@@ -2,6 +2,19 @@
 #include "vm_internal.h"
 #include "vm_sysdeps.h"
 
+void vm_stack_init(vm_stack_t *stack)
+{
+	vm_chunk_t *chunk;
+	
+	chunk = (vm_chunk_t *)vm_alloc(sizeof(vm_chunk_t));
+	if (!chunk) {
+		vm_panic("vm_stack_init: vm_alloc failed.");
+	}
+	
+	chunk->next = NULL;
+	stack->head = stack->top_chunk = chunk;
+}
+
 void vm_stack_push(vm_stack_t *stack, vm_operand_t value)
 {
 	int next_index = stack->top_index + 1;
@@ -54,24 +67,12 @@ void vm_stack_popn(vm_stack_t *stack, size_t n, vm_operand_t *dst)
 	}
 }
 
-vm_operand_t *vm_stack_ptr(vm_stack_t *stack, int index)
+void vm_stack_pushn(vm_stack_t *stack, size_t n, vm_operand_t *src)
 {
-	vm_chunk_t *chunk = stack->top_chunk;
-
-	if (index < 0) {
-		vm_panic("vm_stack_ptr: asking for a negative index.");
+	src += n;
+	while (n--) {
+		src--;
+		vm_stack_push(stack, *src);
 	}
-	
-	index = stack->top_index - index;
-	while (index < 0) {
-		index = VM_CHUNK_ENTRIES - 1 + index;
-		chunk = chunk->next;
-		if (!chunk) {
-			vm_panic("vm_stack_ptr: stack underflow.");
-		}	
-	}
-	
-	return &chunk->entries[index];
 }
-
 
