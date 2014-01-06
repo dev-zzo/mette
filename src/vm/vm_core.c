@@ -5,6 +5,34 @@
 #include "vm_loader.h"
 #include "vm_misc.h"
 
+/* Assembly hacks (platform specific) thanks to GCC. */
+#if defined(TARGET_ARCH_mips)
+#define TARGET_MULU(a,b) \
+	__asm__ __volatile__( \
+		"multu %0, %1\n\t" \
+		"mfhi %0\n\t" \
+		"mflo %1\n\t" \
+		: "=r"(a), "=r"(b) \
+		)
+#define TARGET_MULS(a,b) \
+	__asm__ __volatile__( \
+		"mult %0, %1\n\t" \
+		"mfhi %0\n\t" \
+		"mflo %1\n\t" \
+		: "=r"(a), "=r"(b) \
+		)
+#define TARGET_DIVU(a,b) \
+	vm_uoperand_t quot = (vm_uoperand_t)op0 / (vm_uoperand_t)op1; \
+	vm_uoperand_t rem = (vm_uoperand_t)op0 % (vm_uoperand_t)op1; \
+	op0 = rem; \
+	op1 = quot;
+#define TARGET_DIVS(a,b) \
+	vm_soperand_t quot = (vm_soperand_t)op0 / (vm_soperand_t)op1; \
+	vm_soperand_t rem = (vm_soperand_t)op0 % (vm_soperand_t)op1; \
+	op0 = rem; \
+	op1 = quot;
+#endif
+
 static uint8_t vm_fetch8_pc(vm_context_t *ctx)
 {
 	uint8_t v = *ctx->pc;
@@ -58,29 +86,19 @@ op_SUB:
 	op0 = op0 - op1;
 	goto push_1;
 op_MULU: {
-	uint64_t res = (uint64_t)op0 * (uint64_t)op1;
-	op0 = res >> 32;
-	op1 = res & 0xFFFFFFFFULL;
+	TARGET_MULU(op0, op1);
 	goto push_2;
 }
 op_MULS: {
-	int64_t res = ((int64_t)op0) * ((int64_t)op1);
-	op0 = res >> 32;
-	op1 = (vm_operand_t)res;
+	TARGET_MULS(op0, op1);
 	goto push_2;
 }
 op_DIVU: {
-	vm_uoperand_t quot = (vm_uoperand_t)op0 / (vm_uoperand_t)op1;
-	vm_uoperand_t rem = (vm_uoperand_t)op0 % (vm_uoperand_t)op1;
-	op0 = rem;
-	op1 = quot;
+	TARGET_DIVU(op0, op1);
 	goto push_2;
 }
 op_DIVS: {
-	vm_soperand_t quot = (vm_soperand_t)op0 / (vm_soperand_t)op1;
-	vm_soperand_t rem = (vm_soperand_t)op0 % (vm_soperand_t)op1;
-	op0 = rem;
-	op1 = quot;
+	TARGET_DIVS(op0, op1);
 	goto push_2;
 }
 op_AND:
