@@ -24,7 +24,7 @@ int main()
 		fprintf(fd, "\t/* %s */\n", opcodes[index].description);
 		fprintf(fd, "\tVMOP_%s\t\t= 0x%02X, /* %d -> %d */\n",
 			opcodes[index].mnemonic, 
-			index,
+			index | (opcodes[index].stack_in << 6),
 			opcodes[index].stack_in,
 			opcodes[index].stack_out);
 	}

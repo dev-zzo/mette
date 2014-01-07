@@ -8,7 +8,7 @@ export TARGET_ARCH
 
 ifeq ($(TARGET_ARCH), mips)
 TOOLS_PREFIX:=/home/user/x-tools/mips-unknown-linux-uclibc/bin/mips-unknown-linux-uclibc-
-CFLAGS_FOR_TARGET:=-DTARGET_IS_BE=1 -mdivide-traps -mno-check-zero-division
+CFLAGS_FOR_TARGET:=-DTARGET_IS_BE=1 -mdivide-traps -mno-check-zero-division -save-temps
 endif
 ifeq ($(TARGET_ARCH), i386)
 endif

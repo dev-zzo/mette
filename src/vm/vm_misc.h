@@ -15,7 +15,7 @@ static inline uint16_t vm_fetch16_ua(const void *addr)
 #endif
 }
 
-static inline uint16_t vm_fetch32_ua(const void *addr)
+static inline uint32_t vm_fetch32_ua(const void *addr)
 {
 	const uint8_t *ptr = addr;
 #ifdef TARGET_IS_BE

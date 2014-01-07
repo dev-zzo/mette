@@ -7,32 +7,35 @@
 
 /* Assembly hacks (platform specific) thanks to GCC. */
 #if defined(TARGET_ARCH_mips)
-#define TARGET_MULU(a,b) \
+#define TARGET_MULU(a,b,c,d) \
 	__asm__ __volatile__( \
 		"multu %0, %1\n\t" \
-		"mfhi %0\n\t" \
-		"mflo %1\n\t" \
-		: "=r"(a), "=r"(b) \
+		"mfhi %2\n\t" \
+		"mflo %3\n\t" \
+		: "=r"(c), "=r"(d) \
+		: "r"(a), "r"(b) \
 		)
-#define TARGET_MULS(a,b) \
+#define TARGET_MULS(a,b,c,d) \
 	__asm__ __volatile__( \
 		"mult %0, %1\n\t" \
-		"mfhi %0\n\t" \
-		"mflo %1\n\t" \
-		: "=r"(a), "=r"(b) \
+		"mfhi %2\n\t" \
+		"mflo %3\n\t" \
+		: "=r"(c), "=r"(d) \
+		: "r"(a), "r"(b) \
 		)
 #define TARGET_DIVU(a,b) \
 	vm_uoperand_t quot = (vm_uoperand_t)op0 / (vm_uoperand_t)op1; \
 	vm_uoperand_t rem = (vm_uoperand_t)op0 % (vm_uoperand_t)op1; \
-	op0 = rem; \
-	op1 = quot;
+	r0 = rem; \
+	r1 = quot;
 #define TARGET_DIVS(a,b) \
 	vm_soperand_t quot = (vm_soperand_t)op0 / (vm_soperand_t)op1; \
 	vm_soperand_t rem = (vm_soperand_t)op0 % (vm_soperand_t)op1; \
-	op0 = rem; \
-	op1 = quot;
+	r0 = rem; \
+	r1 = quot;
 #endif
 
+/*
 static uint8_t vm_fetch8_pc(vm_context_t *ctx)
 {
 	uint8_t v = *ctx->pc;
@@ -53,16 +56,20 @@ static uint32_t vm_fetch32_pc(vm_context_t *ctx)
 	ctx->pc += sizeof(uint32_t);
 	return v;
 }
+*/
 
 /* Emulate one VM insn. */
 void vm_step(vm_context_t *ctx)
 {
 #include "vm_opcodes_switch.tab"
 	vm_operand_t op0, op1, op2, op3;
+	vm_operand_t r0, r1, r2, r3;
+	uint8_t *pc = ctx->pc;
 	unsigned opcount;
 	vm_opcode_t opcode;
 	
-	opcode = (vm_opcode_t)vm_fetch8_pc(ctx);
+	opcode = (const vm_opcode_t)(*pc);
+	pc += 1;
 	opcount = opcode >> 6; /* 2 highest bits make for operand count. */
 
 	switch (opcount) {
@@ -80,17 +87,17 @@ op_invalid:
 	vm_panic("vm_step: unknown opcode.");
 
 op_ADD:
-	op0 = op0 + op1;
+	r0 = op0 + op1;
 	goto push_1;
 op_SUB:
-	op0 = op0 - op1;
+	r0 = op0 - op1;
 	goto push_1;
 op_MULU: {
-	TARGET_MULU(op0, op1);
+	TARGET_MULU(op0, op1, r0, r1);
 	goto push_2;
 }
 op_MULS: {
-	TARGET_MULS(op0, op1);
+	TARGET_MULS(op0, op1, r0, r1);
 	goto push_2;
 }
 op_DIVU: {
@@ -102,88 +109,91 @@ op_DIVS: {
 	goto push_2;
 }
 op_AND:
-	op0 = op0 & op1;
+	r0 = op0 & op1;
 	goto push_1;
 op_OR:
-	op0 = op0 | op1;
+	r0 = op0 | op1;
 	goto push_1;
 op_XOR:
-	op0 = op0 ^ op1;
+	r0 = op0 ^ op1;
 	goto push_1;
 op_NOT:
-	op0 = ~op0;
+	r0 = ~op0;
 	goto push_1;
 op_LSL:
-	op0 = op0 << op1;
+	r0 = op0 << op1;
 	goto push_1;
 op_LSR:
-	op0 = ((vm_uoperand_t)op0) >> op1;
+	r0 = ((vm_uoperand_t)op0) >> op1;
 	goto push_1;
 op_ASR:
-	op0 = ((vm_soperand_t)op0) >> op1;
+	r0 = ((vm_soperand_t)op0) >> op1;
 	goto push_1;
 op_CC_LT:
-	op0 = ((vm_soperand_t)op0) < ((vm_soperand_t)op1);
+	r0 = ((vm_soperand_t)op0) < ((vm_soperand_t)op1);
 	goto push_1;
 op_CC_GT:
-	op0 = ((vm_soperand_t)op0) > ((vm_soperand_t)op1);
+	r0 = ((vm_soperand_t)op0) > ((vm_soperand_t)op1);
 	goto push_1;
 op_CC_LE:
-	op0 = ((vm_soperand_t)op0) <= ((vm_soperand_t)op1);
+	r0 = ((vm_soperand_t)op0) <= ((vm_soperand_t)op1);
 	goto push_1;
 op_CC_GE:
-	op0 = ((vm_soperand_t)op0) >= ((vm_soperand_t)op1);
+	r0 = ((vm_soperand_t)op0) >= ((vm_soperand_t)op1);
 	goto push_1;
 op_CC_B:
-	op0 = ((vm_uoperand_t)op0) < ((vm_uoperand_t)op1);
+	r0 = ((vm_uoperand_t)op0) < ((vm_uoperand_t)op1);
 	goto push_1;
 op_CC_A:
-	op0 = ((vm_uoperand_t)op0) > ((vm_uoperand_t)op1);
+	r0 = ((vm_uoperand_t)op0) > ((vm_uoperand_t)op1);
 	goto push_1;
 op_CC_BE:
-	op0 = ((vm_uoperand_t)op0) <= ((vm_uoperand_t)op1);
+	r0 = ((vm_uoperand_t)op0) <= ((vm_uoperand_t)op1);
 	goto push_1;
 op_CC_AE:
-	op0 = ((vm_uoperand_t)op0) >= ((vm_uoperand_t)op1);
+	r0 = ((vm_uoperand_t)op0) >= ((vm_uoperand_t)op1);
 	goto push_1;
 op_CC_EQ:
-	op0 = op0 == op1;
+	r0 = op0 == op1;
 	goto push_1;
 op_CC_NE:
-	op0 = op0 != op1;
+	r0 = op0 != op1;
 	goto push_1;
 op_LDC0:
-	op0 = 0;
+	r0 = 0;
 	goto push_1;
 op_LDC1: 
-	op0 = 1;
+	r0 = 1;
 	goto push_1;
 op_LDC2: 
-	op0 = 2;
+	r0 = 2;
 	goto push_1;
 op_LDCU8:
-	op0 = (vm_uoperand_t)(uint8_t)vm_fetch8_pc(ctx);
+	r0 = (vm_uoperand_t)*(uint8_t *)(pc);
+	pc += 1;
 	goto push_1;
 op_LDCS8:
-	op0 = (vm_soperand_t)(int8_t)vm_fetch8_pc(ctx);
+	r0 = (vm_soperand_t)*(int8_t *)(pc);
+	pc += 1;
 	goto push_1;
 op_LDC32:
-	op0 = vm_fetch32_pc(ctx);
+	r0 = vm_fetch32_ua(pc);
+	pc += 4;
 	goto push_1;
 op_LDMU8:
-	op0 = (vm_uoperand_t)*(uint8_t *)(op0);
+	r0 = (vm_uoperand_t)*(uint8_t *)(op0);
 	goto push_1;
 op_LDMS8:
-	op0 = (vm_soperand_t)*(int8_t *)(op0);
+	r0 = (vm_soperand_t)*(int8_t *)(op0);
 	goto push_1;
 op_LDMU16:
-	op0 = (vm_uoperand_t)*(uint16_t *)(op0);
+	r0 = (vm_uoperand_t)*(uint16_t *)(op0);
 	goto push_1;
 op_LDMS16:
-	op0 = (vm_soperand_t)*(int16_t *)(op0);
+	r0 = (vm_soperand_t)*(int16_t *)(op0);
 	goto push_1;
 op_LDM32:
-	op0 = *(vm_operand_t *)(op0);
+	r0 = *(vm_operand_t *)(op0);
 	goto push_1;
 op_STM8:
 	*(uint8_t *)(op0) = (uint8_t)op1;
@@ -206,7 +216,7 @@ op_LDLOC: {
 	if (op0 >= ctx->locals->count) {
 		vm_panic("vm_step: local index out of bounds.");
 	}
-	op0 = ctx->locals->data[op0];
+	r0 = ctx->locals->data[op0];
 	goto push_1;
 }
 op_STLOC: {
@@ -220,47 +230,46 @@ op_STLOC: {
 	goto push_none;
 }
 op_DUP:
-	op1 = op0;
+	r1 = r0 = op0;
 	goto push_2;
 op_SWAP: {
-	vm_operand_t temp;
-	temp = op0;
-	op0 = op1;
-	op1 = temp;
+	r1 = op0;
+	r0 = op1;
 	goto push_2;
 }
 op_POP:
 	goto push_none;
 op_BRS: {
-	int8_t offset = (int8_t)vm_fetch8_pc(ctx);
-	ctx->pc += offset;
+	int8_t offset = *(int8_t *)(pc);
+	pc = pc + 1 + offset;
 	goto push_none;
 }
 op_BRL: {
-	int32_t offset = (int32_t)vm_fetch32_pc(ctx);
-	ctx->pc += offset;
+	int32_t offset = (int32_t)vm_fetch32_ua(pc);
+	pc = pc + 4 + offset;
 	goto push_none;
 }
 op_BRT: {
-	int8_t offset = (int8_t)vm_fetch8_pc(ctx);
+	int8_t offset = *(int8_t *)(pc);
 	if (op0) {
-		ctx->pc += offset;
+		pc = pc + 1 + offset;
 	}
 	goto push_none;
 }
 op_BRF: {
-	int8_t offset = (int8_t)vm_fetch8_pc(ctx);
+	int8_t offset = *(int8_t *)(pc);
 	if (!op0) {
-		ctx->pc += offset;
+		pc = pc + 1 + offset;
 	}
 	goto push_none;
 }
 op_CALL: {
-	int32_t offset = (int32_t)vm_fetch32_pc(ctx);
-	vm_stack_push(&ctx->cstack, (vm_operand_t)ctx->pc);
+	int32_t offset = (int32_t)vm_fetch32_ua(pc);
+	pc += 4;
+	vm_stack_push(&ctx->cstack, (vm_operand_t)pc);
 	vm_stack_push(&ctx->cstack, (vm_operand_t)ctx->locals);
-	ctx->pc += offset;
 	ctx->locals = NULL;
+	pc += offset;
 	goto push_none;
 }
 op_RET: {
@@ -268,28 +277,35 @@ op_RET: {
 		vm_free(ctx->locals);
 	}
 	ctx->locals = (void *)vm_stack_pop(&ctx->cstack);
-	ctx->pc = (void *)vm_stack_pop(&ctx->cstack);
+	pc = (uint8_t *)vm_stack_pop(&ctx->cstack);
 	goto push_none;
 }
 op_ICALL: {
+	vm_stack_push(&ctx->cstack, (vm_operand_t)pc);
+	vm_stack_push(&ctx->cstack, (vm_operand_t)ctx->locals);
+	ctx->locals = NULL;
+	pc = (uint8_t *)op0;
 	goto push_none;
 }
 op_IJMP: {
+	pc = (uint8_t *)op0;
 	goto push_none;
 }
 op_NCALL: {
-	int index = vm_fetch16_pc(ctx); /* thunk index */
+	int index = vm_fetch16_ua(pc); /* thunk index */
+	pc += 2;
 	vm_thunk_t thunk = (vm_thunk_t)ctx->module->ncalltab[index];
 	thunk(ctx);
 	goto push_none;
 }
 	
 push_2:
-	vm_stack_push(&ctx->dstack, op1);
+	vm_stack_push(&ctx->dstack, r1);
 push_1:
-	vm_stack_push(&ctx->dstack, op0);
+	vm_stack_push(&ctx->dstack, r0);
 push_none:
 	
+	ctx->pc = pc;
 	return;
 }
 

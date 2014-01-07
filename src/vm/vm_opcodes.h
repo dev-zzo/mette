@@ -5,51 +5,51 @@
 
 typedef enum {
 	/* Addition */
-	VMOP_ADD		= 0x00, /* 2 -> 1 */
+	VMOP_ADD		= 0x80, /* 2 -> 1 */
 	/* Subtraction */
-	VMOP_SUB		= 0x01, /* 2 -> 1 */
+	VMOP_SUB		= 0x81, /* 2 -> 1 */
 	/* Multiplication (unsigned*unsigned) */
-	VMOP_MULU		= 0x02, /* 2 -> 2 */
+	VMOP_MULU		= 0x82, /* 2 -> 2 */
 	/* Multiplication (signed*signed) */
-	VMOP_MULS		= 0x03, /* 2 -> 2 */
+	VMOP_MULS		= 0x83, /* 2 -> 2 */
 	/* Division (unsigned/unsigned) */
-	VMOP_DIVU		= 0x04, /* 2 -> 2 */
+	VMOP_DIVU		= 0x84, /* 2 -> 2 */
 	/* Division (signed/signed) */
-	VMOP_DIVS		= 0x05, /* 2 -> 2 */
+	VMOP_DIVS		= 0x85, /* 2 -> 2 */
 	/* Bitwise AND */
-	VMOP_AND		= 0x06, /* 2 -> 1 */
+	VMOP_AND		= 0x86, /* 2 -> 1 */
 	/* Bitwise OR */
-	VMOP_OR		= 0x07, /* 2 -> 1 */
+	VMOP_OR		= 0x87, /* 2 -> 1 */
 	/* Bitwise XOR */
-	VMOP_XOR		= 0x08, /* 2 -> 1 */
+	VMOP_XOR		= 0x88, /* 2 -> 1 */
 	/* Bitwise NOT */
-	VMOP_NOT		= 0x09, /* 2 -> 1 */
+	VMOP_NOT		= 0x89, /* 2 -> 1 */
 	/* Logical shirt left */
-	VMOP_LSL		= 0x0A, /* 2 -> 1 */
+	VMOP_LSL		= 0x8A, /* 2 -> 1 */
 	/* Logical shift right */
-	VMOP_LSR		= 0x0B, /* 2 -> 1 */
+	VMOP_LSR		= 0x8B, /* 2 -> 1 */
 	/* Arithmetic shift right */
-	VMOP_ASR		= 0x0C, /* 2 -> 1 */
+	VMOP_ASR		= 0x8C, /* 2 -> 1 */
 	/* Compare (less than) */
-	VMOP_CC_LT		= 0x0D, /* 2 -> 1 */
+	VMOP_CC_LT		= 0x8D, /* 2 -> 1 */
 	/* Compare (greater than) */
-	VMOP_CC_GT		= 0x0E, /* 2 -> 1 */
+	VMOP_CC_GT		= 0x8E, /* 2 -> 1 */
 	/* Compare (less than or equal) */
-	VMOP_CC_LE		= 0x0F, /* 2 -> 1 */
+	VMOP_CC_LE		= 0x8F, /* 2 -> 1 */
 	/* Compare (greater than or equal) */
-	VMOP_CC_GE		= 0x10, /* 2 -> 1 */
+	VMOP_CC_GE		= 0x90, /* 2 -> 1 */
 	/* Compare (below) */
-	VMOP_CC_B		= 0x11, /* 2 -> 1 */
+	VMOP_CC_B		= 0x91, /* 2 -> 1 */
 	/* Compare (above) */
-	VMOP_CC_A		= 0x12, /* 2 -> 1 */
+	VMOP_CC_A		= 0x92, /* 2 -> 1 */
 	/* Compare (below or equal) */
-	VMOP_CC_BE		= 0x13, /* 2 -> 1 */
+	VMOP_CC_BE		= 0x93, /* 2 -> 1 */
 	/* Compare (above or equal) */
-	VMOP_CC_AE		= 0x14, /* 2 -> 1 */
+	VMOP_CC_AE		= 0x94, /* 2 -> 1 */
 	/* Compare (equal) */
-	VMOP_CC_EQ		= 0x15, /* 2 -> 1 */
+	VMOP_CC_EQ		= 0x95, /* 2 -> 1 */
 	/* Compare (not equal) */
-	VMOP_CC_NE		= 0x16, /* 2 -> 1 */
+	VMOP_CC_NE		= 0x96, /* 2 -> 1 */
 	/* Load 0 on the stack */
 	VMOP_LDC0		= 0x17, /* 0 -> 1 */
 	/* Load 1 on the stack */
@@ -63,49 +63,49 @@ typedef enum {
 	/* Load a 32-bit value on the stack */
 	VMOP_LDC32		= 0x1C, /* 0 -> 1 */
 	/* Load a 8-bit unsigned from memory */
-	VMOP_LDMU8		= 0x1D, /* 1 -> 1 */
+	VMOP_LDMU8		= 0x5D, /* 1 -> 1 */
 	/* Load a 8-bit signed from memory */
-	VMOP_LDMS8		= 0x1E, /* 1 -> 1 */
+	VMOP_LDMS8		= 0x5E, /* 1 -> 1 */
 	/* Load a 16-bit unsigned from memory */
-	VMOP_LDMU16		= 0x1F, /* 1 -> 1 */
+	VMOP_LDMU16		= 0x5F, /* 1 -> 1 */
 	/* Load a 16-bit signed from memory */
-	VMOP_LDMS16		= 0x20, /* 1 -> 1 */
+	VMOP_LDMS16		= 0x60, /* 1 -> 1 */
 	/* Load a 32-bit from memory */
-	VMOP_LDM32		= 0x21, /* 1 -> 1 */
+	VMOP_LDM32		= 0x61, /* 1 -> 1 */
 	/* Store a 8-bit to memory */
-	VMOP_STM8		= 0x22, /* 2 -> 0 */
+	VMOP_STM8		= 0xA2, /* 2 -> 0 */
 	/* Store a 16-bit to memory */
-	VMOP_STM16		= 0x23, /* 2 -> 0 */
+	VMOP_STM16		= 0xA3, /* 2 -> 0 */
 	/* Store a 32-bit to memory */
-	VMOP_STM32		= 0x24, /* 2 -> 0 */
+	VMOP_STM32		= 0xA4, /* 2 -> 0 */
 	/* Create a space for local vars */
-	VMOP_LOCALS		= 0x25, /* 1 -> 0 */
+	VMOP_LOCALS		= 0x65, /* 1 -> 0 */
 	/* Load a local */
-	VMOP_LDLOC		= 0x26, /* 1 -> 1 */
+	VMOP_LDLOC		= 0x66, /* 1 -> 1 */
 	/* Store a local */
-	VMOP_STLOC		= 0x27, /* 2 -> 0 */
+	VMOP_STLOC		= 0xA7, /* 2 -> 0 */
 	/* Duplicate the topmost entry on the stack */
-	VMOP_DUP		= 0x28, /* 1 -> 2 */
+	VMOP_DUP		= 0x68, /* 1 -> 2 */
 	/* Swap two entries on the top of the stack */
-	VMOP_SWAP		= 0x29, /* 2 -> 2 */
+	VMOP_SWAP		= 0xA9, /* 2 -> 2 */
 	/* Discard the topmost entry on the stack */
-	VMOP_POP		= 0x2A, /* 1 -> 0 */
+	VMOP_POP		= 0x6A, /* 1 -> 0 */
 	/* Branch short (8-bit offset) */
 	VMOP_BRS		= 0x2B, /* 0 -> 0 */
 	/* Branch long (32-bit offset) */
 	VMOP_BRL		= 0x2C, /* 0 -> 0 */
 	/* Branch if true (8-bit offset) */
-	VMOP_BRT		= 0x2D, /* 1 -> 0 */
+	VMOP_BRT		= 0x6D, /* 1 -> 0 */
 	/* Branch if false (8-bit offset) */
-	VMOP_BRF		= 0x2E, /* 1 -> 0 */
+	VMOP_BRF		= 0x6E, /* 1 -> 0 */
 	/* Call a subroutine (32-bit offset) */
 	VMOP_CALL		= 0x2F, /* 0 -> 0 */
 	/* Return from the subroutine */
 	VMOP_RET		= 0x30, /* 0 -> 0 */
 	/* Indirect call */
-	VMOP_ICALL		= 0x31, /* 1 -> 0 */
+	VMOP_ICALL		= 0x71, /* 1 -> 0 */
 	/* Indirect jump */
-	VMOP_IJMP		= 0x32, /* 1 -> 0 */
+	VMOP_IJMP		= 0x72, /* 1 -> 0 */
 	/* Call a native subroutine */
 	VMOP_NCALL		= 0x33, /* 0 -> 0 */
 } vm_opcode_t;

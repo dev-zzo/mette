@@ -32,7 +32,7 @@ $(SUBTARGETS):
 SUBTARGETS_clean:=$(addsuffix _clean, $(SUBTARGETS))
 
 clean: $(SUBTARGETS_clean)
-	$(RM) -f $(OBJECTS) mette.map
+	$(RM) -f $(OBJECTS) *.i *.s mette.map
 
 $(SUBTARGETS_clean): 
 	$(MAKE) -C $(subst _clean,,$@) clean
