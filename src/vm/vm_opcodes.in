@@ -65,7 +65,7 @@ static const vm_opcode_info_t opcodes[] = {
 		2, 1,
 	},
 	{
-		"LSL", "Logical shirt left",
+		"LSL", "Logical shift left",
 		//0x18, 
 		2, 1,
 	},
@@ -83,52 +83,52 @@ static const vm_opcode_info_t opcodes[] = {
 	/* Conditionals */
 
 	{
-		"CC_LT", "Compare (less than)",
+		"CMP.LT", "Compare (less than)",
 		//0x40, 
 		2, 1,
 	},
 	{
-		"CC_GT", "Compare (greater than)",
+		"CMP.GT", "Compare (greater than)",
 		//0x41, 
 		2, 1,
 	},
 	{
-		"CC_LE", "Compare (less than or equal)",
+		"CMP.LE", "Compare (less than or equal)",
 		//0x42, 
 		2, 1,
 	},
 	{
-		"CC_GE", "Compare (greater than or equal)",
+		"CMP.GE", "Compare (greater than or equal)",
 		//0x43, 
 		2, 1,
 	},
 	{
-		"CC_B", "Compare (below)",
+		"CMP.B", "Compare (below)",
 		//0x44, 
 		2, 1,
 	},
 	{
-		"CC_A", "Compare (above)",
+		"CMP.A", "Compare (above)",
 		//0x45, 
 		2, 1,
 	},
 	{
-		"CC_BE", "Compare (below or equal)",
+		"CMP.BE", "Compare (below or equal)",
 		//0x46, 
 		2, 1,
 	},
 	{
-		"CC_AE", "Compare (above or equal)",
+		"CMP.AE", "Compare (above or equal)",
 		//0x47, 
 		2, 1,
 	},
 	{
-		"CC_EQ", "Compare (equal)",
+		"CMP.EQ", "Compare (equal)",
 		//0x48, 
 		2, 1,
 	},
 	{
-		"CC_NE", "Compare (not equal)",
+		"CMP.NE", "Compare (not equal)",
 		//0x49, 
 		2, 1,
 	},
@@ -136,32 +136,32 @@ static const vm_opcode_info_t opcodes[] = {
 	/* Constant loading */
 	
 	{
-		"LDC0", "Load 0 on the stack",
+		"LDC.0", "Load 0 on the stack",
 		//0xC0, 
 		0, 1,
 	},
 	{
-		"LDC1", "Load 1 on the stack",
+		"LDC.1", "Load 1 on the stack",
 		//0xC1, 
 		0, 1,
 	},
 	{
-		"LDC2", "Load 2 on the stack",
+		"LDC.2", "Load 2 on the stack",
 		//0xC2, 
 		0, 1,
 	},
 	{
-		"LDCU8", "Load an unsigned byte on the stack",
+		"LDC.8.U", "Load an unsigned byte on the stack",
 		//0xC8, 
 		0, 1,
 	},
 	{
-		"LDCS8", "Load a signed byte on the stack",
+		"LDC.8.S", "Load a signed byte on the stack",
 		//0xC9, 
 		0, 1,
 	},
 	{
-		"LDC32", "Load a 32-bit value on the stack",
+		"LDC.32", "Load a 32-bit value on the stack",
 		//0xCA, 
 		0, 1,
 	},
@@ -169,27 +169,27 @@ static const vm_opcode_info_t opcodes[] = {
 	/* Memory access: loads */
 	
 	{
-		"LDMU8", "Load a 8-bit unsigned from memory",
+		"LDM.8.U", "Load a 8-bit unsigned from memory",
 		//0xD0, 
 		1, 1,
 	},
 	{
-		"LDMS8", "Load a 8-bit signed from memory",
+		"LDM.8.S", "Load a 8-bit signed from memory",
 		//0xD1, 
 		1, 1,
 	},
 	{
-		"LDMU16", "Load a 16-bit unsigned from memory",
+		"LDM.16.U", "Load a 16-bit unsigned from memory",
 		//0xD2, 
 		1, 1,
 	},
 	{
-		"LDMS16", "Load a 16-bit signed from memory",
+		"LDM.16.S", "Load a 16-bit signed from memory",
 		//0xD3, 
 		1, 1,
 	},
 	{
-		"LDM32", "Load a 32-bit from memory",
+		"LDM.32", "Load a 32-bit from memory",
 		//0xD4, 
 		1, 1,
 	},
@@ -197,17 +197,17 @@ static const vm_opcode_info_t opcodes[] = {
 	/* Memory access: stores */
 
 	{
-		"STM8", "Store a 8-bit to memory",
+		"STM.8", "Store a 8-bit to memory",
 		//0xD8, 
 		2, 0,
 	},
 	{
-		"STM16", "Store a 16-bit to memory",
+		"STM.16", "Store a 16-bit to memory",
 		//0xD9, 
 		2, 0,
 	},
 	{
-		"STM32", "Store a 32-bit to memory",
+		"STM.32", "Store a 32-bit to memory",
 		//0xDA, 
 		2, 0,
 	},
@@ -251,22 +251,22 @@ static const vm_opcode_info_t opcodes[] = {
 	/* Control flow insns */
 	
 	{
-		"BRS", "Branch short (8-bit offset)",
+		"BR.S", "Branch short (8-bit offset)",
 		//0xF0, 
 		0, 0,
 	},
 	{
-		"BRL", "Branch long (32-bit offset)",
+		"BR.L", "Branch long (32-bit offset)",
 		//0xF1, 
 		0, 0,
 	},
 	{
-		"BRT", "Branch if true (8-bit offset)",
+		"BR.T", "Branch if true (8-bit offset)",
 		//0xF2, 
 		1, 0,
 	},
 	{
-		"BRF", "Branch if false (8-bit offset)",
+		"BR.F", "Branch if false (8-bit offset)",
 		//0xF3, 
 		1, 0,
 	},

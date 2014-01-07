@@ -129,79 +129,79 @@ op_LSR:
 op_ASR:
 	r0 = ((vm_soperand_t)op0) >> op1;
 	goto push_1;
-op_CC_LT:
+op_CMP_LT:
 	r0 = ((vm_soperand_t)op0) < ((vm_soperand_t)op1);
 	goto push_1;
-op_CC_GT:
+op_CMP_GT:
 	r0 = ((vm_soperand_t)op0) > ((vm_soperand_t)op1);
 	goto push_1;
-op_CC_LE:
+op_CMP_LE:
 	r0 = ((vm_soperand_t)op0) <= ((vm_soperand_t)op1);
 	goto push_1;
-op_CC_GE:
+op_CMP_GE:
 	r0 = ((vm_soperand_t)op0) >= ((vm_soperand_t)op1);
 	goto push_1;
-op_CC_B:
+op_CMP_B:
 	r0 = ((vm_uoperand_t)op0) < ((vm_uoperand_t)op1);
 	goto push_1;
-op_CC_A:
+op_CMP_A:
 	r0 = ((vm_uoperand_t)op0) > ((vm_uoperand_t)op1);
 	goto push_1;
-op_CC_BE:
+op_CMP_BE:
 	r0 = ((vm_uoperand_t)op0) <= ((vm_uoperand_t)op1);
 	goto push_1;
-op_CC_AE:
+op_CMP_AE:
 	r0 = ((vm_uoperand_t)op0) >= ((vm_uoperand_t)op1);
 	goto push_1;
-op_CC_EQ:
+op_CMP_EQ:
 	r0 = op0 == op1;
 	goto push_1;
-op_CC_NE:
+op_CMP_NE:
 	r0 = op0 != op1;
 	goto push_1;
-op_LDC0:
+op_LDC_0:
 	r0 = 0;
 	goto push_1;
-op_LDC1: 
+op_LDC_1: 
 	r0 = 1;
 	goto push_1;
-op_LDC2: 
+op_LDC_2: 
 	r0 = 2;
 	goto push_1;
-op_LDCU8:
+op_LDC_8_U:
 	r0 = (vm_uoperand_t)*(uint8_t *)(pc);
 	pc += 1;
 	goto push_1;
-op_LDCS8:
+op_LDC_8_S:
 	r0 = (vm_soperand_t)*(int8_t *)(pc);
 	pc += 1;
 	goto push_1;
-op_LDC32:
+op_LDC_32:
 	r0 = vm_fetch32_ua(pc);
 	pc += 4;
 	goto push_1;
-op_LDMU8:
+op_LDM_8_U:
 	r0 = (vm_uoperand_t)*(uint8_t *)(op0);
 	goto push_1;
-op_LDMS8:
+op_LDM_8_S:
 	r0 = (vm_soperand_t)*(int8_t *)(op0);
 	goto push_1;
-op_LDMU16:
+op_LDM_16_U:
 	r0 = (vm_uoperand_t)*(uint16_t *)(op0);
 	goto push_1;
-op_LDMS16:
+op_LDM_16_S:
 	r0 = (vm_soperand_t)*(int16_t *)(op0);
 	goto push_1;
-op_LDM32:
+op_LDM_32:
 	r0 = *(vm_operand_t *)(op0);
 	goto push_1;
-op_STM8:
+op_STM_8:
 	*(uint8_t *)(op0) = (uint8_t)op1;
 	goto push_none;
-op_STM16:
+op_STM_16:
 	*(uint16_t *)(op0) = (uint16_t)op1;
 	goto push_none;
-op_STM32:
+op_STM_32:
 	*(vm_operand_t *)(op0) = op1;
 	goto push_none;
 op_LOCALS: {
@@ -239,24 +239,24 @@ op_SWAP: {
 }
 op_POP:
 	goto push_none;
-op_BRS: {
+op_BR_S: {
 	int8_t offset = *(int8_t *)(pc);
 	pc = pc + 1 + offset;
 	goto push_none;
 }
-op_BRL: {
+op_BR_L: {
 	int32_t offset = (int32_t)vm_fetch32_ua(pc);
 	pc = pc + 4 + offset;
 	goto push_none;
 }
-op_BRT: {
+op_BR_T: {
 	int8_t offset = *(int8_t *)(pc);
 	if (op0) {
 		pc = pc + 1 + offset;
 	}
 	goto push_none;
 }
-op_BRF: {
+op_BR_F: {
 	int8_t offset = *(int8_t *)(pc);
 	if (!op0) {
 		pc = pc + 1 + offset;

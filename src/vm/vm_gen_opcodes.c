@@ -1,8 +1,20 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <ctype.h>
 #include "vm_misc.h"
 #include "vm_opcodes.in"
 #include "vm_opcodes_traits.h"
+
+static char *sanitize_mnem(const char *text)
+{
+	static char buffer[256];
+	int i;
+	for (i = 0; text[i] != '\0'; ++i) {
+		buffer[i] = text[i] == '.' ? '_' : text[i];
+	}
+	buffer[i] = '\0';
+	return buffer;
+}
 
 int main()
 {
@@ -23,7 +35,7 @@ int main()
 	for (index = 0; index < ARRAY_SIZE(opcodes); ++index) {
 		fprintf(fd, "\t/* %s */\n", opcodes[index].description);
 		fprintf(fd, "\tVMOP_%s\t\t= 0x%02X, /* %d -> %d */\n",
-			opcodes[index].mnemonic, 
+			sanitize_mnem(opcodes[index].mnemonic), 
 			index | (opcodes[index].stack_in << 6),
 			opcodes[index].stack_in,
 			opcodes[index].stack_out);
@@ -38,12 +50,30 @@ int main()
 	fprintf(fd, "static const unsigned short offtab[64] = {\n");
 	for (index = 0; index < ARRAY_SIZE(opcodes); ++index) {
 		if (opcodes[index].mnemonic) {
-			fprintf(fd, "\t&&op_%s - &&op_invalid,\n", opcodes[index].mnemonic);
+			fprintf(fd, "\t&&op_%s - &&op_invalid,\n", sanitize_mnem(opcodes[index].mnemonic));
 		} else {
 			fprintf(fd, "\t0,\n");
 		}
 	}
 	fprintf(fd, "};\n\n");
+	fclose(fd);
+	
+	fprintf(stdout, "Generating vm_asm.l.ops.tab.\n");
+	fd = fopen("vm_asm.l.ops.tab", "w");
+	for (index = 0; index < ARRAY_SIZE(opcodes); ++index) {
+		const char *mnem = opcodes[index].mnemonic;
+		if (mnem) {
+			int i;
+			for (i = 0; mnem[i]; ++i) {
+				if (isalpha(mnem[i])) {
+					fprintf(fd, "[%c%c]", tolower(mnem[i]), toupper(mnem[i]));
+				} else {
+					fprintf(fd, "[%c]", mnem[i]);
+				}
+			}
+			fprintf(fd, " return OP_%s;\n", sanitize_mnem(opcodes[index].mnemonic));
+		}
+	}
 	fclose(fd);
 	
 	return 0;
