@@ -1,6 +1,5 @@
 #include "vm_internal.h"
 #include "vm_opcodes.h"
-#include "vm_opcodes_traits.h"
 #include "vm_thunks.h"
 #include "vm_loader.h"
 #include "vm_misc.h"
@@ -205,28 +204,33 @@ op_STM_32:
 	*(vm_operand_t *)(op0) = op1;
 	goto push_none;
 op_LOCALS: {
-	ctx->locals = (vm_locals_t *)vm_alloc(sizeof(vm_locals_t) + (op0 - 1) * sizeof(vm_operand_t));
-	ctx->locals->count = op0;
+	uint8_t count = *(uint8_t *)(pc);
+	ctx->locals = (vm_locals_t *)vm_alloc(sizeof(vm_locals_t) + (count - 1) * sizeof(vm_operand_t));
+	ctx->locals->count = count;
 	goto push_none;
 }
 op_LDLOC: {
+	uint8_t index = *(uint8_t *)(pc);
+	pc += 1;
 	if (!ctx->locals) {
 		vm_panic("vm_step: accessing locals where none have been allocated.");
 	}
-	if (op0 >= ctx->locals->count) {
+	if (index >= ctx->locals->count) {
 		vm_panic("vm_step: local index out of bounds.");
 	}
-	r0 = ctx->locals->data[op0];
+	r0 = ctx->locals->data[index];
 	goto push_1;
 }
 op_STLOC: {
+	uint8_t index = *(uint8_t *)(pc);
+	pc += 1;
 	if (!ctx->locals) {
 		vm_panic("vm_step: accessing locals where none have been allocated.");
 	}
-	if (op0 >= ctx->locals->count) {
+	if (index >= ctx->locals->count) {
 		vm_panic("vm_step: local index out of bounds.");
 	}
-	ctx->locals->data[op0] = op1;
+	ctx->locals->data[index] = op0;
 	goto push_none;
 }
 op_DUP:

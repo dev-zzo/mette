@@ -3,7 +3,6 @@
 #include <ctype.h>
 #include "vm_misc.h"
 #include "vm_opcodes.in"
-#include "vm_opcodes_traits.h"
 
 static char *sanitize_mnem(const char *text)
 {
@@ -59,7 +58,7 @@ int main()
 	fclose(fd);
 	
 	fprintf(stdout, "Generating vm_asm.l.ops.tab.\n");
-	fd = fopen("vm_asm.l.ops.tab", "w");
+	fd = fopen("vma_lexer.ops.tab", "w");
 	for (index = 0; index < ARRAY_SIZE(opcodes); ++index) {
 		const char *mnem = opcodes[index].mnemonic;
 		if (mnem) {
