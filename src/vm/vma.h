@@ -160,10 +160,16 @@ struct vma_unit {
 	struct vma_insn_node *tail;
 };
 
-extern struct vma_unit *vma_current_unit;
-
 extern struct vma_unit *vma_build_unit();
 extern struct vma_unit *vma_append_unit(struct vma_unit *unit, struct vma_insn_node *node);
+
+/*
+ * Parsing
+ */
+
+struct vma_parser_state {
+	struct vma_unit *unit;
+};
 
 /* 
  * Helper functions
@@ -176,5 +182,6 @@ extern void vma_error(const char *format, ...);
 extern void vma_abort(const char *format, ...);
 
 extern int vma_errors;
+extern int vma_debug;
 
 #endif // __mette_vm_asm_h_included

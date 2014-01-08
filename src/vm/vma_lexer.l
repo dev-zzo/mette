@@ -6,7 +6,10 @@
 
 %{
 
+#include "vma.h"
 #include "vma_tokens.h"
+
+#define YY_DECL int yylex(struct vma_parser_state *state)
 
 %}
 
@@ -103,7 +106,7 @@ ID		{ALPHA}{ALNUM}*
 	BEGIN(COMMENT);
 }
 <COMMENT>[^\n]+ /* Ignored */ {
-	printf("Comment: %s\n", yytext);
+	//printf("Comment: %s\n", yytext);
 	BEGIN(INITIAL);
 }
 
@@ -125,3 +128,7 @@ ID		{ALPHA}{ALNUM}*
 
 %%
 
+void vma_lexer_set_input(FILE *input)
+{
+	yyrestart(input);
+}

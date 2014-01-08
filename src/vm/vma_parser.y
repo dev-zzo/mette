@@ -3,14 +3,24 @@
  * ref: http://www.gnu.org/software/bison/manual/bison.html
  */
 
+%debug
+
 %{
 
 #include "vma.h"
+#include <stdio.h>
+
+%}
+
+%lex-param {struct vma_parser_state *state}
+%parse-param {struct vma_parser_state *state}
+
+%{
 
 /* Globals... */
-extern int yylex (void);
+extern int yylex(struct vma_parser_state *state);
 
-static void yyerror(const char *msg);
+static void yyerror(struct vma_parser_state *state, const char *msg);
 
 %}
 
@@ -62,7 +72,8 @@ static void yyerror(const char *msg);
 %%
 
 unit
-	: /* empty */ { $$ = vma_current_unit = vma_build_unit(); }
+	: /* empty */ { $$ = state->unit = vma_build_unit(); }
+	| unit NEWLINE { $$ = $1; }
 	| unit stmt { $$ = vma_append_unit($1, $2); }
 ;
 
@@ -163,7 +174,16 @@ expr
 
 %%
 
-void yyerror(const char *msg)
+void yyerror(struct vma_parser_state *state, const char *msg)
 {
 	vma_error(msg);
+}
+
+extern void vma_lexer_set_input(FILE *input);
+
+int vma_parse_input(FILE *input, struct vma_parser_state *state)
+{
+	yydebug = vma_debug;
+	vma_lexer_set_input(input);
+	return yyparse(state);
 }

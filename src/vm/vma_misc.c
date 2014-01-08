@@ -26,11 +26,13 @@ void vma_error(const char *format, ...)
 	va_list args;
 
 	va_start(args, format);
+	fputs("error: ", stderr);
 	vfprintf(stderr, format, args);
+	fputc('\n', stderr);
 	va_end(args);
 
 	if (++vma_errors > VMA_MAX_ERRORS) {
-		vma_abort("error: too many errors, aborting.");
+		vma_abort("too many errors, aborting.");
 	}
 }
 
@@ -39,7 +41,9 @@ void vma_abort(const char *format, ...)
 	va_list args;
 
 	va_start(args, format);
+	fputs("fatal: ", stderr);
 	vfprintf(stderr, format, args);
+	fputc('\n', stderr);
 	va_end(args);
 
 	exit(1);

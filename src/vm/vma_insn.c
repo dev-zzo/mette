@@ -1,7 +1,5 @@
 #include "vma.h"
 
-struct vma_unit *vma_current_unit = NULL;
-
 struct vma_insn_node *vma_build_insn(enum vma_insn_type type)
 {
 	struct vma_insn_node *insn = (struct vma_insn_node *)vma_malloc(sizeof(*insn));
