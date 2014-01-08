@@ -20,29 +20,35 @@ int yyline = 1;
 DIGIT	[0-9]
 ALNUM	[0-9a-zA-Z_]
 ALPHA	[a-zA-Z_]
-WSPACE	[\t\v ]
+WSPACE	[\t\v\r ]
 ID		{ALPHA}{ALNUM}*
 
 %%
 
+/* Numbers: integers */
 ((0x|0X){DIGIT}+)|(0{DIGIT}+)|({DIGIT}+) {
 		yylval.integer = strtol(yytext, NULL, 0);
 		return INTEGER;
 	}
 
+/* Identifiers */
 {ID} {
-		yylval.text = yytext;
+		yylval.text = strdup(yytext);
 		return IDENTIFIER;
 	}
 
+/* Keywords */
 ".db" return KW_DB;
 ".dh" return KW_DH;
 ".dw" return KW_DW;
 
+/* Opcodes */
 [aA][dD][dD] return OP_ADD;
 [sS][uU][bB] return OP_SUB;
+[lL][dD][cC][.][8][.][uU] return OP_LDC_8_U;
 
-"#" { /* Comment */
+/* Comments */
+"#" {
 		BEGIN(COMMENT);
 	}
 <COMMENT>[^\n]+ /* Ignored */ {
@@ -51,6 +57,9 @@ ID		{ALPHA}{ALNUM}*
 	}
 
 {WSPACE}+ /* Ignored */
+
+/* Punctuation */
+[:,()+*-/|&^.@~] return yytext[0];
 
 "\n" return NEWLINE;
 
