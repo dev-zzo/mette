@@ -1,6 +1,8 @@
 #ifndef __mette_vm_asm_h_included
 #define __mette_vm_asm_h_included
 
+#include <stddef.h>
+
 struct vma_insn_node;
 
 /*
@@ -46,7 +48,7 @@ enum vma_expr_type {
 
 struct vma_expr_node {
 	struct vma_expr_node *next; /* in expr_list */
-	vma_expr_type type;
+	enum vma_expr_type type;
 	union {
 		int const_int;
 		struct vma_expr_node *child[2]; /* lhs, rhs */
@@ -58,7 +60,7 @@ extern struct vma_expr_node *vma_build_constant_expr(int value);
 extern struct vma_expr_node *vma_build_symref_expr(const char *name);
 extern struct vma_expr_node *vma_build_parent_expr
 (
-	vma_expr_type type,
+	enum vma_expr_type type,
 	struct vma_expr_node *a,
 	struct vma_expr_node *b
 );
@@ -129,23 +131,39 @@ enum vma_insn_type {
 	INSN_IJMP,
 	INSN_NCALL,
 
-	KW_DEFB,
-	KW_DEFH,
-	KW_DEFW,
-	KW_RESB,
-	KW_RESH,
-	KW_RESW,
+	INSN_DEFB,
+	INSN_DEFH,
+	INSN_DEFW,
+	INSN_RESB,
+	INSN_RESH,
+	INSN_RESW,
 };
 
 struct vma_insn_node {
 	struct vma_insn_node *next;
-	vma_insn_type type;
+	enum vma_insn_type type;
 	union {
-		struct vma_symref ref;
-		struct vma_expr *expr;
+		struct vma_symref symref;
+		struct vma_expr_node *expr;
 		struct vma_expr_list *expr_list;
 	} u;
 };
+
+extern struct vma_insn_node *vma_build_insn(enum vma_insn_type type);
+
+/*
+ * Translation unit
+ */
+
+struct vma_unit {
+	struct vma_insn_node *head;
+	struct vma_insn_node *tail;
+};
+
+extern struct vma_unit *vma_current_unit;
+
+extern struct vma_unit *vma_build_unit();
+extern struct vma_unit *vma_append_unit(struct vma_unit *unit, struct vma_insn_node *node);
 
 /* 
  * Helper functions

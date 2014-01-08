@@ -1,4 +1,5 @@
-#include "vm_asm.h"
+#include "vma.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 

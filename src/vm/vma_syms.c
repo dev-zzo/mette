@@ -1,4 +1,4 @@
-#include "vm_asm.h"
+#include "vma.h"
 
 static struct vma_symbol *vma_symtab;
 

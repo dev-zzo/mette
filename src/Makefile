@@ -1,5 +1,5 @@
 
-CFLAGS+=-I./ -I./vm/
+CFLAGS_FOR_TARGET+=-I./ -I./vm/
 
 OBJECTS:= \
 	main.o \
@@ -16,12 +16,12 @@ SUBTARGETS:= \
 all: $(SUBTARGETS) $(TARGETS)
 
 mette: main.o vm/mette-vm.a
-	$(LD) $(LDFLAGS) -Wl,--gc-sections -o $@ -Wl,-Map,mette.map $^
-	$(SIZE) $@
+	$(LD_FOR_TARGET) $(LDFLAGS_FOR_TARGET) -Wl,--gc-sections -o $@ -Wl,-Map,mette.map $^
+	$(SIZE_FOR_TARGET) $@
 	
 $(OBJECTS): %.o: %.c
-	$(CC) -c $(CFLAGS) -o $@ $<
-	$(SIZE) $@
+	$(CC_FOR_TARGET) -c $(CFLAGS_FOR_TARGET) -o $@ $<
+	$(SIZE_FOR_TARGET) $@
 
 $(SUBTARGETS):
 	$(MAKE) -C $@ all

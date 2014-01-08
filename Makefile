@@ -7,27 +7,41 @@ TARGET_ARCH:=mips
 export TARGET_ARCH
 
 ifeq ($(TARGET_ARCH), mips)
-TOOLS_PREFIX:=/home/user/x-tools/mips-unknown-linux-uclibc/bin/mips-unknown-linux-uclibc-
+TOOLS_SPEC:=mips-unknown-linux-uclibc
+TOOLS_PATH:=$(HOME)/x-tools/$(TOOLS_SPEC)/bin/$(TOOLS_SPEC)-
 CFLAGS_FOR_TARGET:=-DTARGET_IS_BE=1 -mdivide-traps -mno-check-zero-division # -save-temps
 endif
+ifeq ($(TARGET_ARCH), arm)
+TOOLS_SPEC:=arm-none-linux-uclibcgnueabi
+TOOLS_PATH:=$(HOME)/x-tools/$(TOOLS_SPEC)/bin/$(TOOLS_SPEC)-
+CFLAGS_FOR_TARGET:=-DTARGET_IS_BE=0
+endif
 ifeq ($(TARGET_ARCH), i386)
+TOOLS_PATH:=
+CFLAGS_FOR_TARGET:=-DTARGET_IS_BE=0
 endif
 
-# Build tools
-export HOST_CC:=gcc
-export CC:=$(TOOLS_PREFIX)gcc
-export LD:=$(TOOLS_PREFIX)gcc
-export AR:=$(TOOLS_PREFIX)ar
-export RANLIB:=$(TOOLS_PREFIX)ranlib
-export SIZE:=$(TOOLS_PREFIX)size
+# Target build tools
+export CC_FOR_TARGET:=$(TOOLS_PATH)gcc
+export LD_FOR_TARGET:=$(TOOLS_PATH)gcc
+export AR_FOR_TARGET:=$(TOOLS_PATH)ar
+export RANLIB_FOR_TARGET:=$(TOOLS_PATH)ranlib
+export SIZE_FOR_TARGET:=$(TOOLS_PATH)size
 
-# Build options
-CFLAGS:=-Os -std=c99 -ffreestanding -mno-abicalls -mno-shared -DTARGET_ARCH_$(TARGET_ARCH)=1 $(CFLAGS_FOR_TARGET)
-LDFLAGS:=-s -static $(LDFALGS_FOR_TARGET)
-export CFLAGS
-export LDFLAGS
+# Target build options
+CFLAGS_FOR_TARGET:=-Os -std=c99 -ffreestanding -mno-abicalls -mno-shared -DTARGET_ARCH_$(TARGET_ARCH)=1 $(CFLAGS_FOR_TARGET)
+LDFLAGS_FOR_TARGET:=-s -static $(LDFLAGS_FOR_TARGET)
+export CFLAGS_FOR_TARGET
+export LDFLAGS_FOR_TARGET
 
-export HOST_CFLAGS:=-O2 -std=c99
+
+# Host build tools
+export CC_FOR_HOST:=gcc
+export LD_FOR_HOST:=gcc
+
+export CFLAGS_FOR_HOST:=-O2 -D_BSD_SOURCE=1
+export LDFLAGS_FOR_HOST:=-s
+
 
 .PHONY: all src clean
 

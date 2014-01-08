@@ -1,17 +1,16 @@
 /*
  * VM assembly flex scanner.
  * ref: http://dinosaur.compilertools.net/flex/manpage.html
+ * ref: http://flex.sourceforge.net/manual/Bison-Bridge.html
  */
-
-%option noyywrap
 
 %{
 
 #include "vma_tokens.h"
 
-int yyline = 1;
-
 %}
+
+%option noyywrap
 
  /* Start conditions */
 %x COMMENT
@@ -27,9 +26,9 @@ ID		{ALPHA}{ALNUM}*
 
  /* Numbers: integers */
 ((0x|0X){DIGIT}+)|(0{DIGIT}+)|({DIGIT}+) {
-		yylval.integer = strtol(yytext, NULL, 0);
-		return INTEGER;
-	}
+	yylval.const_int = strtol(yytext, NULL, 0);
+	return INTEGER;
+}
 
  /* Keywords */
 [.][dD][eE][fF][bB] return KW_DEFB;
@@ -95,18 +94,18 @@ ID		{ALPHA}{ALNUM}*
 
  /* Identifiers */
 {ID} {
-		yylval.text = strdup(yytext);
-		return IDENTIFIER;
-	}
+	yylval.text = strdup(yytext);
+	return IDENTIFIER;
+}
 
  /* Comments */
 "#" {
-		BEGIN(COMMENT);
-	}
+	BEGIN(COMMENT);
+}
 <COMMENT>[^\n]+ /* Ignored */ {
-		printf("Comment: %s\n", yytext);
-		BEGIN(INITIAL);
-	}
+	printf("Comment: %s\n", yytext);
+	BEGIN(INITIAL);
+}
 
 {WSPACE}+ /* Ignored */
 
@@ -115,19 +114,14 @@ ID		{ALPHA}{ALNUM}*
 
 "\n" return NEWLINE;
 
-. {
-		printf("Unrecognized character: %s\n", yytext);
-	}
-%%
-
-int main(int argc, char *argv[])
-{
-	++argv, --argc;	/* skip over program name */
-	if ( argc > 0 )
-	   yyin = fopen( argv[0], "r" );
-	else
-	   yyin = stdin;
-
-	yylex();
+<<EOF>> {
+	return END;
 }
+
+. {
+	printf("Unrecognized character: %s\n", yytext);
+	return yytext[0];
+}
+
+%%
 

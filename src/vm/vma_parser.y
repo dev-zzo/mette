@@ -5,9 +5,12 @@
 
 %{
 
-#include "vm_asm.h"
+#include "vma.h"
 
 /* Globals... */
+extern int yylex (void);
+
+static void yyerror(const char *msg);
 
 %}
 
@@ -18,17 +21,17 @@
 	struct vma_expr_node *expr;
 	struct vma_expr_list *expr_list;
 	struct vma_insn_node *insn;
+	struct vma_unit *unit;
 }
 
+%token END 0 "end of file"
 %token NEWLINE
-%token EOF
 %type <sym> label
 %type <expr> expr
 %type <expr_list> expr_list
-%type <insn> op_insn
-%type <insn> kw_insn
 %type <insn> insn
 %type <insn> stmt
+%type <unit> unit
 %left '|'
 %left '&'
 %left '^'
@@ -58,38 +61,29 @@
 
 %%
 
-unit:
-	  /* empty */
-	| unit line
+unit
+	: /* empty */ { $$ = vma_current_unit = vma_build_unit(); }
+	| unit stmt { $$ = vma_append_unit($1, $2); }
 ;
 
-line:
-	  NEWLINE
-	| stmt NEWLINE
-	| stmt EOF
+newline.opt
+	: /* empty */
+	| NEWLINE
 ;
 
-stmt:
-	  insn { $$ = $1; }
-	| label insn { $$ = $2; $1->location = $$; }
+stmt
+	: insn newline.opt { $$ = $1; }
+	| label insn newline.opt { $$ = $2; $1->location = $$; }
 ;
 
-insn:
-	  kw_insn { $$ = $1; }
-	| op_insn { $$ = $1; }
-;
-
-kw_insn:
-	  KW_DEFB expr_list	{ $$ = vma_build_insn(INSN_DEFB); $$->u.expr_list = $2; }
+insn
+	: KW_DEFB expr_list	{ $$ = vma_build_insn(INSN_DEFB); $$->u.expr_list = $2; }
 	| KW_DEFH expr_list	{ $$ = vma_build_insn(INSN_DEFH); $$->u.expr_list = $2; }
 	| KW_DEFW expr_list	{ $$ = vma_build_insn(INSN_DEFW); $$->u.expr_list = $2; }
 	| KW_RESB expr_list	{ $$ = vma_build_insn(INSN_RESB); $$->u.expr_list = $2; }
 	| KW_RESH expr_list	{ $$ = vma_build_insn(INSN_RESH); $$->u.expr_list = $2; }
 	| KW_RESW expr_list	{ $$ = vma_build_insn(INSN_RESW); $$->u.expr_list = $2; }
-;
-
-op_insn:
-	  OP_ADD	{ $$ = vma_build_insn(INSN_ADD); }
+	| OP_ADD	{ $$ = vma_build_insn(INSN_ADD); }
 	| OP_SUB	{ $$ = vma_build_insn(INSN_SUB); }
 	| OP_MULU	{ $$ = vma_build_insn(INSN_MULU); }
 	| OP_MULS	{ $$ = vma_build_insn(INSN_MULS); }
@@ -125,7 +119,7 @@ op_insn:
 	| OP_LDM_32	{ $$ = vma_build_insn(INSN_LDM_32); }
 	| OP_STM_8	{ $$ = vma_build_insn(INSN_STM_8); }
 	| OP_STM_16	{ $$ = vma_build_insn(INSN_STM_16); }
-	| OP_STM_32	{ $$ = vma_build_insn(INSN_STM_32; }
+	| OP_STM_32	{ $$ = vma_build_insn(INSN_STM_32); }
 	| OP_LOCALS expr { $$ = vma_build_insn(INSN_LOCALS); $$->u.expr = $2; }
 	| OP_LDLOC expr { $$ = vma_build_insn(INSN_LDLOC); $$->u.expr = $2; }
 	| OP_STLOC expr { $$ = vma_build_insn(INSN_STLOC); $$->u.expr = $2; }
@@ -143,17 +137,17 @@ op_insn:
 	| OP_NCALL IDENTIFIER { $$ = vma_build_insn(INSN_NCALL); vma_init_symref(&$$->u.symref, $2); $$->u.symref.ncall = 1; } /* TBD */
 ;
 
-label:
-	  IDENTIFIER ':' { $$ = vma_define_symbol($1); }
+label
+	: IDENTIFIER ':' { $$ = vma_define_symbol($1); }
 ;
 
-expr_list:
-	  expr				{ $$ = vma_append_expr_list(vma_create_expr_list(), $1); }
+expr_list
+	: expr				{ $$ = vma_append_expr_list(vma_create_expr_list(), $1); }
 	| expr_list ',' expr { $$ = vma_append_expr_list($1, $3); }
 ;
 
-expr:
-	  INTEGER			{ $$ = vma_build_constant_expr($1); }
+expr
+	: INTEGER			{ $$ = vma_build_constant_expr($1); }
 	| '@' IDENTIFIER	{ $$ = vma_build_symref_expr($2); }
 	| expr '|' expr		{ $$ = vma_build_parent_expr(EXPR_OR, $1, $3); }
 	| expr '&' expr		{ $$ = vma_build_parent_expr(EXPR_AND, $1, $3); }
@@ -169,3 +163,7 @@ expr:
 
 %%
 
+void yyerror(const char *msg)
+{
+	vma_error(msg);
+}

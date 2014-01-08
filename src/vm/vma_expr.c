@@ -24,7 +24,7 @@ struct vma_expr_node *vma_build_symref_expr(const char *name)
 
 struct vma_expr_node *vma_build_parent_expr
 (
-	vma_expr_type type,
+	enum vma_expr_type type,
 	struct vma_expr_node *a,
 	struct vma_expr_node *b
 )
