@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 struct vma_insn_node;
 typedef uint32_t vma_vaddr_t;
@@ -136,19 +137,22 @@ enum vma_insn_type {
 	INSN_IJMP,
 	INSN_NCALL,
 
+	INSN_ASM_KEYWORDS,
+
 	INSN_DEFB,
 	INSN_DEFH,
 	INSN_DEFW,
 	INSN_RESB,
 	INSN_RESH,
 	INSN_RESW,
+
+	INSN_MAX,
 };
 
 struct vma_insn_node {
 	struct vma_insn_node *next;
 	enum vma_insn_type type;
 	vma_vaddr_t start_addr;
-	unsigned length;
 	union {
 		struct vma_symref symref;
 		struct vma_expr_node *expr;
@@ -157,6 +161,7 @@ struct vma_insn_node {
 };
 
 extern struct vma_insn_node *vma_build_insn(enum vma_insn_type type);
+extern void vma_output_insn(struct vma_insn_node *node);
 
 /*
  * Translation unit
@@ -174,11 +179,25 @@ extern struct vma_unit *vma_append_unit(struct vma_unit *unit, struct vma_insn_n
  * Parsing
  */
 
-struct vma_parser_state {
+struct vma_context {
+	FILE *input;
+	FILE *output;
 	struct vma_unit *unit;
+	vma_vaddr_t start_va;
+	vma_vaddr_t bss_va;
+	vma_vaddr_t end_va;
 };
 
-extern void vma_assemble(struct vma_unit *unit);
+extern void vma_assemble(struct vma_context *ctx);
+
+/*
+ * Output generation
+ */
+
+extern void vma_generate(struct vma_context *ctx);
+extern void vma_output_u8(uint8_t value);
+extern void vma_output_u16(uint16_t value);
+extern void vma_output_u32(uint32_t value);
 
 /* 
  * Helper functions

@@ -39,8 +39,8 @@ export LDFLAGS_FOR_TARGET
 export CC_FOR_HOST:=gcc
 export LD_FOR_HOST:=gcc
 
-export CFLAGS_FOR_HOST:=-O2 -D_BSD_SOURCE=1
-export LDFLAGS_FOR_HOST:=-s
+export CFLAGS_FOR_HOST:=-g -D_BSD_SOURCE=1
+export LDFLAGS_FOR_HOST:=-g
 
 
 .PHONY: all src clean

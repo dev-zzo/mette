@@ -48,7 +48,6 @@ static void vma_resolve_symrefs(struct vma_insn_node *list_head)
 	struct vma_insn_node *node = list_head;
 
 	while (node) {
-		node = node->next;
 		switch (node->type) {
 			case INSN_LDC_8_U:
 			case INSN_LDC_8_S:
@@ -77,14 +76,16 @@ static void vma_resolve_symrefs(struct vma_insn_node *list_head)
 				vma_resolve_symref(&node->u.symref);
 				break;
 		}
+		node = node->next;
 	}
 }
 
 /* Walk the list and estimate insn VAs and sizes */
-static void vma_estimate_insns(struct vma_insn_node *list_head, vma_vaddr_t start_va)
+static vma_vaddr_t vma_estimate_insns(struct vma_insn_node *list_head, vma_vaddr_t start_va, vma_vaddr_t *first_bss_va)
 {
 	struct vma_insn_node *node = list_head;
 	vma_vaddr_t next_va = start_va;
+	vma_vaddr_t bss_va = start_va;
 
 	while (node) {
 		node->start_addr = next_va;
@@ -129,7 +130,8 @@ static void vma_estimate_insns(struct vma_insn_node *list_head, vma_vaddr_t star
 			case INSN_RET:
 			case INSN_ICALL:
 			case INSN_IJMP:
-				node->length = 1;
+				next_va += 1;
+				bss_va = next_va;
 				break;
 
 			case INSN_LDC_8_U:
@@ -140,35 +142,53 @@ static void vma_estimate_insns(struct vma_insn_node *list_head, vma_vaddr_t star
 			case INSN_BR_S:
 			case INSN_BR_T:
 			case INSN_BR_F:
-				node->length = 1 + 1;
+				next_va += 1 + 1;
+				bss_va = next_va;
 				break;
 
 			case INSN_NCALL:
-				node->length = 1 + 2;
+				next_va += 1 + 2;
+				bss_va = next_va;
 				break;
 				
 			case INSN_LDC_32:
 			case INSN_BR_L:
 			case INSN_CALL:
-				node->length = 1 + 4;
+				next_va += 1 + 4;
+				bss_va = next_va;
 				break;
 				
 			case INSN_DEFB:
-			case INSN_RESB:
 				VMA_ASSERT(node->u.expr_list);
-				node->length = sizeof(uint8_t) * node->u.expr_list->count;
+				next_va += sizeof(uint8_t) * node->u.expr_list->count;
+				bss_va = next_va;
 				break;
 
 			case INSN_DEFH:
-			case INSN_RESH:
 				VMA_ASSERT(node->u.expr_list);
-				node->length = sizeof(uint16_t) * node->u.expr_list->count;
+				next_va += sizeof(uint16_t) * node->u.expr_list->count;
+				bss_va = next_va;
 				break;
 
 			case INSN_DEFW:
-			case INSN_RESW:
 				VMA_ASSERT(node->u.expr_list);
-				node->length = sizeof(uint32_t) * node->u.expr_list->count;
+				next_va += sizeof(uint32_t) * node->u.expr_list->count;
+				bss_va = next_va;
+				break;
+
+			case INSN_RESB:
+				VMA_ASSERT(node->u.expr);
+				next_va += sizeof(uint8_t) * node->u.expr->value;
+				break;
+
+			case INSN_RESH:
+				VMA_ASSERT(node->u.expr);
+				next_va += sizeof(uint16_t) * node->u.expr->value;
+				break;
+
+			case INSN_RESW:
+				VMA_ASSERT(node->u.expr);
+				next_va += sizeof(uint32_t) * node->u.expr->value;
 				break;
 
 			default:
@@ -176,17 +196,23 @@ static void vma_estimate_insns(struct vma_insn_node *list_head, vma_vaddr_t star
 				break;
 		}
 
-		next_va += node->length;
 		node = node->next;
 	}
+
+	if (first_bss_va) {
+		*first_bss_va = bss_va;
+	}
+
+	return next_va;
 }
 
-void vma_assemble(struct vma_unit *unit)
+void vma_assemble(struct vma_context *ctx)
 {
-	VMA_ASSERT(unit);
+	VMA_ASSERT(ctx);
+	VMA_ASSERT(ctx->unit);
 
-	vma_resolve_symrefs(unit->head);
+	vma_resolve_symrefs(ctx->unit->head);
 	vma_abort_on_errors();
-	vma_estimate_insns(unit->head, 0x00400000);
+	ctx->end_va = vma_estimate_insns(ctx->unit->head, ctx->start_va, &ctx->bss_va);
 	vma_abort_on_errors();
 }

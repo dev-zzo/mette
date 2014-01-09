@@ -27,7 +27,9 @@ struct vma_symbol *vma_define_symbol(const char *name)
 	sym->next = vma_symtab;
 	sym->name = name;
 	sym->location = NULL;
+	vma_symtab = sym;
 
+	vma_debug_print("new symbol defined: '%s'", name);
 	return sym;
 }
 

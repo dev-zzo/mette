@@ -9,7 +9,7 @@
 #include "vma.h"
 #include "vma_tokens.h"
 
-#define YY_DECL int yylex(struct vma_parser_state *state)
+#define YY_DECL int yylex(struct vma_context *state)
 
 %}
 
@@ -20,6 +20,8 @@
 
  /* Patterns */
 DIGIT	[0-9]
+HEXDIGIT [0-9a-fA-F]
+OCTDIGIT [0-7]
 ALNUM	[0-9a-zA-Z_]
 ALPHA	[a-zA-Z_]
 WSPACE	[\t\v\r ]
@@ -28,7 +30,7 @@ ID		{ALPHA}{ALNUM}*
 %%
 
  /* Numbers: integers */
-((0x|0X){DIGIT}+)|(0{DIGIT}+)|({DIGIT}+) {
+((0x|0X){HEXDIGIT}+)|(0{OCTDIGIT}+)|({DIGIT}+) {
 	yylval.const_int = strtol(yytext, NULL, 0);
 	return INTEGER;
 }
@@ -115,7 +117,7 @@ ID		{ALPHA}{ALNUM}*
  /* Punctuation */
 [:,()+*-/|&^.@~] return yytext[0];
 
-"\n" return NEWLINE;
+"\n" { }
 
 <<EOF>> {
 	return END;
