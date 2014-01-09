@@ -203,7 +203,10 @@ insn
 	| OP_IJMP
 		{ $$ = vma_insn_build(INSN_IJMP); }
 	| OP_NCALL IDENTIFIER
-		{ $$ = vma_insn_build(INSN_NCALL); vma_symref_init(&$$->u.symref, $2); }
+		{
+			$$ = vma_insn_build(INSN_NCALL);
+			$$->u.symref.u.sym = vma_symtab_define(&ctx->ncalls, $2, 0);
+		}
 ;
 
 label

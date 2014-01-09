@@ -189,6 +189,7 @@ struct _vma_context_t {
 	vma_vaddr_t end_va;
 };
 
+extern void vma_context_init(vma_context_t *ctx);
 extern void vma_assemble(vma_context_t *ctx);
 
 /*

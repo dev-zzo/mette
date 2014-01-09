@@ -69,3 +69,14 @@ void vma_debug_print(const char *format, ...)
 	fputc('\n', stderr);
 	va_end(args);
 }
+
+void vma_context_init(vma_context_t *ctx)
+{
+	ctx->output = ctx->input = NULL;
+	vma_symtab_init(&ctx->labels);
+	vma_symtab_init(&ctx->ncalls);
+	ctx->insns_tail = ctx->insns_head = NULL;
+	ctx->start_va = 0;
+	ctx->bss_va = 0;
+	ctx->end_va = 0;
+}

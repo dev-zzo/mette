@@ -1,8 +1,6 @@
 #include "vma.h"
 #include <stdint.h>
 
-#include "vma.h"
-
 /*******************************************************************************
  * Symbols
  */
@@ -29,7 +27,7 @@ vma_symbol_t *vma_symtab_define(vma_symtab_t *symtab, const char *name, int uniq
 	sym->next = symtab->head;
 	symtab->head = sym;
 	sym->name = name;
-	sym->u.id = ++symtab->count;
+	sym->u.id = symtab->count++;
 
 	vma_debug_print("new symbol defined: '%s' (%d)", name, sym->u.id);
 
@@ -313,7 +311,8 @@ void vma_insn_emit(vma_insn_t *node)
 			break;
 
 		case INSN_NCALL:
-			vma_output_u16(0xBABA); /* TODO... */
+			VMA_ASSERT(node->u.symref.u.sym);
+			vma_output_u16(node->u.symref.u.sym->u.id);
 			break;
 			
 		case INSN_LDC_32:
@@ -388,11 +387,11 @@ static void vma_insns_evaluate(vma_context_t *ctx)
 }
 
 /* Walk the list and estimate insn VAs and sizes */
-static vma_vaddr_t vma_insns_allocate(vma_insn_t *list_head, vma_vaddr_t start_va, vma_vaddr_t *first_bss_va)
+static void vma_insns_allocate(vma_context_t *ctx)
 {
-	vma_insn_t *node = list_head;
-	vma_vaddr_t next_va = start_va;
-	vma_vaddr_t bss_va = start_va;
+	vma_insn_t *node = ctx->insns_head;
+	vma_vaddr_t next_va = ctx->start_va;
+	vma_vaddr_t bss_va = ctx->start_va;
 
 	while (node) {
 		node->start_addr = next_va;
@@ -506,11 +505,8 @@ static vma_vaddr_t vma_insns_allocate(vma_insn_t *list_head, vma_vaddr_t start_v
 		node = node->next;
 	}
 
-	if (first_bss_va) {
-		*first_bss_va = bss_va;
-	}
-
-	return next_va;
+	ctx->end_va = next_va;
+	ctx->bss_va = bss_va;
 }
 
 void vma_assemble(vma_context_t *ctx)
@@ -519,6 +515,6 @@ void vma_assemble(vma_context_t *ctx)
 
 	vma_insns_evaluate(ctx);
 	vma_abort_on_errors();
-	ctx->end_va = vma_insns_allocate(ctx->insns_head, ctx->start_va, &ctx->bss_va);
+	vma_insns_allocate(ctx);
 	vma_abort_on_errors();
 }

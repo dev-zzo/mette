@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
 	FILE *input = NULL;
 	vma_context_t context;
 
+	vma_context_init(&context);
 	parse_args(argc, argv);
 
 	if (!input_path) {
