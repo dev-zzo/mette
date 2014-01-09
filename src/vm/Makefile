@@ -76,7 +76,7 @@ $(VMA_OBJECTS): %.o: %.c
 
 
 clean:
-	rm -f $(OBJECTS) *.i *.s
+	rm -f $(OBJECTS) $(VMA_OBJECTS) *.i *.s
 	rm -f $(TARGETS)
 	rm -f $(GENERATORS) $(GENERATED)
 

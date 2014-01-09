@@ -28,6 +28,7 @@ struct _vma_symbol_t {
 
 struct _vma_symtab_t {
 	vma_symbol_t *head;
+	vma_symbol_t *tail;
 	unsigned count;
 };
 
@@ -204,6 +205,8 @@ extern void vma_output_u32(uint32_t value);
 /* 
  * Helper functions
  */
+
+#define VMA_ALIGN(x,a) (((x) + (a) - 1) & ~((a) - 1))
 
 extern void *vma_malloc(size_t count);
 extern void vma_free(void *ptr);

@@ -7,7 +7,7 @@
 
 void vma_symtab_init(vma_symtab_t *symtab)
 {
-	symtab->head = NULL;
+	symtab->tail = symtab->head = NULL;
 	symtab->count = 0;
 }
 
@@ -24,12 +24,17 @@ vma_symbol_t *vma_symtab_define(vma_symtab_t *symtab, const char *name, int uniq
 
 	sym = (vma_symbol_t *)vma_malloc(sizeof(*sym));
 
-	sym->next = symtab->head;
-	symtab->head = sym;
+	sym->next = NULL;
 	sym->name = name;
 	sym->u.id = symtab->count++;
+	if (symtab->tail) {
+		symtab->tail->next = sym;
+	} else {
+		symtab->head = sym;
+	}
+	symtab->tail = sym;
 
-	vma_debug_print("new symbol defined: '%s' (%d)", name, sym->u.id);
+	vma_debug_print("symtab %p: new symbol: `%s' (%d/%p)", symtab, name, sym->u.id, sym);
 
 	return sym;
 }
@@ -113,6 +118,7 @@ uint32_t vma_expr_evaluate(vma_expr_t *expr, vma_context_t *ctx)
 
 	VMA_ASSERT(expr);
 
+	vma_debug_print("evaluating expr: %p", expr);
 	switch (expr->type) {
 		case EXPR_CONSTANT:
 			break;
@@ -204,13 +210,13 @@ vma_expr_list_t *vma_expr_list_create(void)
 
 vma_expr_list_t *vma_expr_list_append(vma_expr_list_t *list, vma_expr_t *node)
 {
+	node->next = NULL;
 	if (list->tail) {
 		list->tail->next = node;
-		node->next = NULL;
-		list->tail = node;
 	} else {
-		list->tail = list->head = node;
+		list->head = node;
 	}
+	list->tail = node;
 	list->count++;
 	return list;
 }
@@ -244,6 +250,7 @@ vma_insn_t *vma_insn_build(vma_insn_type_t type)
 
 void vma_insn_evaluate(vma_insn_t *insn, vma_context_t *ctx)
 {
+	vma_debug_print("evaluating insn %p", insn);
 	switch (insn->type) {
 		case INSN_LDC_8_U:
 		case INSN_LDC_8_S:
@@ -272,7 +279,7 @@ void vma_insn_evaluate(vma_insn_t *insn, vma_context_t *ctx)
 			break;
 
 		case INSN_NCALL:
-			vma_symref_resolve(&insn->u.symref, &ctx->ncalls);
+			//vma_symref_resolve(&insn->u.symref, &ctx->ncalls);
 			break;
 	}
 }
@@ -472,12 +479,16 @@ static void vma_insns_allocate(vma_context_t *ctx)
 
 			case INSN_DEFH:
 				VMA_ASSERT(node->u.expr_list);
+				node->start_addr = VMA_ALIGN(node->start_addr, 2);
+				next_va = VMA_ALIGN(next_va, 2);
 				next_va += sizeof(uint16_t) * node->u.expr_list->count;
 				bss_va = next_va;
 				break;
 
 			case INSN_DEFW:
 				VMA_ASSERT(node->u.expr_list);
+				node->start_addr = VMA_ALIGN(node->start_addr, 4);
+				next_va = VMA_ALIGN(next_va, 4);
 				next_va += sizeof(uint32_t) * node->u.expr_list->count;
 				bss_va = next_va;
 				break;
@@ -489,11 +500,15 @@ static void vma_insns_allocate(vma_context_t *ctx)
 
 			case INSN_RESH:
 				VMA_ASSERT(node->u.expr);
+				node->start_addr = VMA_ALIGN(node->start_addr, 2);
+				next_va = VMA_ALIGN(next_va, 2);
 				next_va += sizeof(uint16_t) * node->u.expr->value;
 				break;
 
 			case INSN_RESW:
 				VMA_ASSERT(node->u.expr);
+				node->start_addr = VMA_ALIGN(node->start_addr, 4);
+				next_va = VMA_ALIGN(next_va, 4);
 				next_va += sizeof(uint32_t) * node->u.expr->value;
 				break;
 
@@ -501,6 +516,8 @@ static void vma_insns_allocate(vma_context_t *ctx)
 				vma_abort("%s:%d:internal error: unhandled insn type %d", __FILE__, __LINE__, node->type);
 				break;
 		}
+
+		vma_debug_print("alloc: %p (%d): at %08X", node, node->type, node->start_addr);
 
 		node = node->next;
 	}
@@ -513,6 +530,7 @@ void vma_assemble(vma_context_t *ctx)
 {
 	VMA_ASSERT(ctx);
 
+	vma_debug_print("%p: %p/%p", ctx, ctx->insns_head, ctx->insns_tail);
 	vma_insns_evaluate(ctx);
 	vma_abort_on_errors();
 	vma_insns_allocate(ctx);

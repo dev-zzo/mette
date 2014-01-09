@@ -77,7 +77,15 @@ unit
 	: /* empty */
 		{ ctx->insns_tail = ctx->insns_head = NULL; }
 	| unit stmt
-		{ if (ctx->insns_tail) { $2->next = ctx->insns_tail; } else { ctx->insns_head = $2; } ctx->insns_tail = $2; }
+		{
+			if (ctx->insns_tail) {
+				ctx->insns_tail->next = $2;
+			} else {
+				ctx->insns_head = $2;				
+			}
+			ctx->insns_tail = $2;
+			vma_debug_print("%p/%p", ctx->insns_head, ctx->insns_tail);
+		}
 ;
 
 stmt
@@ -262,7 +270,7 @@ int vma_parse_input(vma_context_t *ctx)
 	VMA_ASSERT(ctx);
 	VMA_ASSERT(ctx->input);
 
-	yydebug = vma_debug;
+	//yydebug = vma_debug;
 	vma_lexer_set_input(ctx->input);
 	return yyparse(ctx);
 }
