@@ -85,7 +85,7 @@ stmt
 	: insn
 		{ $$ = $1; }
 	| label insn
-		{ $$ = $2; $1->location = $$; }
+		{ $$ = $2; $1->u.location = $$; }
 ;
 
 insn

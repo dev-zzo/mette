@@ -15,7 +15,10 @@ typedef uint32_t vma_vaddr_t;
 struct vma_symbol {
 	struct vma_symbol *next;
 	const char *name;
-	struct vma_insn_node *location;
+	union {
+		uint32_t hash;
+		struct vma_insn_node *location;
+	} u;
 };
 
 struct vma_symref {
@@ -29,6 +32,8 @@ struct vma_symref {
 
 extern struct vma_symbol *vma_lookup_symbol(const char *name);
 extern struct vma_symbol *vma_define_symbol(const char *name);
+extern struct vma_symbol *vma_lookup_ncall_symbol(const char *name);
+extern struct vma_symbol *vma_define_ncall_symbol(const char *name);
 extern void vma_init_symref(struct vma_symref *ref, const char *name);
 extern int vma_resolve_symref(struct vma_symref *ref);
 

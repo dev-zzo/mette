@@ -16,6 +16,10 @@ routine1 :
 	add
 	ret
 
+_exit:
+	ncall _exit
+	ret
+
 randomdata:
 	.defb 0xAA, 0xBB, 0xCC, 0xDD, 0xEE
 
