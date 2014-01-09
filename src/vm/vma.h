@@ -2,8 +2,10 @@
 #define __mette_vm_asm_h_included
 
 #include <stddef.h>
+#include <stdint.h>
 
 struct vma_insn_node;
+typedef uint32_t vma_vaddr_t;
 
 /*
  * Symbols
@@ -27,6 +29,7 @@ struct vma_symref {
 extern struct vma_symbol *vma_lookup_symbol(const char *name);
 extern struct vma_symbol *vma_define_symbol(const char *name);
 extern void vma_init_symref(struct vma_symref *ref, const char *name);
+extern int vma_resolve_symref(struct vma_symref *ref);
 
 /*
  * Expressions
@@ -49,8 +52,8 @@ enum vma_expr_type {
 struct vma_expr_node {
 	struct vma_expr_node *next; /* in expr_list */
 	enum vma_expr_type type;
+	uint32_t value;
 	union {
-		int const_int;
 		struct vma_expr_node *child[2]; /* lhs, rhs */
 		struct vma_symref symref;
 	} u;
@@ -64,13 +67,15 @@ extern struct vma_expr_node *vma_build_parent_expr
 	struct vma_expr_node *a,
 	struct vma_expr_node *b
 );
+extern uint32_t vma_evaluate_expr(struct vma_expr_node *expr);
 
 struct vma_expr_list {
 	struct vma_expr_node *head;
 	struct vma_expr_node *tail;
+	unsigned count;
 };
 
-extern struct vma_expr_list *vma_create_expr_list();
+extern struct vma_expr_list *vma_create_expr_list(void);
 extern struct vma_expr_list *vma_append_expr_list(struct vma_expr_list *list, struct vma_expr_node *node);
 
 /*
@@ -142,6 +147,8 @@ enum vma_insn_type {
 struct vma_insn_node {
 	struct vma_insn_node *next;
 	enum vma_insn_type type;
+	vma_vaddr_t start_addr;
+	unsigned length;
 	union {
 		struct vma_symref symref;
 		struct vma_expr_node *expr;
@@ -171,6 +178,8 @@ struct vma_parser_state {
 	struct vma_unit *unit;
 };
 
+extern void vma_assemble(struct vma_unit *unit);
+
 /* 
  * Helper functions
  */
@@ -178,8 +187,12 @@ struct vma_parser_state {
 extern void *vma_malloc(size_t count);
 extern void vma_free(void *ptr);
 
+#define VMA_ASSERT(cond) (cond) ? (void)0 : vma_abort("%s:%d: assertion failed: %s", __FILE__, __LINE__, #cond)
+
 extern void vma_error(const char *format, ...);
 extern void vma_abort(const char *format, ...);
+extern void vma_abort_on_errors(void);
+extern void vma_debug_print(const char *format, ...);
 
 extern int vma_errors;
 extern int vma_debug;

@@ -22,7 +22,7 @@ struct vma_symbol *vma_define_symbol(const char *name)
 		return NULL;
 	}
 
-	sym = (struct vma_symbol *)malloc(sizeof(*sym));
+	sym = (struct vma_symbol *)vma_malloc(sizeof(*sym));
 
 	sym->next = vma_symtab;
 	sym->name = name;
@@ -36,4 +36,22 @@ void vma_init_symref(struct vma_symref *ref, const char *name)
 	ref->u.name = name;
 	ref->resolved = 0;
 	ref->ncall = 0;
+}
+
+int vma_resolve_symref(struct vma_symref *ref)
+{
+	struct vma_symbol *sym;
+
+	VMA_ASSERT(ref->resolved == 0);
+	VMA_ASSERT(ref->u.name);
+
+	sym = vma_lookup_symbol(ref->u.name);
+	if (!sym) {
+		vma_error("unresolved symbol: `%s'", ref->u.name);
+		return 0;
+	}
+
+	ref->u.sym = sym;
+	ref->resolved = 1;
+	return 1;
 }

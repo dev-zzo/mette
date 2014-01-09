@@ -32,7 +32,7 @@ void vma_error(const char *format, ...)
 	va_end(args);
 
 	if (++vma_errors > VMA_MAX_ERRORS) {
-		vma_abort("too many errors, aborting.");
+		vma_abort("too many errors to continue.");
 	}
 }
 
@@ -47,4 +47,25 @@ void vma_abort(const char *format, ...)
 	va_end(args);
 
 	exit(1);
+}
+
+void vma_abort_on_errors(void)
+{
+	if (vma_errors) {
+		vma_abort("errors encountered, aborting.");
+	}
+}
+
+void vma_debug_print(const char *format, ...)
+{
+	va_list args;
+
+	if (!vma_debug)
+		return;
+
+	va_start(args, format);
+	fputs("debug: ", stderr);
+	vfprintf(stderr, format, args);
+	fputc('\n', stderr);
+	va_end(args);
 }

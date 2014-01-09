@@ -58,6 +58,7 @@ VMA_OBJECTS:= \
 	vma_misc.o \
 	vma_syms.o \
 	vma_insn.o \
+	vma_asm.o \
 	vma.o
 
 vma: $(VMA_OBJECTS)

@@ -75,25 +75,21 @@ int main(int argc, char *argv[])
 	parse_args(argc, argv);
 
 	if (!input_path) {
-		vma_error("no input file.");
-		rv = 1;
-		goto exit0;
+		vma_abort("no input file.");
 	}
 
 	input = fopen(input_path, "r");
 	if (!input) {
-		vma_error("could not open input file '%s'.", input_path);
-		rv = 1;
-		goto exit0;
+		vma_abort("could not open input file '%s'.", input_path);
 	}
 
-	if (vma_parse_input(input, &parser_state)) {
-		vma_error("parsing error(s) encountered; stopping.");
-		rv = 2;
-		goto exit1;
-	}
+	vma_debug_print("stage: parser");
+	vma_parse_input(input, &parser_state);
+	vma_abort_on_errors();
 
-	/* TBD: assemble? */
+	vma_debug_print("stage: assembler");
+	vma_assemble(parser_state.unit);
+	vma_abort_on_errors();
 
 	/* TBD: write the result */
 
