@@ -9,7 +9,7 @@
 #include "vma.h"
 #include "vma_tokens.h"
 
-#define YY_DECL int yylex(struct vma_context *state)
+#define YY_DECL int yylex(vma_context_t *state)
 
 %}
 

@@ -32,13 +32,25 @@ void vma_output_u32(uint32_t value)
 	}
 }
 
-void vma_generate(struct vma_context *ctx)
+static uint32_t vma_hash_name(const char *name)
 {
-	struct vma_insn_node *insn;
+	uint32_t hash = 0;
+	const char *ptr = name;
+
+	while (*ptr) {
+		hash = hash * 7 + *ptr;
+		ptr++;
+	}
+
+	return hash;
+}
+
+void vma_generate(vma_context_t *ctx)
+{
+	vma_insn_t *insn;
 
 	VMA_ASSERT(ctx);
 	VMA_ASSERT(ctx->output);
-	VMA_ASSERT(ctx->unit);
 
 	stream = ctx->output;
 
@@ -47,9 +59,9 @@ void vma_generate(struct vma_context *ctx)
 	vma_output_u32(ctx->end_va - ctx->start_va);
 	vma_output_u32(ctx->bss_va - ctx->start_va);
 
-	insn = ctx->unit->head;
+	insn = ctx->insns_head;
 	while (insn && insn->start_addr < ctx->bss_va) {
-		vma_output_insn(insn);
+		vma_insn_emit(insn);
 		insn = insn->next;
 	}
 }

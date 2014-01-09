@@ -1,89 +1,396 @@
 #include "vma.h"
 #include <stdint.h>
 
-static void vma_resolve_symrefs_expr(struct vma_expr_node *node)
-{
-	VMA_ASSERT(node);
+#include "vma.h"
 
-	switch (node->type) {
+/*******************************************************************************
+ * Symbols
+ */
+
+void vma_symtab_init(vma_symtab_t *symtab)
+{
+	symtab->head = NULL;
+	symtab->count = 0;
+}
+
+vma_symbol_t *vma_symtab_define(vma_symtab_t *symtab, const char *name, int unique)
+{
+	vma_symbol_t *sym = vma_symtab_lookup(symtab, name);
+	if (sym) {
+		if (unique) {
+			vma_error("symbol '%s' already defined", name);
+			return NULL;
+		}
+		return sym;
+	}
+
+	sym = (vma_symbol_t *)vma_malloc(sizeof(*sym));
+
+	sym->next = symtab->head;
+	symtab->head = sym;
+	sym->name = name;
+	sym->u.id = ++symtab->count;
+
+	vma_debug_print("new symbol defined: '%s' (%d)", name, sym->u.id);
+
+	return sym;
+}
+
+vma_symbol_t *vma_symtab_lookup(const vma_symtab_t *symtab, const char *name)
+{
+	vma_symbol_t *sym = symtab->head;
+
+	while (sym) {
+		if (!strcmp(sym->name, name)) {
+			break;
+		}
+		sym = sym->next;
+	}
+
+	return sym;
+}
+
+void vma_symref_init(vma_symref_t *ref, const char *name)
+{
+	ref->u.name = name;
+}
+
+int vma_symref_resolve(vma_symref_t *ref, vma_symtab_t *symtab)
+{
+	vma_symbol_t *sym;
+
+	VMA_ASSERT(ref->u.name);
+
+	sym = vma_symtab_lookup(symtab, ref->u.name);
+	if (!sym) {
+		vma_error("unresolved symbol: `%s'", ref->u.name);
+		return 0;		
+	}
+
+	ref->u.sym = sym;
+	return 1;
+}
+
+/*******************************************************************************
+ * Expressions
+ */
+
+vma_expr_t *vma_expr_build_constant(int value)
+{
+	vma_expr_t *node = (vma_expr_t *)vma_malloc(sizeof(*node));
+
+	node->next = NULL;
+	node->type = EXPR_CONSTANT;
+	node->value = value;
+
+	return node;
+}
+
+vma_expr_t *vma_expr_build_symref(const char *name)
+{
+	vma_expr_t *node = (vma_expr_t *)vma_malloc(sizeof(*node));
+
+	node->next = NULL;
+	node->type = EXPR_SYMREF;
+	vma_symref_init(&node->u.symref, name);
+
+	return node;
+}
+
+vma_expr_t *vma_expr_build_parent(vma_expr_type_t type, vma_expr_t *a, vma_expr_t *b)
+{
+	vma_expr_t *node = (vma_expr_t *)vma_malloc(sizeof(*node));
+
+	node->next = NULL;
+	node->type = type;
+	node->u.child[0] = a;
+	node->u.child[1] = b;
+
+	return node;
+}
+
+uint32_t vma_expr_evaluate(vma_expr_t *expr, vma_context_t *ctx)
+{
+	uint32_t lhs, rhs;
+
+	VMA_ASSERT(expr);
+
+	switch (expr->type) {
+		case EXPR_CONSTANT:
+			break;
+
 		case EXPR_SYMREF:
-			vma_resolve_symref(&node->u.symref);
+			if (vma_symref_resolve(&expr->u.symref, &ctx->labels)) {
+				expr->value = expr->u.symref.u.sym->u.location->start_addr;
+			} else {
+				expr->value = 0;
+			}
 			break;
 
 		case EXPR_OR:
+			lhs = vma_expr_evaluate(expr->u.child[0], ctx);
+			rhs = vma_expr_evaluate(expr->u.child[1], ctx);
+			expr->value = lhs | rhs;
+			break;
+
 		case EXPR_AND:
+			lhs = vma_expr_evaluate(expr->u.child[0], ctx);
+			rhs = vma_expr_evaluate(expr->u.child[1], ctx);
+			expr->value = lhs & rhs;
+			break;
+
 		case EXPR_XOR:
+			lhs = vma_expr_evaluate(expr->u.child[0], ctx);
+			rhs = vma_expr_evaluate(expr->u.child[1], ctx);
+			expr->value = lhs ^ rhs;
+			break;
+
 		case EXPR_ADD:
+			lhs = vma_expr_evaluate(expr->u.child[0], ctx);
+			rhs = vma_expr_evaluate(expr->u.child[1], ctx);
+			expr->value = lhs + rhs;
+			break;
+
 		case EXPR_SUB:
+			lhs = vma_expr_evaluate(expr->u.child[0], ctx);
+			rhs = vma_expr_evaluate(expr->u.child[1], ctx);
+			expr->value = lhs - rhs;
+			break;
+
 		case EXPR_MUL:
+			lhs = vma_expr_evaluate(expr->u.child[0], ctx);
+			rhs = vma_expr_evaluate(expr->u.child[1], ctx);
+			expr->value = lhs * rhs;
+			break;
+
 		case EXPR_DIV:
-			vma_resolve_symrefs_expr(node->u.child[1]);
-			/* fall-through */
+			lhs = vma_expr_evaluate(expr->u.child[0], ctx);
+			rhs = vma_expr_evaluate(expr->u.child[1], ctx);
+			if (rhs == 0) {
+				/* TODO: location tracking. */
+				vma_error("divisor evaluates to zero");
+				expr->value = 1;
+			} else {
+				expr->value = lhs / rhs;
+			}
+			break;
 
 		case EXPR_NEG:
+			rhs = vma_expr_evaluate(expr->u.child[0], ctx);
+			expr->value = -rhs;
+			break;
+
 		case EXPR_NOT:
-			vma_resolve_symrefs_expr(node->u.child[0]);
+			rhs = vma_expr_evaluate(expr->u.child[0], ctx);
+			expr->value = ~rhs;
 			break;
 
 		default:
+			vma_abort("%s:%d:internal error: unhandled expr type %d", __FILE__, __LINE__, expr->type);
+			return 0;
+	}
+	return expr->value;
+}
+
+/*******************************************************************************
+ * Expression lists
+ */
+
+vma_expr_list_t *vma_expr_list_create(void)
+{
+	vma_expr_list_t *list = (vma_expr_list_t *)vma_malloc(sizeof(*list));
+	list->tail = list->head = NULL;
+	list->count = 0;
+	return list;
+}
+
+vma_expr_list_t *vma_expr_list_append(vma_expr_list_t *list, vma_expr_t *node)
+{
+	if (list->tail) {
+		list->tail->next = node;
+		node->next = NULL;
+		list->tail = node;
+	} else {
+		list->tail = list->head = node;
+	}
+	list->count++;
+	return list;
+}
+
+void vma_expr_list_evaluate(vma_expr_list_t *list, vma_context_t *ctx)
+{
+	vma_expr_t *expr;
+
+	VMA_ASSERT(list);
+
+	expr = list->head;
+	while (expr) {
+		vma_expr_evaluate(expr, ctx);
+		expr = expr->next;
+	}
+}
+
+/*******************************************************************************
+ * Instructions
+ */
+
+vma_insn_t *vma_insn_build(vma_insn_type_t type)
+{
+	vma_insn_t *insn = (vma_insn_t *)vma_malloc(sizeof(*insn));
+
+	insn->next = NULL;
+	insn->type = type;
+
+	return insn;
+}
+
+void vma_insn_evaluate(vma_insn_t *insn, vma_context_t *ctx)
+{
+	switch (insn->type) {
+		case INSN_LDC_8_U:
+		case INSN_LDC_8_S:
+		case INSN_LDC_32:
+		case INSN_LOCALS:
+		case INSN_LDLOC:
+		case INSN_STLOC:
+		case INSN_RESB:
+		case INSN_RESH:
+		case INSN_RESW:
+			vma_expr_evaluate(insn->u.expr, ctx);
+			break;
+			
+		case INSN_DEFB:
+		case INSN_DEFH:
+		case INSN_DEFW:
+			vma_expr_list_evaluate(insn->u.expr_list, ctx);
+			break;
+
+		case INSN_BR_S:
+		case INSN_BR_L:
+		case INSN_BR_T:
+		case INSN_BR_F:
+		case INSN_CALL:
+			vma_symref_resolve(&insn->u.symref, &ctx->labels);
+			break;
+
+		case INSN_NCALL:
+			vma_symref_resolve(&insn->u.symref, &ctx->ncalls);
 			break;
 	}
 }
 
-static void vma_resolve_symrefs_expr_list(struct vma_expr_list *list)
+void vma_insn_emit(vma_insn_t *node)
 {
-	struct vma_expr_node *node;
+#include "vma_insn.ops.tab"
 
-	VMA_ASSERT(list);
+	uint32_t diff;
+	uint32_t count;
+	vma_expr_t *expr;
 
-	node = list->head;
-	while (node) {
-		vma_resolve_symrefs_expr(node);
-		node = node->next;
+	VMA_ASSERT(node);
+
+	if (node->type < INSN_ASM_KEYWORDS) {
+		vma_output_u8(vma_insn_to_opcode[node->type]);
+	}
+
+	switch (node->type) {
+		case INSN_LDC_8_U:
+		case INSN_LDC_8_S:
+		case INSN_LOCALS:
+		case INSN_LDLOC:
+		case INSN_STLOC:
+			vma_output_u8((uint8_t)node->u.expr->value);
+			break;
+
+		case INSN_BR_S:
+		case INSN_BR_T:
+		case INSN_BR_F:
+			diff = node->u.expr->value - node->start_addr;
+			if (diff & 0xFFFFFF00) {
+				vma_error("branch target out of range");
+			}
+			vma_output_u8((uint8_t)diff);
+			break;
+
+		case INSN_NCALL:
+			vma_output_u16(0xBABA); /* TODO... */
+			break;
+			
+		case INSN_LDC_32:
+			vma_output_u32(node->u.expr->value);
+			break;
+
+		case INSN_BR_L:
+		case INSN_CALL:
+			diff = node->u.expr->value - node->start_addr;
+			vma_output_u32(diff);
+			break;
+			
+		case INSN_DEFB:
+			expr = node->u.expr_list->head;
+			while (expr) {
+				vma_output_u8((uint8_t)expr->value);
+				expr = expr->next;
+			}
+			break;
+
+		case INSN_DEFH:
+			expr = node->u.expr_list->head;
+			while (expr) {
+				vma_output_u16((uint16_t)expr->value);
+				expr = expr->next;
+			}
+			break;
+
+		case INSN_DEFW:
+			expr = node->u.expr_list->head;
+			while (expr) {
+				vma_output_u32((uint32_t)expr->value);
+				expr = expr->next;
+			}
+			break;
+
+		case INSN_RESB:
+			count = node->u.expr->value;
+			while (count--) {
+				vma_output_u8(0xCC);
+			}
+			break;
+
+		case INSN_RESH:
+			count = node->u.expr->value;
+			while (count--) {
+				vma_output_u16(0xCCCC);
+			}
+			break;
+			
+		case INSN_RESW:
+			count = node->u.expr->value;
+			while (count--) {
+				vma_output_u32(0xCCCCCCCC);
+			}
+			break;
 	}
 }
 
-static void vma_resolve_symrefs(struct vma_insn_node *list_head)
+/*******************************************************************************
+ * Assembly
+ */
+
+static void vma_insns_evaluate(vma_context_t *ctx)
 {
-	struct vma_insn_node *node = list_head;
+	vma_insn_t *node = ctx->insns_head;
 
 	while (node) {
-		switch (node->type) {
-			case INSN_LDC_8_U:
-			case INSN_LDC_8_S:
-			case INSN_LDC_32:
-			case INSN_LOCALS:
-			case INSN_LDLOC:
-			case INSN_STLOC:
-				vma_resolve_symrefs_expr(node->u.expr);
-				break;
-				
-			case INSN_DEFB:
-			case INSN_RESB:
-			case INSN_DEFH:
-			case INSN_RESH:
-			case INSN_DEFW:
-			case INSN_RESW:
-				vma_resolve_symrefs_expr_list(node->u.expr_list);
-				break;
-
-			case INSN_BR_S:
-			case INSN_BR_L:
-			case INSN_BR_T:
-			case INSN_BR_F:
-			case INSN_CALL:
-			case INSN_NCALL:
-				vma_resolve_symref(&node->u.symref);
-				break;
-		}
+		vma_insn_evaluate(node, ctx);
 		node = node->next;
 	}
 }
 
 /* Walk the list and estimate insn VAs and sizes */
-static vma_vaddr_t vma_estimate_insns(struct vma_insn_node *list_head, vma_vaddr_t start_va, vma_vaddr_t *first_bss_va)
+static vma_vaddr_t vma_insns_allocate(vma_insn_t *list_head, vma_vaddr_t start_va, vma_vaddr_t *first_bss_va)
 {
-	struct vma_insn_node *node = list_head;
+	vma_insn_t *node = list_head;
 	vma_vaddr_t next_va = start_va;
 	vma_vaddr_t bss_va = start_va;
 
@@ -206,13 +513,12 @@ static vma_vaddr_t vma_estimate_insns(struct vma_insn_node *list_head, vma_vaddr
 	return next_va;
 }
 
-void vma_assemble(struct vma_context *ctx)
+void vma_assemble(vma_context_t *ctx)
 {
 	VMA_ASSERT(ctx);
-	VMA_ASSERT(ctx->unit);
 
-	vma_resolve_symrefs(ctx->unit->head);
+	vma_insns_evaluate(ctx);
 	vma_abort_on_errors();
-	ctx->end_va = vma_estimate_insns(ctx->unit->head, ctx->start_va, &ctx->bss_va);
+	ctx->end_va = vma_insns_allocate(ctx->insns_head, ctx->start_va, &ctx->bss_va);
 	vma_abort_on_errors();
 }

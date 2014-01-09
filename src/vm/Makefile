@@ -57,10 +57,7 @@ vm_gen_opcodes: vm_gen_opcodes.c vm_opcodes.in
 VMA_OBJECTS:= \
 	vma_parser.o \
 	vma_lexer.o \
-	vma_expr.o \
 	vma_misc.o \
-	vma_syms.o \
-	vma_insn.o \
 	vma_asm.o \
 	vma_out.o \
 	vma.o

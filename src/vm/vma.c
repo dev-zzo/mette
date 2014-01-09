@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 
-extern int vma_parse_input(struct vma_context *ctx);
+extern int vma_parse_input(vma_context_t *ctx);
 
 int vma_debug = 1;
 
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 {
 	int rv = 0;
 	FILE *input = NULL;
-	struct vma_context context;
+	vma_context_t context;
 
 	parse_args(argc, argv);
 

@@ -12,25 +12,25 @@
 
 %}
 
-%lex-param {struct vma_context *ctx}
-%parse-param {struct vma_context *ctx}
+%lex-param {vma_context_t *ctx}
+%parse-param {vma_context_t *ctx}
 
 %{
 
 /* Globals... */
-extern int yylex(struct vma_context *ctx);
+extern int yylex(vma_context_t *ctx);
 
-static void yyerror(struct vma_context *ctx, const char *msg);
+static void yyerror(vma_context_t *ctx, const char *msg);
 
 %}
 
 %union {
 	int const_int;
 	const char *text;
-	struct vma_symbol *sym;
-	struct vma_expr_node *expr;
-	struct vma_expr_list *expr_list;
-	struct vma_insn_node *insn;
+	vma_symbol_t *sym;
+	vma_expr_t *expr;
+	vma_expr_list_t *expr_list;
+	vma_insn_t *insn;
 	struct vma_unit *unit;
 }
 
@@ -41,7 +41,6 @@ static void yyerror(struct vma_context *ctx, const char *msg);
 %type <expr_list> expr_list
 %type <insn> insn
 %type <insn> stmt
-%type <unit> unit
 %left '|'
 %left '&'
 %left '^'
@@ -76,9 +75,9 @@ static void yyerror(struct vma_context *ctx, const char *msg);
 
 unit
 	: /* empty */
-		{ $$ = ctx->unit = vma_build_unit(); }
+		{ ctx->insns_tail = ctx->insns_head = NULL; }
 	| unit stmt
-		{ $$ = vma_append_unit($1, $2); }
+		{ if (ctx->insns_tail) { $2->next = ctx->insns_tail; } else { ctx->insns_head = $2; } ctx->insns_tail = $2; }
 ;
 
 stmt
@@ -90,172 +89,172 @@ stmt
 
 insn
 	: KW_DEFB expr_list
-		{ $$ = vma_build_insn(INSN_DEFB); $$->u.expr_list = $2; }
+		{ $$ = vma_insn_build(INSN_DEFB); $$->u.expr_list = $2; }
 	| KW_DEFH expr_list
-		{ $$ = vma_build_insn(INSN_DEFH); $$->u.expr_list = $2; }
+		{ $$ = vma_insn_build(INSN_DEFH); $$->u.expr_list = $2; }
 	| KW_DEFW expr_list
-		{ $$ = vma_build_insn(INSN_DEFW); $$->u.expr_list = $2; }
+		{ $$ = vma_insn_build(INSN_DEFW); $$->u.expr_list = $2; }
 	| KW_RESB expr
-		{ $$ = vma_build_insn(INSN_RESB); $$->u.expr = $2; }
+		{ $$ = vma_insn_build(INSN_RESB); $$->u.expr = $2; }
 	| KW_RESH expr
-		{ $$ = vma_build_insn(INSN_RESH); $$->u.expr = $2; }
+		{ $$ = vma_insn_build(INSN_RESH); $$->u.expr = $2; }
 	| KW_RESW expr
-		{ $$ = vma_build_insn(INSN_RESW); $$->u.expr = $2; }
+		{ $$ = vma_insn_build(INSN_RESW); $$->u.expr = $2; }
 	| OP_ADD
-		{ $$ = vma_build_insn(INSN_ADD); }
+		{ $$ = vma_insn_build(INSN_ADD); }
 	| OP_SUB
-		{ $$ = vma_build_insn(INSN_SUB); }
+		{ $$ = vma_insn_build(INSN_SUB); }
 	| OP_MULU
-		{ $$ = vma_build_insn(INSN_MULU); }
+		{ $$ = vma_insn_build(INSN_MULU); }
 	| OP_MULS
-		{ $$ = vma_build_insn(INSN_MULS); }
+		{ $$ = vma_insn_build(INSN_MULS); }
 	| OP_DIVU
-		{ $$ = vma_build_insn(INSN_DIVU); }
+		{ $$ = vma_insn_build(INSN_DIVU); }
 	| OP_DIVS
-		{ $$ = vma_build_insn(INSN_DIVS); }
+		{ $$ = vma_insn_build(INSN_DIVS); }
 	| OP_AND
-		{ $$ = vma_build_insn(INSN_AND); }
+		{ $$ = vma_insn_build(INSN_AND); }
 	| OP_OR
-		{ $$ = vma_build_insn(INSN_OR); }
+		{ $$ = vma_insn_build(INSN_OR); }
 	| OP_XOR
-		{ $$ = vma_build_insn(INSN_XOR); }
+		{ $$ = vma_insn_build(INSN_XOR); }
 	| OP_NOT
-		{ $$ = vma_build_insn(INSN_NOT); }
+		{ $$ = vma_insn_build(INSN_NOT); }
 	| OP_LSL
-		{ $$ = vma_build_insn(INSN_LSL); }
+		{ $$ = vma_insn_build(INSN_LSL); }
 	| OP_LSR
-		{ $$ = vma_build_insn(INSN_LSR); }
+		{ $$ = vma_insn_build(INSN_LSR); }
 	| OP_ASR
-		{ $$ = vma_build_insn(INSN_ASR); }
+		{ $$ = vma_insn_build(INSN_ASR); }
 	| OP_CMP_LT
-		{ $$ = vma_build_insn(INSN_CMP_LT); }
+		{ $$ = vma_insn_build(INSN_CMP_LT); }
 	| OP_CMP_GT
-		{ $$ = vma_build_insn(INSN_CMP_GT); }
+		{ $$ = vma_insn_build(INSN_CMP_GT); }
 	| OP_CMP_LE
-		{ $$ = vma_build_insn(INSN_CMP_LE); }
+		{ $$ = vma_insn_build(INSN_CMP_LE); }
 	| OP_CMP_GE
-		{ $$ = vma_build_insn(INSN_CMP_GE); }
+		{ $$ = vma_insn_build(INSN_CMP_GE); }
 	| OP_CMP_B
-		{ $$ = vma_build_insn(INSN_CMP_B); }
+		{ $$ = vma_insn_build(INSN_CMP_B); }
 	| OP_CMP_A
-		{ $$ = vma_build_insn(INSN_CMP_A); }
+		{ $$ = vma_insn_build(INSN_CMP_A); }
 	| OP_CMP_BE
-		{ $$ = vma_build_insn(INSN_CMP_BE); }
+		{ $$ = vma_insn_build(INSN_CMP_BE); }
 	| OP_CMP_AE
-		{ $$ = vma_build_insn(INSN_CMP_AE); }
+		{ $$ = vma_insn_build(INSN_CMP_AE); }
 	| OP_CMP_EQ
-		{ $$ = vma_build_insn(INSN_CMP_EQ); }
+		{ $$ = vma_insn_build(INSN_CMP_EQ); }
 	| OP_CMP_NE
-		{ $$ = vma_build_insn(INSN_CMP_NE); }
+		{ $$ = vma_insn_build(INSN_CMP_NE); }
 	| OP_LDC_0
-		{ $$ = vma_build_insn(INSN_LDC_0); }
+		{ $$ = vma_insn_build(INSN_LDC_0); }
 	| OP_LDC_1
-		{ $$ = vma_build_insn(INSN_LDC_1); }
+		{ $$ = vma_insn_build(INSN_LDC_1); }
 	| OP_LDC_2
-		{ $$ = vma_build_insn(INSN_LDC_2); }
+		{ $$ = vma_insn_build(INSN_LDC_2); }
 	| OP_LDC_8_U expr
-		{ $$ = vma_build_insn(INSN_LDC_8_U); $$->u.expr = $2; }
+		{ $$ = vma_insn_build(INSN_LDC_8_U); $$->u.expr = $2; }
 	| OP_LDC_8_S expr
-		{ $$ = vma_build_insn(INSN_LDC_8_S); $$->u.expr = $2; }
+		{ $$ = vma_insn_build(INSN_LDC_8_S); $$->u.expr = $2; }
 	| OP_LDC_32 expr
-		{ $$ = vma_build_insn(INSN_LDC_32); $$->u.expr = $2; }
+		{ $$ = vma_insn_build(INSN_LDC_32); $$->u.expr = $2; }
 	| OP_LDM_8_U
-		{ $$ = vma_build_insn(INSN_LDM_8_U); }
+		{ $$ = vma_insn_build(INSN_LDM_8_U); }
 	| OP_LDM_8_S
-		{ $$ = vma_build_insn(INSN_LDM_8_S); }
+		{ $$ = vma_insn_build(INSN_LDM_8_S); }
 	| OP_LDM_16_U
-		{ $$ = vma_build_insn(INSN_LDM_16_U); }
+		{ $$ = vma_insn_build(INSN_LDM_16_U); }
 	| OP_LDM_16_S
-		{ $$ = vma_build_insn(INSN_LDM_16_S); }
+		{ $$ = vma_insn_build(INSN_LDM_16_S); }
 	| OP_LDM_32
-		{ $$ = vma_build_insn(INSN_LDM_32); }
+		{ $$ = vma_insn_build(INSN_LDM_32); }
 	| OP_STM_8
-		{ $$ = vma_build_insn(INSN_STM_8); }
+		{ $$ = vma_insn_build(INSN_STM_8); }
 	| OP_STM_16
-		{ $$ = vma_build_insn(INSN_STM_16); }
+		{ $$ = vma_insn_build(INSN_STM_16); }
 	| OP_STM_32
-		{ $$ = vma_build_insn(INSN_STM_32); }
+		{ $$ = vma_insn_build(INSN_STM_32); }
 	| OP_LOCALS expr
-		{ $$ = vma_build_insn(INSN_LOCALS); $$->u.expr = $2; }
+		{ $$ = vma_insn_build(INSN_LOCALS); $$->u.expr = $2; }
 	| OP_LDLOC expr
-		{ $$ = vma_build_insn(INSN_LDLOC); $$->u.expr = $2; }
+		{ $$ = vma_insn_build(INSN_LDLOC); $$->u.expr = $2; }
 	| OP_STLOC expr
-		{ $$ = vma_build_insn(INSN_STLOC); $$->u.expr = $2; }
+		{ $$ = vma_insn_build(INSN_STLOC); $$->u.expr = $2; }
 	| OP_DUP
-		{ $$ = vma_build_insn(INSN_DUP); }
+		{ $$ = vma_insn_build(INSN_DUP); }
 	| OP_SWAP
-		{ $$ = vma_build_insn(INSN_SWAP); }
+		{ $$ = vma_insn_build(INSN_SWAP); }
 	| OP_POP
-		{ $$ = vma_build_insn(INSN_POP); }
+		{ $$ = vma_insn_build(INSN_POP); }
 	| OP_BR_S IDENTIFIER
-		{ $$ = vma_build_insn(INSN_BR_S); vma_init_symref(&$$->u.symref, $2); }
+		{ $$ = vma_insn_build(INSN_BR_S); vma_symref_init(&$$->u.symref, $2); }
 	| OP_BR_L IDENTIFIER
-		{ $$ = vma_build_insn(INSN_BR_L); vma_init_symref(&$$->u.symref, $2); }
+		{ $$ = vma_insn_build(INSN_BR_L); vma_symref_init(&$$->u.symref, $2); }
 	| OP_BR_T IDENTIFIER
-		{ $$ = vma_build_insn(INSN_BR_T); vma_init_symref(&$$->u.symref, $2); }
+		{ $$ = vma_insn_build(INSN_BR_T); vma_symref_init(&$$->u.symref, $2); }
 	| OP_BR_F IDENTIFIER
-		{ $$ = vma_build_insn(INSN_BR_F); vma_init_symref(&$$->u.symref, $2); }
+		{ $$ = vma_insn_build(INSN_BR_F); vma_symref_init(&$$->u.symref, $2); }
 	| OP_CALL IDENTIFIER
-		{ $$ = vma_build_insn(INSN_CALL); vma_init_symref(&$$->u.symref, $2); }
+		{ $$ = vma_insn_build(INSN_CALL); vma_symref_init(&$$->u.symref, $2); }
 	| OP_RET
-		{ $$ = vma_build_insn(INSN_RET); }
+		{ $$ = vma_insn_build(INSN_RET); }
 	| OP_ICALL
-		{ $$ = vma_build_insn(INSN_ICALL); }
+		{ $$ = vma_insn_build(INSN_ICALL); }
 	| OP_IJMP
-		{ $$ = vma_build_insn(INSN_IJMP); }
+		{ $$ = vma_insn_build(INSN_IJMP); }
 	| OP_NCALL IDENTIFIER
-		{ $$ = vma_build_insn(INSN_NCALL); vma_init_symref(&$$->u.symref, $2); $$->u.symref.ncall = 1; } /* TBD */
+		{ $$ = vma_insn_build(INSN_NCALL); vma_symref_init(&$$->u.symref, $2); }
 ;
 
 label
 	: IDENTIFIER ':'
-		{ $$ = vma_define_symbol($1); }
+		{ $$ = vma_symtab_define(&ctx->labels, $1, 1); }
 ;
 
 expr_list
 	: expr
-		{ $$ = vma_append_expr_list(vma_create_expr_list(), $1); }
+		{ $$ = vma_expr_list_append(vma_expr_list_create(), $1); }
 	| expr_list ',' expr
-		{ $$ = vma_append_expr_list($1, $3); }
+		{ $$ = vma_expr_list_append($1, $3); }
 ;
 
 expr
 	: INTEGER
-		{ $$ = vma_build_constant_expr($1); }
+		{ $$ = vma_expr_build_constant($1); }
 	| '@' IDENTIFIER
-		{ $$ = vma_build_symref_expr($2); }
+		{ $$ = vma_expr_build_symref($2); }
 	| expr '|' expr
-		{ $$ = vma_build_parent_expr(EXPR_OR, $1, $3); }
+		{ $$ = vma_expr_build_parent(EXPR_OR, $1, $3); }
 	| expr '&' expr
-		{ $$ = vma_build_parent_expr(EXPR_AND, $1, $3); }
+		{ $$ = vma_expr_build_parent(EXPR_AND, $1, $3); }
 	| expr '^' expr
-		{ $$ = vma_build_parent_expr(EXPR_XOR, $1, $3); }
+		{ $$ = vma_expr_build_parent(EXPR_XOR, $1, $3); }
 	| expr '+' expr
-		{ $$ = vma_build_parent_expr(EXPR_ADD, $1, $3); }
+		{ $$ = vma_expr_build_parent(EXPR_ADD, $1, $3); }
 	| expr '-' expr
-		{ $$ = vma_build_parent_expr(EXPR_SUB, $1, $3); }
+		{ $$ = vma_expr_build_parent(EXPR_SUB, $1, $3); }
 	| expr '*' expr
-		{ $$ = vma_build_parent_expr(EXPR_MUL, $1, $3); }
+		{ $$ = vma_expr_build_parent(EXPR_MUL, $1, $3); }
 	| expr '/' expr
-		{ $$ = vma_build_parent_expr(EXPR_DIV, $1, $3); }
+		{ $$ = vma_expr_build_parent(EXPR_DIV, $1, $3); }
 	| '-' expr %prec NEG
-		{ $$ = vma_build_parent_expr(EXPR_NEG, $2, NULL); }
+		{ $$ = vma_expr_build_parent(EXPR_NEG, $2, NULL); }
 	| '~' expr %prec NOT
-		{ $$ = vma_build_parent_expr(EXPR_NOT, $2, NULL); }
+		{ $$ = vma_expr_build_parent(EXPR_NOT, $2, NULL); }
 	| '(' expr ')'
 		{ $$ = $2; }
 ;
 
 %%
 
-void yyerror(struct vma_context *ctx, const char *msg)
+void yyerror(vma_context_t *ctx, const char *msg)
 {
 	vma_error(msg);
 }
 
 extern void vma_lexer_set_input(FILE *input);
 
-int vma_parse_input(struct vma_context *ctx)
+int vma_parse_input(vma_context_t *ctx)
 {
 	VMA_ASSERT(ctx);
 	VMA_ASSERT(ctx->input);

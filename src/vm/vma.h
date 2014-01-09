@@ -5,43 +5,52 @@
 #include <stdint.h>
 #include <stdio.h>
 
-struct vma_insn_node;
 typedef uint32_t vma_vaddr_t;
-
+typedef struct _vma_symbol_t vma_symbol_t;
+typedef struct _vma_symtab_t vma_symtab_t;
+typedef struct _vma_symref_t vma_symref_t;
+typedef struct _vma_expr_t vma_expr_t;
+typedef struct _vma_expr_list_t vma_expr_list_t;
+typedef struct _vma_insn_t vma_insn_t;
+typedef struct _vma_context_t vma_context_t;
 /*
  * Symbols
  */
 
-struct vma_symbol {
-	struct vma_symbol *next;
+struct _vma_symbol_t {
+	vma_symbol_t *next;
 	const char *name;
 	union {
-		uint32_t hash;
-		struct vma_insn_node *location;
+		unsigned id;
+		vma_insn_t *location;
 	} u;
 };
 
-struct vma_symref {
+struct _vma_symtab_t {
+	vma_symbol_t *head;
+	unsigned count;
+};
+
+extern void vma_symtab_init(vma_symtab_t *symtab);
+extern vma_symbol_t *vma_symtab_define(vma_symtab_t *symtab, const char *name, int unique);
+extern vma_symbol_t *vma_symtab_lookup(const vma_symtab_t *symtab, const char *name);
+
+struct _vma_symref_t {
 	union {
 		const char *name;
-		struct vma_symbol *sym;
+		vma_symbol_t *sym;
 	} u;
-	unsigned resolved : 1; /* nonzero if this is a valid ref */
-	unsigned ncall : 1; /* 1 if refers to a native routine */
 };
 
-extern struct vma_symbol *vma_lookup_symbol(const char *name);
-extern struct vma_symbol *vma_define_symbol(const char *name);
-extern struct vma_symbol *vma_lookup_ncall_symbol(const char *name);
-extern struct vma_symbol *vma_define_ncall_symbol(const char *name);
-extern void vma_init_symref(struct vma_symref *ref, const char *name);
-extern int vma_resolve_symref(struct vma_symref *ref);
+extern void vma_symref_init(vma_symref_t *ref, const char *name);
+extern int vma_symref_resolve(vma_symref_t *ref, vma_symtab_t *symtab);
 
 /*
  * Expressions
  */
 
-enum vma_expr_type {
+typedef enum _vma_expr_type_t vma_expr_type_t;
+enum _vma_expr_type_t {
 	EXPR_CONSTANT,
 	EXPR_SYMREF,
 	EXPR_OR,
@@ -55,40 +64,36 @@ enum vma_expr_type {
 	EXPR_NOT,
 };
 
-struct vma_expr_node {
-	struct vma_expr_node *next; /* in expr_list */
-	enum vma_expr_type type;
+struct _vma_expr_t {
+	vma_expr_t *next; /* in expr_list */
+	vma_expr_type_t type;
 	uint32_t value;
 	union {
-		struct vma_expr_node *child[2]; /* lhs, rhs */
-		struct vma_symref symref;
+		vma_expr_t *child[2]; /* lhs, rhs */
+		vma_symref_t symref;
 	} u;
 };
 
-extern struct vma_expr_node *vma_build_constant_expr(int value);
-extern struct vma_expr_node *vma_build_symref_expr(const char *name);
-extern struct vma_expr_node *vma_build_parent_expr
-(
-	enum vma_expr_type type,
-	struct vma_expr_node *a,
-	struct vma_expr_node *b
-);
-extern uint32_t vma_evaluate_expr(struct vma_expr_node *expr);
+extern vma_expr_t *vma_expr_build_constant(int value);
+extern vma_expr_t *vma_expr_build_symref(const char *name);
+extern vma_expr_t *vma_expr_build_parent(vma_expr_type_t type, vma_expr_t *a, vma_expr_t *b);
+extern uint32_t vma_expr_evaluate(vma_expr_t *expr, vma_context_t *ctx);
 
-struct vma_expr_list {
-	struct vma_expr_node *head;
-	struct vma_expr_node *tail;
+struct _vma_expr_list_t {
+	vma_expr_t *head;
+	vma_expr_t *tail;
 	unsigned count;
 };
 
-extern struct vma_expr_list *vma_create_expr_list(void);
-extern struct vma_expr_list *vma_append_expr_list(struct vma_expr_list *list, struct vma_expr_node *node);
+extern vma_expr_list_t *vma_expr_list_create(void);
+extern vma_expr_list_t *vma_expr_list_append(vma_expr_list_t *list, vma_expr_t *node);
 
 /*
  * Instructions
  */
 
-enum vma_insn_type {
+typedef enum _vma_insn_type_t vma_insn_type_t;
+enum _vma_insn_type_t {
 	INSN_ADD,
 	INSN_SUB,
 	INSN_MULU,
@@ -154,52 +159,43 @@ enum vma_insn_type {
 	INSN_MAX,
 };
 
-struct vma_insn_node {
-	struct vma_insn_node *next;
-	enum vma_insn_type type;
+struct _vma_insn_t {
+	vma_insn_t *next;
+	vma_insn_type_t type;
 	vma_vaddr_t start_addr;
 	union {
-		struct vma_symref symref;
-		struct vma_expr_node *expr;
-		struct vma_expr_list *expr_list;
+		vma_symref_t symref;
+		vma_expr_t *expr;
+		vma_expr_list_t *expr_list;
 	} u;
 };
 
-extern struct vma_insn_node *vma_build_insn(enum vma_insn_type type);
-extern void vma_output_insn(struct vma_insn_node *node);
-
-/*
- * Translation unit
- */
-
-struct vma_unit {
-	struct vma_insn_node *head;
-	struct vma_insn_node *tail;
-};
-
-extern struct vma_unit *vma_build_unit();
-extern struct vma_unit *vma_append_unit(struct vma_unit *unit, struct vma_insn_node *node);
+extern vma_insn_t *vma_insn_build(vma_insn_type_t type);
+extern void vma_output_insn(vma_insn_t *node);
 
 /*
  * Parsing
  */
 
-struct vma_context {
+struct _vma_context_t {
 	FILE *input;
 	FILE *output;
-	struct vma_unit *unit;
+	vma_symtab_t labels;
+	vma_symtab_t ncalls;
+	vma_insn_t *insns_head;
+	vma_insn_t *insns_tail;
 	vma_vaddr_t start_va;
 	vma_vaddr_t bss_va;
 	vma_vaddr_t end_va;
 };
 
-extern void vma_assemble(struct vma_context *ctx);
+extern void vma_assemble(vma_context_t *ctx);
 
 /*
  * Output generation
  */
 
-extern void vma_generate(struct vma_context *ctx);
+extern void vma_generate(vma_context_t *ctx);
 extern void vma_output_u8(uint8_t value);
 extern void vma_output_u16(uint16_t value);
 extern void vma_output_u32(uint32_t value);
