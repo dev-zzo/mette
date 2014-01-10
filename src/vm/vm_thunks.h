@@ -26,13 +26,11 @@ typedef struct {
 	vm_thunk_t proc;
 } vm_thunk_record_t;
 
+#define VM_THUNK(name) \
+	void __thunkproc_##name(vm_context_t *ctx)
+
 #define VM_THUNK_DEFINE(name, hash) \
 	vm_thunk_record_t __thunkrec_##name __attribute__ ((section (".thunks"))) = { hash, __thunkproc_##name }
-
-#define VM_THUNK(name, hash) \
-	static void __thunkproc_##name(vm_context_t *ctx); \
-	VM_THUNK_DEFINE(name, hash); \
-	static void __thunkproc_##name(vm_context_t *ctx)
 
 extern vm_thunk_t vm_lookup_thunk(uint32_t hash);
 

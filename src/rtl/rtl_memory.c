@@ -1,7 +1,7 @@
 #include "vm_thunks.h"
 #include "xmalloc.h"
 
-VM_THUNK(xmalloc, 0xC3150001)
+VM_THUNK(rtl_alloc)
 {
 	void *ptr;
 	VM_THUNK_ARGS_START
@@ -11,7 +11,7 @@ VM_THUNK(xmalloc, 0xC3150001)
 	VM_THUNK_RETURN(ptr);
 }
 
-VM_THUNK(xrealloc, 0xC3150002)
+VM_THUNK(rtl_realloc)
 {
 	void *ptr;
 	VM_THUNK_ARGS_START
@@ -22,12 +22,10 @@ VM_THUNK(xrealloc, 0xC3150002)
 	VM_THUNK_RETURN(ptr);
 }
 
-VM_THUNK(xfree, 0xC3150003)
+VM_THUNK(rtl_free)
 {
 	VM_THUNK_ARGS_START
 		VM_THUNK_ARG(void *ptr);
 	VM_THUNK_ARGS_END
 	xfree(args.ptr);
 }
-
-
