@@ -27,3 +27,4 @@ CFLAGS+=-I$(SOURCES_ROOT)/vm/
 LDFLAGS+=-Wl,--gc-sections -Wl,-Map,mette.map
 
 # Additional rules
+rtl: vm
