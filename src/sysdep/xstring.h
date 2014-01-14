@@ -1,7 +1,7 @@
 #ifndef __mette_sysdep_xstring_h_included
 #define __mette_sysdep_xstring_h_included
 
-#include "xstddef.h"
+#include <stddef.h>
 
 extern void *xmemcpy(void *dest, const void *src, size_t count);
 

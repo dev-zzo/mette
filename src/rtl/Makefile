@@ -3,8 +3,7 @@
 #
 
 # Main target in this dir
-TARGET:= \
-	mette-rtl.a \
+TARGET:=mette-rtl.a
 
 # What to build from
 SOURCES:= \

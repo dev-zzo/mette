@@ -12,19 +12,24 @@ SOURCES:= \
 
 # Additional libs to link
 LIBS:= \
-	vm/mette-vm.a
+	vm/mette-vm.a \
+	sysdep/mette-sysdep.a \
 
 # Any additional subtargets here
 SUBTARGETS:= \
+	sysdep \
 	vm \
 	rtl \
+
+GENERATED:= \
+	mette.map
 
 # Include either target or host
 include $(SOURCES_ROOT)/Makefile.target.inc
 
 # Override CFLAGS
-CFLAGS+=-I$(SOURCES_ROOT)/vm/
-LDFLAGS+=-Wl,--gc-sections -Wl,-Map,mette.map
+CFLAGS+=-I$(SOURCES_ROOT)/sysdep/ -I$(SOURCES_ROOT)/vm/ 
+LDFLAGS+=-nostdlib -Wl,--gc-sections -Wl,-Map,mette.map
 
 # Additional rules
 rtl: vm

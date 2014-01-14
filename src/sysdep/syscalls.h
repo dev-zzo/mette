@@ -5,15 +5,25 @@
 // http://syscalls.kernelgrok.com/
 
 // ==================== BEGIN ARCH-SPECIFIC CODE ==============================
-#include "syscalls-i386.h"
+#if defined(TARGET_ARCH_i386)
+#include "i386/syscalls.h"
+#endif
+#if defined(TARGET_ARCH_mips)
+#include "mips/syscalls.h"
+#endif
 // =================== END ARCH-SPECIFIC CODE =================================
+
+#include <stddef.h>
+#include <sys/types.h>
+
+extern int sys_errno;
 
 // processes
 
-#define sys_exit(code) __SYSCALL(exit, 1, code)
-#define sys_exit_group(code) __SYSCALL(exit_group, 1, code)
-#define sys_fork(regs) __SYSCALL(fork, 1, regs)
-#define sys_getpid() __SYSCALL(getpid, 0)
+__DECLARE_SYSCALL1(exit, void, int code);
+__DECLARE_SYSCALL1(exit_group, void, int code);
+__DECLARE_SYSCALL1(fork, int, void *regs);
+__DECLARE_SYSCALL0(getpid, int);
 
 // signals
 
@@ -40,45 +50,43 @@
 #define sys_rmdir(path) __SYSCALL(rmdir, 1, path)
 #define sys_truncate(path, length) __SYSCALL(truncate, 2, path, length)
 #define sys_ftruncate(fd, length) __SYSCALL(ftruncate, 2, fd, length)
-#define sys_open(path, flags, mode) __SYSCALL(open, 3, path, flags, mode)
-#define sys_read(fd, buf, count) __SYSCALL(read, 3, fd, buf, count)
-#define sys_write(fd, buf, count) __SYSCALL(write, 3, fd, buf, count)
-#define sys_close(fd) __SYSCALL(close, 1, fd)
-#define sys_lseek(fd, offset, origin) __SYSCALL(lseek, 2, offset, origin)
+__DECLARE_SYSCALL3(open, int, const char *path, int flags, int mode);
+__DECLARE_SYSCALL3(read, int, int fd, void *buf, size_t count);
+__DECLARE_SYSCALL3(write, int, int fd, const void *buf, size_t count);
+__DECLARE_SYSCALL1(close, int, int fd);
+__DECLARE_SYSCALL2(lseek, int, off_t offset, int origin);
 #define sys_flock(fd, cmd) __SYSCALL(flock, 2, fd, cmd)
 #define sys_select(n, inp, outp, exp, tvp) __SYSCALL(select, 5, n, inp, outp, exp, tvp)
 #define sys_pipe(pipefd) __SYSCALL(pipe, 1, pipefd)
 
 // memory
 
-#define sys_brk(addr) __SYSCALL(brk, 1, addr)
+__DECLARE_SYSCALL1(brk, void *, void *addr);
+__DECLARE_SYSCALL6(mmap, void *, void *addr, size_t length, int prot, int flags, int fd, off_t offset);
 #define sys_old_mmap(args) __SYSCALL(old_mmap, 1, args)
-#define sys_munmap(addr, length) __SYSCALL(munmap, 2, addr, length)
+__DECLARE_SYSCALL2(munmap, int, void *addr, size_t length);
 #define sys_mprotect(addr, length, prot) __SYSCALL(mprotect, 3, addr, length, prot)
 
 // sockets
 
-#ifdef ARCH_WANTS_SOCKETCALL
-// multiplexed socket API
-#define sys_socket(domain, type, proto) __SOCKETCALL(SYS_SOCKET, 3, domain, type, proto)
-#define sys_bind(sockfd, addr, addrlen) __SOCKETCALL(SYS_BIND, 3, sockfd, addr, addrlen)
-#define sys_connect(sockfd, addr, addrlen) __SOCKETCALL(SYS_CONNECT, 3, sockfd, addr, addrlen)
-#define sys_listen(sockfd, backlog) __SOCKETCALL(SYS_LISTEN, 2, sockfd, backlog)
-#define sys_accept(sockfd, addr, addrlen) __SOCKETCALL(SYS_ACCEPT, 3, sockfd, addr, addrlen)
-#define sys_getsockname(sockfd, addr, addrlen) __SOCKETCALL(SYS_GETSOCKNAME, 3, sockfd, addr, addrlen)
-#define sys_getpeername(sockfd, addr, addrlen) __SOCKETCALL(SYS_GETPEERNAME, 3, sockfd, addr, addrlen)
+struct sockaddr;
+
+__DECLARE_SYSCALL3(socket, int, int domain, int type, int proto);
+__DECLARE_SYSCALL3(bind, int, int sockfd, const struct sockaddr *addr, size_t addrlen);
+__DECLARE_SYSCALL3(connect, int, int sockfd, const struct sockaddr *addr, size_t addrlen);
+__DECLARE_SYSCALL2(listen, int, int sockfd, int backlog);
+__DECLARE_SYSCALL3(accept, int, int sockfd, const struct sockaddr *addr, size_t addrlen);
+__DECLARE_SYSCALL3(getsockname, int, int sockfd, const struct sockaddr *addr, size_t addrlen);
+__DECLARE_SYSCALL3(getpeername, int, int sockfd, const struct sockaddr *addr, size_t addrlen);
 // socketpair skipped
-#define sys_send(sockfd, buf, len, flags) __SOCKETCALL(SYS_SEND, 4, sockfd, buf, len, flags)
-#define sys_recv(sockfd, buf, len, flags) __SOCKETCALL(SYS_RECV, 4, sockfd, buf, len, flags)
-#define sys_sendto(sockfd, buf, len, flags, addr, addrlen) __SOCKETCALL(SYS_SENDTO, 6, sockfd, buf, len, flags, addr, addrlen)
-#define sys_recvfrom(sockfd, buf, len, flags, addr, addrlen) __SOCKETCALL(SYS_RECVFROM, 6, sockfd, buf, len, flags, addr, addrlen)
-#define sys_shutdown(sockfd, how) __SOCKETCALL(SYS_SHUTDOWN, 2, sockfd, how)
-#define sys_setsockopt(sockfd, level, name, val, len) __SOCKETCALL(SYS_SETSOCKOPT, 5, sockfd, level, name, val, len)
-#define sys_getsockopt(sockfd, level, name, val, len) __SOCKETCALL(SYS_GETSOCKOPT, 5, sockfd, level, name, val, len)
+__DECLARE_SYSCALL3(send, int, int sockfd, void *buf, size_t len, int flags);
+__DECLARE_SYSCALL3(recv, int, int sockfd, void *buf, size_t len, int flags);
+__DECLARE_SYSCALL3(sendto, int, int sockfd, void *buf, size_t len, int flags, const struct sockaddr *addr, size_t addrlen);
+__DECLARE_SYSCALL3(recvfrom, int, int sockfd, void *buf, size_t len, int flags, const struct sockaddr *addr, size_t addrlen);
+__DECLARE_SYSCALL3(shutdown, int, int sockfd, int how);
+__DECLARE_SYSCALL3(setsockopt, int, int sockfd, int level, int name, const void *val, size_t len);
+__DECLARE_SYSCALL3(getsockopt, int, int sockfd, int level, int name, void *val, size_t *len);
 // *msg skipped
-#else
-// non-multiplexed socket API
-#endif
 
 // IPC
 

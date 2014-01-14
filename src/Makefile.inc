@@ -10,7 +10,7 @@ OBJECTS:= \
 # Making
 #
 
-.PHONY: all $(SUBTARGETS) $(TARGET)
+.PHONY: all $(SUBTARGETS)
 
 all: $(SUBTARGETS) $(TARGET)
 
@@ -47,5 +47,5 @@ $(SUBTARGETS_clean):
 	$(MAKE) -C $(subst _clean,,$@) clean
 
 clean: $(SUBTARGETS_clean)
-	$(RM) $(TARGET) *.o *.d $(patsubst %.c, %.i, $(SOURCES)) $(GENERATED)
+	$(RM) $(TARGET) *.o *.d $(patsubst %.c, %.i, $(SOURCES)) $(patsubst %.c, %.s, $(SOURCES)) $(GENERATED)
 

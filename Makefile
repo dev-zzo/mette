@@ -8,7 +8,7 @@ export TARGET_ARCH:=mips
 ifeq ($(TARGET_ARCH), mips)
   TOOLS_SPEC:=mips-unknown-linux-uclibc
   TOOLS_PATH:=$(HOME)/x-tools/$(TOOLS_SPEC)/bin/$(TOOLS_SPEC)-
-  CFLAGS_FOR_TARGET:=-DTARGET_IS_BE=1 -mdivide-traps -mno-check-zero-division # -save-temps
+  CFLAGS_FOR_TARGET:=-DTARGET_IS_BE=1 -mdivide-traps -mno-check-zero-division #-save-temps
 endif
 ifeq ($(TARGET_ARCH), arm)
   TOOLS_SPEC:=arm-none-linux-uclibcgnueabi

@@ -1,25 +1,14 @@
+#
+# Makefile for VM system dependent library
+#
 
-CFLAGS+=-I./
-
-OBJECTS:= \
-	xmalloc.o \
-	xstring.o \
-
-TARGETS:= \
+TARGET:= \
 	mette-sysdep.a \
 
-.PHONY: all
+SOURCES:= \
+	syscalls.c \
+	$(TARGET_ARCH)/syscalls.c \
+	xstring.c \
 
-all: $(TARGETS)
-
-mette-sysdep.a: $(OBJECTS)
-	$(AR) rcs $@ $^
-	$(RANLIB) $@
-
-$(OBJECTS): %.o: %.c
-	$(CC) -c $(CFLAGS) -o $@ $<
-	$(SIZE) $@
-
-clean:
-	rm -f $(OBJECTS) $(TARGETS)
-
+# Include either target or host
+include $(SOURCES_ROOT)/Makefile.target.inc
