@@ -10,5 +10,8 @@ SOURCES:= \
 	$(TARGET_ARCH)/syscalls.c \
 	xstring.c \
 
+ASMSOURCES:= \
+	$(TARGET_ARCH)/startup.S \
+
 # Include either target or host
 include $(SOURCES_ROOT)/Makefile.target.inc

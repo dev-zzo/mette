@@ -5,6 +5,7 @@
 OBJECTS:= \
 	$(OBJECTS) \
 	$(patsubst %.c, %.o, $(SOURCES)) \
+	$(patsubst %.S, %.o, $(ASMSOURCES)) \
 
 #
 # Making
@@ -27,7 +28,10 @@ endif
 %.o: %.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-$(TARGET): $(OBJECTS)
+%.o: %.S
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+$(TARGET): $(OBJECTS) $(LIBS)
 ifeq ($(suffix $(TARGET)), .a)
 	$(AR) rcs $@ $^
 	$(SIZE) $@
