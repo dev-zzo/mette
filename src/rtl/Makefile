@@ -9,6 +9,8 @@ TARGET:=mette-rtl.a
 SOURCES:= \
 	rtl_memory.c \
 	rtl_strbuf.c \
+	rtl_sockets.c \
+	rtl_select.c \
 	rtl_thunks.c \
 
 GENERATED:= \

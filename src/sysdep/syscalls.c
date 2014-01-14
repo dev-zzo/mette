@@ -42,7 +42,7 @@ __DEFINE_SYSCALL3(write, int, int fd, const void *buf, size_t count);
 __DEFINE_SYSCALL1(close, int, int fd);
 __DEFINE_SYSCALL2(lseek, int, off_t offset, int origin);
 //#define sys_flock(fd, cmd) __SYSCALL(flock, 2, fd, cmd)
-//#define sys_select(n, inp, outp, exp, tvp) __SYSCALL(select, 5, n, inp, outp, exp, tvp)
+__DEFINE_SYSCALL5(_newselect, int, int n, fd_set *inp, fd_set *outp, fd_set *exp, struct timeval *tvp);
 //#define sys_pipe(pipefd) __SYSCALL(pipe, 1, pipefd)
 
 // memory
@@ -56,20 +56,20 @@ __DEFINE_SYSCALL2(munmap, int, void *addr, size_t length);
 // sockets
 
 __DEFINE_SYSCALL3(socket, int, int domain, int type, int proto);
-__DEFINE_SYSCALL3(bind, int, int sockfd, const struct sockaddr *addr, size_t addrlen);
-__DEFINE_SYSCALL3(connect, int, int sockfd, const struct sockaddr *addr, size_t addrlen);
+__DEFINE_SYSCALL3(bind, int, int sockfd, const struct sockaddr *addr, int addrlen);
+__DEFINE_SYSCALL3(connect, int, int sockfd, const struct sockaddr *addr, int addrlen);
 __DEFINE_SYSCALL2(listen, int, int sockfd, int backlog);
-__DEFINE_SYSCALL3(accept, int, int sockfd, const struct sockaddr *addr, size_t addrlen);
-__DEFINE_SYSCALL3(getsockname, int, int sockfd, const struct sockaddr *addr, size_t addrlen);
-__DEFINE_SYSCALL3(getpeername, int, int sockfd, const struct sockaddr *addr, size_t addrlen);
+__DEFINE_SYSCALL3(accept, int, int sockfd, const struct sockaddr *addr, int addrlen);
+__DEFINE_SYSCALL3(getsockname, int, int sockfd, const struct sockaddr *addr, int addrlen);
+__DEFINE_SYSCALL3(getpeername, int, int sockfd, const struct sockaddr *addr, int addrlen);
 // socketpair skipped
-__DEFINE_SYSCALL3(send, int, int sockfd, void *buf, size_t len, int flags);
-__DEFINE_SYSCALL3(recv, int, int sockfd, void *buf, size_t len, int flags);
-__DEFINE_SYSCALL3(sendto, int, int sockfd, void *buf, size_t len, int flags, const struct sockaddr *addr, size_t addrlen);
-__DEFINE_SYSCALL3(recvfrom, int, int sockfd, void *buf, size_t len, int flags, const struct sockaddr *addr, size_t addrlen);
-__DEFINE_SYSCALL3(shutdown, int, int sockfd, int how);
-__DEFINE_SYSCALL3(setsockopt, int, int sockfd, int level, int name, const void *val, size_t len);
-__DEFINE_SYSCALL3(getsockopt, int, int sockfd, int level, int name, void *val, size_t *len);
+__DEFINE_SYSCALL4(send, int, int sockfd, void *buf, size_t len, int flags);
+__DEFINE_SYSCALL4(recv, int, int sockfd, void *buf, size_t len, int flags);
+__DEFINE_SYSCALL6(sendto, int, int sockfd, void *buf, size_t len, int flags, const struct sockaddr *addr, int addrlen);
+__DEFINE_SYSCALL6(recvfrom, int, int sockfd, void *buf, size_t len, int flags, const struct sockaddr *addr, int addrlen);
+__DEFINE_SYSCALL2(shutdown, int, int sockfd, int how);
+__DEFINE_SYSCALL5(setsockopt, int, int sockfd, int level, int name, const void *val, size_t len);
+__DEFINE_SYSCALL5(getsockopt, int, int sockfd, int level, int name, void *val, size_t *len);
 
 // IPC
 

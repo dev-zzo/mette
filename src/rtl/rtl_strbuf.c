@@ -6,13 +6,6 @@
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #define max(a,b) ((a) > (b) ? (a) : (b))
 
-struct _rtl_strbuf {
-	uint16_t length;
-	uint16_t max_length;
-};
-
-#define STRBUF_DATA(sb) ((char *)(sb) + sizeof(rtl_strbuf_t))
-
 rtl_strbuf_t *strbuf_alloc(uint16_t size)
 {
 	rtl_strbuf_t *sb = NULL;
@@ -27,21 +20,6 @@ rtl_strbuf_t *strbuf_alloc(uint16_t size)
 void strbuf_free(rtl_strbuf_t *sb)
 {
 	rtl_free(sb);
-}
-
-uint16_t strbuf_get_length(rtl_strbuf_t *sb)
-{
-	return sb->length;
-}
-
-uint16_t strbuf_get_size(rtl_strbuf_t *sb)
-{
-	return sb->max_length;
-}
-
-void *strbuf_get_buffer(rtl_strbuf_t *sb)
-{
-	return STRBUF_DATA(sb);
 }
 
 void strbuf_set_length(rtl_strbuf_t *sb, uint16_t length)

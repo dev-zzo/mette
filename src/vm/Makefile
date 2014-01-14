@@ -20,6 +20,7 @@ GENERATED:= \
 	vm_opcodes_switch.tab \
 	vma_lexer.ops.tab \
 	vma_insn.ops.tab \
+	vm_gen_opcodes \
 
 # Any additional subtargets here
 SUBTARGETS:= \

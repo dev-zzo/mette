@@ -4,6 +4,12 @@
 #include <stdint.h>
 
 typedef struct _rtl_strbuf rtl_strbuf_t;
+struct _rtl_strbuf {
+	uint16_t length;
+	uint16_t max_length;
+};
+
+#define STRBUF_DATA(sb) ((char *)(sb) + sizeof(rtl_strbuf_t))
 
 extern rtl_strbuf_t *
 strbuf_alloc(uint16_t size);
@@ -11,14 +17,23 @@ strbuf_alloc(uint16_t size);
 extern void 
 strbuf_free(rtl_strbuf_t *sb);
 
-extern uint16_t 
-strbuf_get_length(rtl_strbuf_t *sb);
+static inline uint16_t 
+strbuf_get_length(const rtl_strbuf_t *sb)
+{
+	return sb->length;
+}
 
-extern uint16_t 
-strbuf_get_size(rtl_strbuf_t *sb);
+static inline uint16_t 
+strbuf_get_size(const rtl_strbuf_t *sb)
+{
+	return sb->max_length;
+}
 
-extern void *
-strbuf_get_buffer(rtl_strbuf_t *sb);
+static inline void *
+strbuf_get_buffer(rtl_strbuf_t *sb)
+{
+	return STRBUF_DATA(sb);
+}
 
 extern void 
 strbuf_set_length(rtl_strbuf_t *sb, uint16_t length);
