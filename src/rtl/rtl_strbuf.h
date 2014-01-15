@@ -12,33 +12,33 @@ struct _rtl_strbuf {
 #define STRBUF_DATA(sb) ((char *)(sb) + sizeof(rtl_strbuf_t))
 
 extern rtl_strbuf_t *
-strbuf_alloc(uint16_t size);
+rtl_strbuf_alloc(uint16_t size);
 
 extern void 
-strbuf_free(rtl_strbuf_t *sb);
+rtl_strbuf_free(rtl_strbuf_t *sb);
 
 static inline uint16_t 
-strbuf_get_length(const rtl_strbuf_t *sb)
+rtl_strbuf_get_length(const rtl_strbuf_t *sb)
 {
 	return sb->length;
 }
 
 static inline uint16_t 
-strbuf_get_size(const rtl_strbuf_t *sb)
+rtl_strbuf_get_size(const rtl_strbuf_t *sb)
 {
 	return sb->max_length;
 }
 
 static inline void *
-strbuf_get_buffer(rtl_strbuf_t *sb)
+rtl_strbuf_get_buffer(rtl_strbuf_t *sb)
 {
 	return STRBUF_DATA(sb);
 }
 
 extern void 
-strbuf_set_length(rtl_strbuf_t *sb, uint16_t length);
+rtl_strbuf_set_length(rtl_strbuf_t *sb, uint16_t length);
 
 extern rtl_strbuf_t *
-strbuf_resize(rtl_strbuf_t *sb, uint16_t size);
+rtl_strbuf_resize(rtl_strbuf_t *sb, uint16_t size);
 
 #endif // __mette_rtl_strbuf_included

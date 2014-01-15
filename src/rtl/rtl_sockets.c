@@ -153,7 +153,7 @@ VM_THUNK(socket_send)
 
 	result = sys_send(
 		args.sockfd,
-		strbuf_get_buffer(args.sb), strbuf_get_length(args.sb),
+		rtl_strbuf_get_buffer(args.sb), rtl_strbuf_get_length(args.sb),
 		0);
 
 	VM_THUNK_RETURN(result);
@@ -171,7 +171,7 @@ VM_THUNK(socket_sendto)
 
 	result = sys_sendto(
 		args.sockfd,
-		strbuf_get_buffer(args.sb), strbuf_get_length(args.sb),
+		rtl_strbuf_get_buffer(args.sb), rtl_strbuf_get_length(args.sb),
 		0,
 		args.sa, sizeof(*args.sa));
 
@@ -188,7 +188,7 @@ VM_THUNK(socket_recv)
 		VM_THUNK_ARG(size_t max_length);
 	VM_THUNK_ARGS_END
 
-	sb = strbuf_alloc(args.max_length);
+	sb = rtl_strbuf_alloc(args.max_length);
 	if (!sb) {
 		sys_errno = ENOMEM;
 		VM_THUNK_RETURN(0);
@@ -196,14 +196,14 @@ VM_THUNK(socket_recv)
 
 	result = sys_recv(
 		args.sockfd,
-		strbuf_get_buffer(sb), strbuf_get_size(sb),
+		rtl_strbuf_get_buffer(sb), rtl_strbuf_get_size(sb),
 		0);
 
 	if (result >= 0) {
-		strbuf_set_length(sb, result);
+		rtl_strbuf_set_length(sb, result);
 		VM_THUNK_RETURN(sb);
 	} else {
-		strbuf_free(sb);
+		rtl_strbuf_free(sb);
 		VM_THUNK_RETURN(0);
 	}
 }
@@ -219,7 +219,7 @@ VM_THUNK(socket_recvfrom)
 		VM_THUNK_ARG(struct sockaddr *sa);
 	VM_THUNK_ARGS_END
 
-	sb = strbuf_alloc(args.max_length);
+	sb = rtl_strbuf_alloc(args.max_length);
 	if (!sb) {
 		sys_errno = ENOMEM;
 		VM_THUNK_RETURN(0);
@@ -227,15 +227,15 @@ VM_THUNK(socket_recvfrom)
 
 	result = sys_recvfrom(
 		args.sockfd,
-		strbuf_get_buffer(sb), strbuf_get_size(sb),
+		rtl_strbuf_get_buffer(sb), rtl_strbuf_get_size(sb),
 		0,
 		args.sa, sizeof(*args.sa));
 
 	if (result >= 0) {
-		strbuf_set_length(sb, result);
+		rtl_strbuf_set_length(sb, result);
 		VM_THUNK_RETURN(sb);
 	} else {
-		strbuf_free(sb);
+		rtl_strbuf_free(sb);
 		VM_THUNK_RETURN(0);
 	}
 }
