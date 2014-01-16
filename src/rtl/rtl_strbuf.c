@@ -73,7 +73,7 @@ VM_THUNK(rtl_strbuf_get_size)
 	VM_THUNK_RETURN(rtl_strbuf_get_size(args.sb));
 }
 
-VM_THUNK(rtl_strbuf_get_buf)
+VM_THUNK(rtl_strbuf_get_buffer)
 {
 	VM_THUNK_ARGS_START
 		VM_THUNK_ARG(rtl_strbuf_t *sb);

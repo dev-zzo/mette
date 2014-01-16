@@ -30,7 +30,7 @@ rtl_strbuf_get_size(const rtl_strbuf_t *sb)
 }
 
 static inline void *
-rtl_strbuf_get_buffer(rtl_strbuf_t *sb)
+rtl_strbuf_get_buffer(const rtl_strbuf_t *sb)
 {
 	return STRBUF_DATA(sb);
 }

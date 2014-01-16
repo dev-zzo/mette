@@ -11,6 +11,7 @@ SOURCES:= \
 	rtl_strbuf.c \
 	rtl_sockets.c \
 	rtl_select.c \
+	rtl_print.c \
 	rtl_thunks.c \
 
 GENERATED:= \

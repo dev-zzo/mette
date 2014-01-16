@@ -21,3 +21,11 @@ void *xmemset(void *dest, int c, size_t count)
 	return dest;
 }
 
+size_t xstrlen(const char *str)
+{
+	const char *ptr = str;
+
+	while (*ptr++);
+
+	return ptr - str;
+}
