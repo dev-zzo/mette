@@ -33,7 +33,18 @@ void vma_output_u32(uint32_t value)
 	}
 }
 
-#include "vm_ncallhash.inc"
+static uint32_t vma_hash_name(const char *name)
+{
+	uint32_t hash = 0;
+	const char *ptr = name;
+
+	while (*ptr) {
+		hash = (hash * 61 + *ptr) ^ (hash >> 16);
+		ptr++;
+	}
+
+	return hash;
+}
 
 void vma_generate(vma_context_t *ctx)
 {
