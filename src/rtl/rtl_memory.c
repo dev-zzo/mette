@@ -13,6 +13,10 @@
 #define PAGE_SIZE 4096U
 #define UNIT_SIZE sizeof(struct slot)
 
+extern char end; /* Linker-defined, marks the end of the program's dataseg. */
+
+#define DSEG_END ((void *)ALIGN((uintptr_t)&end, PAGE_SIZE))
+
 /*
  * We use a fixed 8-byte header here, which is twice the overhead compared to
  * the Minix implementation of the same routines.
@@ -28,35 +32,35 @@ struct slot {
 /* Keeps the free list head. The free list is sorted by address. */
 static struct slot *free_anchor;
 
+/* Remember the arena start. */
+static struct slot *first_slot;
+
 /* Remember the program break. */
 static void *arena_brk;
 
 /* Allocates with getting some system memory. */
 static int xmem_grow(size_t units, struct slot *last_free)
 {
-	extern char end; /* Linker-defined, marks the end of the program's dataseg. */
 	struct slot *new_slot;
-	void *new_brk;
-	
-	if (!arena_brk) {
-		/* First call -- initialise the pointers */
-		arena_brk = (void *)sys_brk((void *)ALIGN((uintptr_t)&end, PAGE_SIZE));
-	}
 
-	new_brk = (void *)sys_brk(arena_brk + ALIGN(units * UNIT_SIZE, PAGE_SIZE));
-	if (new_brk == arena_brk) {
+	if (!arena_brk) {
+		arena_brk = DSEG_END;
+		first_slot = (struct slot *)DSEG_END;
+	}
+	
+	new_slot = (struct slot *)sys_brk(arena_brk + ALIGN(units * UNIT_SIZE, PAGE_SIZE));
+	if ((void *)new_slot <= arena_brk) {
 		/* Seems that brk(2) has failed. Sorry. */
 		return 0;
 	}
-	new_slot = (struct slot *)arena_brk;
-	arena_brk = new_brk;
+	arena_brk = new_slot;
 	
 	if (last_free) {
-		/* Simply extend the last free slot. */
-		last_free->next_slot = (struct slot *)new_brk;
+		/* Simply append to the last free slot. */
+		last_free->next_slot = (struct slot *)new_slot;
 	} else {
 		/* This is now the list head. */
-		new_slot->next_slot = (struct slot *)new_brk;
+		new_slot->next_slot = (struct slot *)new_slot;
 		new_slot->next_free = NULL;
 		free_anchor = new_slot;
 	}
@@ -263,3 +267,17 @@ VM_THUNK(rtl_free)
 	VM_THUNK_ARGS_END
 	rtl_free(args.ptr);
 }
+
+#ifndef NDEBUG
+
+void rtl_alloc_dump(void)
+{
+	struct slot *s = first_slot;
+
+	while (s) {
+		/* "%p (%08X))", s, s->next_slot - s */
+		s = s->next_slot;
+	}
+}
+
+#endif // NDEBUG

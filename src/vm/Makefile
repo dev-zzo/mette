@@ -25,7 +25,6 @@ GENERATED:= \
 # Any additional subtargets here
 SUBTARGETS:= \
 	vma \
-	vm_gen_thunks \
 
 # Include either target or host
 include $(SOURCES_ROOT)/Makefile.target.inc

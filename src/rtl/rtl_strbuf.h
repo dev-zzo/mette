@@ -41,4 +41,13 @@ rtl_strbuf_set_length(rtl_strbuf_t *sb, uint16_t length);
 extern rtl_strbuf_t *
 rtl_strbuf_resize(rtl_strbuf_t *sb, uint16_t size);
 
+extern void
+rtl_strbuf_append(rtl_strbuf_t *sb, const rtl_strbuf_t *src);
+
+extern void
+rtl_strbuf_append_char(rtl_strbuf_t *sb, char ch);
+
+extern void
+rtl_strbuf_append_asciiz(rtl_strbuf_t *sb, const char *asciiz);
+
 #endif // __mette_rtl_strbuf_included
