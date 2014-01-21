@@ -277,7 +277,7 @@ void rtl_alloc_dump(void)
 	rtl_print_fd(2, "Slots start: %08x\n", s);
 
 	rtl_print_fd(2, "Slots dump: \n");
-	while (s < arena_brk) {
+	while (s < (struct slot *)arena_brk) {
 		rtl_print_fd(2, "%08x (%08x) nf=%08x\n", s, (s->next_slot - s) * UNIT_SIZE, s->next_free);
 		//rtl_print_fd(2, "%08x (%08x)\n", s, (s->next_slot - s) * UNIT_SIZE);
 		s = s->next_slot;

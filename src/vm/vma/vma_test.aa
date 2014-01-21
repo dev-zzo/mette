@@ -1,27 +1,9 @@
 # Test file for the assembler
 
 start:
-	ldc.32 0x12345678
-	ldc.8.u 0xcc
-	add
-	call routine1
+	ncall sys_exit
 	ret
 
-routine1 :
-	locals 2
-	stloc 0
-	stloc 1
-	ldloc 1
-	ldloc 0
-	add
-	ret
+text:
+	.defs "Sample text!"
 
-_exit:
-	ncall _exit
-	ret
-
-randomdata:
-	.defb 0xAA, 0xBB, 0xCC, 0xDD, 0xEE
-
-space:
-	.resb 0x400

@@ -73,6 +73,7 @@ void vma_debug_print(const char *format, ...)
 void vma_context_init(vma_context_t *ctx)
 {
 	ctx->output = ctx->input = NULL;
+	ctx->start_symbol = "start";
 	vma_symtab_init(&ctx->labels);
 	vma_symtab_init(&ctx->ncalls);
 	ctx->insns_tail = ctx->insns_head = NULL;

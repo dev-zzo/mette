@@ -28,7 +28,7 @@ export RANLIB_FOR_TARGET:=$(TOOLS_PATH)ranlib
 export SIZE_FOR_TARGET:=$(TOOLS_PATH)size
 
 # Target build options
-CFLAGS_FOR_TARGET:=-Os -std=c99 -ffreestanding -mno-abicalls -mno-shared -I./ -DTARGET_ARCH_$(TARGET_ARCH)=1 $(CFLAGS_FOR_TARGET)
+CFLAGS_FOR_TARGET:=-Os -std=c99 -ffreestanding -mno-abicalls -mno-shared -Werror -I./ -DTARGET_ARCH_$(TARGET_ARCH)=1 $(CFLAGS_FOR_TARGET)
 LDFLAGS_FOR_TARGET:=-s -static $(LDFLAGS_FOR_TARGET)
 export CFLAGS_FOR_TARGET
 export LDFLAGS_FOR_TARGET

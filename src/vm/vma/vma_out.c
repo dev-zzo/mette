@@ -49,9 +49,11 @@ static uint32_t vma_hash_name(const char *name)
 void vma_generate(vma_context_t *ctx)
 {
 	vma_symbol_t *sym_ncall;
+	vma_symbol_t *ep_sym;
 	vma_insn_t *insn;
 	unsigned size_in_memory;
 	unsigned size_in_file;
+	unsigned ep_offset;
 
 	VMA_ASSERT(ctx);
 	VMA_ASSERT(ctx->output);
@@ -62,12 +64,21 @@ void vma_generate(vma_context_t *ctx)
 	size_in_file = ctx->bss_va - ctx->start_va;
 	vma_debug_print("memory: %08X file: %08X", size_in_memory, size_in_file);
 
+	ep_sym = vma_symtab_lookup(&ctx->labels, ctx->start_symbol);
+	if (!ep_sym) {
+		vma_abort("start symbol '%s' not defined", ctx->start_symbol);
+	}
+	ep_offset = ep_sym->u.location->start_addr - ctx->start_va;
+
 	vma_output_u8('B'); vma_output_u8('A'); vma_output_u8('R'); vma_output_u8('F');
-	vma_output_u32(ctx->start_va);
-	vma_output_u16(size_in_memory); /* in memory */
-	vma_output_u16(size_in_file); /* in file */
+	vma_output_u32(size_in_memory); /* in memory */
+	vma_output_u32(size_in_file); /* in file */
+	vma_output_u32(ep_offset);
 	vma_output_u16(ctx->ncalls.count);
 	vma_output_u16(0xFFFF);
+	vma_output_u32(0xFFFF);
+	vma_output_u32(0xFFFF);
+	vma_output_u32(0xFFFF);
 
 	insn = ctx->insns_head;
 	while (insn && insn->start_addr < ctx->bss_va) {

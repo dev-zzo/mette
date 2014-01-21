@@ -10,6 +10,7 @@ SOURCES_RAW:= \
 	vmt_rtl.c \
 	vmt_sockets.c \
 	vmt_select.c \
+	vmt_misc.c \
 
 GENERATED:= \
 	vmt_thunks.c \

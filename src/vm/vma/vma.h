@@ -148,6 +148,7 @@ enum _vma_insn_type_t {
 	INSN_DEFB,
 	INSN_DEFH,
 	INSN_DEFW,
+	INSN_DEFS,
 	INSN_RESB,
 	INSN_RESH,
 	INSN_RESW,
@@ -163,6 +164,7 @@ struct _vma_insn_t {
 		vma_symref_t symref;
 		vma_expr_t *expr;
 		vma_expr_list_t *expr_list;
+		const char *text;
 	} u;
 };
 
@@ -176,6 +178,7 @@ extern void vma_output_insn(vma_insn_t *node);
 struct _vma_context_t {
 	FILE *input;
 	FILE *output;
+	const char *start_symbol;
 	vma_symtab_t labels;
 	vma_symtab_t ncalls;
 	vma_insn_t *insns_head;

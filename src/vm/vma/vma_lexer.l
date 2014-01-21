@@ -17,6 +17,7 @@
 
  /* Start conditions */
 %x COMMENT
+%x STRING
 
  /* Patterns */
 DIGIT	[0-9]
@@ -36,6 +37,7 @@ ID		{ALPHA}{ALNUM}*
 }
 
  /* Keywords */
+[.][dD][eE][fF][sS] return KW_DEFS;
 [.][dD][eE][fF][bB] return KW_DEFB;
 [.][dD][eE][fF][hH] return KW_DEFH;
 [.][dD][eE][fF][wW] return KW_DEFW;
@@ -96,6 +98,18 @@ ID		{ALPHA}{ALNUM}*
 {ID} {
 	yylval.text = strdup(yytext);
 	return IDENTIFIER;
+}
+
+ /* Strings */
+"\"" {
+	BEGIN(STRING);
+}
+<STRING>[^"]* {
+	yylval.text = strdup(yytext);
+	return STRINGT;
+}
+<STRING>"\"" {
+	BEGIN(INITIAL);
 }
 
  /* Comments */

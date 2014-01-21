@@ -291,6 +291,7 @@ void vma_insn_emit(vma_insn_t *node)
 	uint32_t diff;
 	uint32_t count;
 	vma_expr_t *expr;
+	const char *text;
 
 	VMA_ASSERT(node);
 
@@ -355,6 +356,14 @@ void vma_insn_emit(vma_insn_t *node)
 			while (expr) {
 				vma_output_u32((uint32_t)expr->value);
 				expr = expr->next;
+			}
+			break;
+
+		case INSN_DEFS:
+			text = node->u.text;
+			while (*text) {
+				vma_output_u8(*text);
+				++text;
 			}
 			break;
 
@@ -468,6 +477,12 @@ static void vma_insns_allocate(vma_context_t *ctx)
 				bss_va = next_va;
 				break;
 				
+			case INSN_DEFS:
+				VMA_ASSERT(node->u.text);
+				next_va += strlen(node->u.text);
+				bss_va = next_va;
+				break;
+
 			case INSN_DEFB:
 				VMA_ASSERT(node->u.expr_list);
 				next_va += sizeof(uint8_t) * node->u.expr_list->count;

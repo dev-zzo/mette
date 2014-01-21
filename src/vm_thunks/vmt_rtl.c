@@ -1,6 +1,7 @@
 #include "vm_thunks.h"
 #include "rtl_memory.h"
 #include "rtl_strbuf.h"
+#include "rtl_print.h"
 
 /* rtl_memory */
 
@@ -98,5 +99,33 @@ VM_THUNK(rtl_strbuf_resize)
 	VM_THUNK_ARGS_END
 
 	VM_THUNK_RETURN(rtl_strbuf_resize(args.sb, args.new_size));
+}
+
+/* rtl_print */
+
+static uintptr_t nextarg_stack(void *context)
+{
+	vm_context_t *ctx = (vm_context_t *)context;
+	return vm_stack_pop(&ctx->dstack);
+}
+
+VM_THUNK(rtl_print_fd)
+{
+	VM_THUNK_ARGS_START
+		VM_THUNK_ARG(int fd);
+		VM_THUNK_ARG(const char *format);
+	VM_THUNK_ARGS_END
+
+	VM_THUNK_RETURN(rtl_print_fd4(args.fd, args.format, nextarg_stack, ctx));
+}
+
+VM_THUNK(rtl_print_sb)
+{
+	VM_THUNK_ARGS_START
+		VM_THUNK_ARG(rtl_strbuf_t *sb);
+		VM_THUNK_ARG(const char *format);
+	VM_THUNK_ARGS_END
+
+	VM_THUNK_RETURN(rtl_print_sb4(args.sb, args.format, nextarg_stack, ctx));
 }
 

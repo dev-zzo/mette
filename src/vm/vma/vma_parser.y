@@ -51,8 +51,9 @@ static void yyerror(vma_context_t *ctx, const char *msg);
 
 %token <const_int> INTEGER
 %token <text> IDENTIFIER
+%token <text> STRINGT
 
-%token KW_DEFB KW_DEFH KW_DEFW
+%token KW_DEFS KW_DEFB KW_DEFH KW_DEFW
 %token KW_RESB KW_RESH KW_RESW
 
 %token OP_ADD OP_SUB OP_MULU OP_MULS OP_DIVU OP_DIVS 
@@ -102,6 +103,8 @@ insn
 		{ $$ = vma_insn_build(INSN_DEFH); $$->u.expr_list = $2; }
 	| KW_DEFW expr_list
 		{ $$ = vma_insn_build(INSN_DEFW); $$->u.expr_list = $2; }
+	| KW_DEFS STRINGT
+		{ $$ = vma_insn_build(INSN_DEFS); $$->u.text = $2; }
 	| KW_RESB expr
 		{ $$ = vma_insn_build(INSN_RESB); $$->u.expr = $2; }
 	| KW_RESH expr

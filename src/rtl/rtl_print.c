@@ -1,3 +1,4 @@
+#include "rtl_print.h"
 #include "rtl_strbuf.h"
 #include "xstring.h"
 #include "syscalls.h"
@@ -8,7 +9,6 @@
 
 typedef struct ___print_context_t __print_context_t;
 
-typedef uintptr_t (*__nextarg_proc_t)(__print_context_t *pctx);
 typedef void (*__flush_proc_t)(__print_context_t *pctx);
 
 #define BUFFER_SIZE 1024
@@ -28,10 +28,8 @@ struct ___print_context_t {
 	unsigned prec;
 
 	/* Arg reader context */
-	__nextarg_proc_t nextarg_proc;
-	union {
-		va_list varargs;
-	} reader_data;
+	rtl_print_nextarg_proc_t nextarg_proc;
+	void *reader_data;
 
 	/* Output writer context */
 	char buffer[BUFFER_SIZE];
@@ -285,14 +283,9 @@ static void __print_internal(const char *format, __print_context_t *pctx)
 	}
 }
 
-static uintptr_t nextarg_va_list(__print_context_t *pctx)
+static uintptr_t nextarg_va_list(void *context)
 {
-	return va_arg(pctx->reader_data.varargs, uintptr_t);
-}
-
-static uintptr_t nextarg_stack(__print_context_t *pctx)
-{
-	return 0;
+	return va_arg(*(va_list *)context, uintptr_t);
 }
 
 static void flush_sb(__print_context_t *pctx)
@@ -305,13 +298,12 @@ static void flush_fd(__print_context_t *pctx)
 	sys_write(pctx->writer_data.fd, pctx->buffer, pctx->buffer_mark);
 }
 
-int rtl_print_sb(rtl_strbuf_t *sb, const char *format, ...)
+int rtl_print_sb4(rtl_strbuf_t *sb, const char *format, rtl_print_nextarg_proc_t nextarg_proc, void *context)
 {
 	__print_context_t pctx;
 
-	va_start(pctx.reader_data.varargs, format);
-
-	pctx.nextarg_proc = nextarg_va_list;
+	pctx.nextarg_proc = nextarg_proc;
+	pctx.reader_data = context;
 	pctx.flush_proc = flush_sb;
 	pctx.writer_data.sb = sb;
 	pctx.buffer_mark = 0;
@@ -319,18 +311,29 @@ int rtl_print_sb(rtl_strbuf_t *sb, const char *format, ...)
 
 	__print_internal(format, &pctx);
 
-	va_end(pctx.reader_data.varargs);
-
 	return rtl_strbuf_get_length(sb);
 }
 
-int rtl_print_fd(int fd, const char *format, ...)
+int rtl_print_sb(rtl_strbuf_t *sb, const char *format, ...)
+{
+	va_list args;
+	int result;
+
+	va_start(args, format);
+
+	result = rtl_print_sb4(sb, format, nextarg_va_list, &args);
+
+	va_end(args);
+
+	return result;
+}
+
+int rtl_print_fd4(int fd, const char *format, rtl_print_nextarg_proc_t nextarg_proc, void *context)
 {
 	__print_context_t pctx;
 
-	va_start(pctx.reader_data.varargs, format);
-
-	pctx.nextarg_proc = nextarg_va_list;
+	pctx.nextarg_proc = nextarg_proc;
+	pctx.reader_data = context;
 	pctx.flush_proc = flush_fd;
 	pctx.writer_data.fd = fd;
 	pctx.buffer_mark = 0;
@@ -338,8 +341,20 @@ int rtl_print_fd(int fd, const char *format, ...)
 
 	__print_internal(format, &pctx);
 
-	va_end(pctx.reader_data.varargs);
-
 	return pctx.write_count;
+}
+
+int rtl_print_fd(int fd, const char *format, ...)
+{
+	va_list args;
+	int result;
+
+	va_start(args, format);
+
+	result = rtl_print_fd4(fd, format, nextarg_va_list, &args);
+
+	va_end(args);
+
+	return result;
 }
 
