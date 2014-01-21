@@ -4,6 +4,8 @@
 #include <stdarg.h>
 #include <stdint.h>
 
+//#define DBGPRINT
+
 typedef struct ___print_context_t __print_context_t;
 
 typedef uintptr_t (*__nextarg_proc_t)(__print_context_t *pctx);
@@ -99,7 +101,7 @@ static void conv_text(__print_context_t *pctx, const char *text, size_t text_len
 
 static const char conv_digits[] = "0123456789ABCDEFHGIJKLMNOPQRSTUVWXYZ";
 
-char *conv_base_r(char *buffer, unsigned base, unsigned value)
+static char *conv_base_r(char *buffer, unsigned base, unsigned value)
 {
 	unsigned next = value / base;
 	unsigned rem = value % base;
@@ -122,10 +124,10 @@ static void conv_d(__print_context_t *pctx, int value)
 	char digits[34];
 	size_t digit_count;
 
-	/*
+#ifdef DBGPRINT
 	xmemset(digits, 'X', 33);
 	digits[33] = '\n';
-	*/
+#endif
 
 	if (value < 0) {
 		digit_count = conv_base(digits + 1, 10, -value) + 1;
@@ -135,16 +137,28 @@ static void conv_d(__print_context_t *pctx, int value)
 		digit_count = conv_base(digits, 10, value);
 		conv_text(pctx, digits, digit_count, pctx->flags.zero_padded ? '0' : ' ');
 	}
+#ifdef DBGPRINT
+	sys_write(2, digits, 34);
+#endif
 }
 
 static void conv_uox(__print_context_t *pctx, unsigned base, unsigned value)
 {
-	char digits[32];
+	char digits[33];
 	size_t digit_count;
+
+#ifdef DBGPRINT
+	xmemset(digits, 'X', 32);
+	digits[32] = '\n';
+#endif
 
 	digit_count = conv_base(digits, base, value);
 
 	conv_text(pctx, digits, digit_count, pctx->flags.zero_padded ? '0' : ' ');
+
+#ifdef DBGPRINT
+	sys_write(2, digits, 33);
+#endif
 }
 
 static void conv_strbuf(__print_context_t *pctx, const rtl_strbuf_t *sb)
@@ -174,7 +188,6 @@ static int __ascii2uint(const char *text, unsigned *result)
 static void __print_internal(const char *format, __print_context_t *pctx)
 {
 	const char *cursor = format;
-	const char *escape_start;
 	int done = 0;
 
 	do {
@@ -185,6 +198,7 @@ static void __print_internal(const char *format, __print_context_t *pctx)
 				++cursor;
 			} else {
 				++cursor;
+				pctx->flags.all = 0;
 				break;
 			}
 		}
@@ -199,13 +213,17 @@ static void __print_internal(const char *format, __print_context_t *pctx)
 			/* Zero padding flag */
 			pctx->flags.zero_padded = 1;
 			++cursor;
-			/* sys_write(2, "Z", 1); */
+#ifdef DBGPRINT
+			sys_write(2, "Z", 1);
+#endif
 		}
 		if (*cursor == '-') {
 			/* Left alignment flag */
 			pctx->flags.left_adjusted = 1;
 			++cursor;
-			/* sys_write(2, "L", 2); */
+#ifdef DBGPRINT
+			sys_write(2, "L", 2);
+#endif
 		}
 		if (xisdigit(*cursor)) {
 			/* Field width specifier */
@@ -296,6 +314,8 @@ int rtl_print_sb(rtl_strbuf_t *sb, const char *format, ...)
 	pctx.nextarg_proc = nextarg_va_list;
 	pctx.flush_proc = flush_sb;
 	pctx.writer_data.sb = sb;
+	pctx.buffer_mark = 0;
+	pctx.write_count = 0;
 
 	__print_internal(format, &pctx);
 
@@ -313,6 +333,8 @@ int rtl_print_fd(int fd, const char *format, ...)
 	pctx.nextarg_proc = nextarg_va_list;
 	pctx.flush_proc = flush_fd;
 	pctx.writer_data.fd = fd;
+	pctx.buffer_mark = 0;
+	pctx.write_count = 0;
 
 	__print_internal(format, &pctx);
 
