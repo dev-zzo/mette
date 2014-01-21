@@ -418,14 +418,9 @@ static void vma_insns_allocate(vma_context_t *ctx)
 			case INSN_ASR:
 			case INSN_CMP_LT:
 			case INSN_CMP_GT:
-			case INSN_CMP_LE:
-			case INSN_CMP_GE:
 			case INSN_CMP_B:
 			case INSN_CMP_A:
-			case INSN_CMP_BE:
-			case INSN_CMP_AE:
 			case INSN_CMP_EQ:
-			case INSN_CMP_NE:
 			case INSN_LDC_0:
 			case INSN_LDC_1:
 			case INSN_LDC_2:
@@ -465,7 +460,6 @@ static void vma_insns_allocate(vma_context_t *ctx)
 				break;
 				
 			case INSN_LDC_32:
-			case INSN_BR_L:
 			case INSN_CALL:
 				next_va += 1 + 4;
 				bss_va = next_va;

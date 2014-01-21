@@ -3,18 +3,94 @@
 	{
 		"selected_items":
 		[
+			[
+				"rtl_a",
+				"rtl_alloc_dump"
+			],
+			[
+				"next",
+				"next_free"
+			],
+			[
+				"new",
+				"new_slot"
+			],
+			[
+				"arena",
+				"arena_brk"
+			],
+			[
+				"aren",
+				"arena_brk"
+			],
+			[
+				"rtl_p",
+				"rtl_print_fd"
+			],
+			[
+				"pr",
+				"process_thunks"
+			],
+			[
+				"area",
+				"arena_brk"
+			],
+			[
+				"fl",
+				"flush_proc"
+			],
+			[
+				"next_",
+				"next_slot"
+			],
+			[
+				"sp",
+				"space_count"
+			],
+			[
+				"TARG",
+				"TARGET_ARCH"
+			],
+			[
+				"rtl_",
+				"rtl_strbuf_t"
+			],
+			[
+				"SOURCES",
+				"SOURCES_ROOT"
+			],
+			[
+				"vma_lo",
+				"vma_lookup_ncall_symbol"
+			],
+			[
+				"vma_sym",
+				"vma_symtab"
+			],
+			[
+				"vma_de",
+				"vma_debug_print"
+			],
+			[
+				"vma_res",
+				"vma_resolve_symrefs_expr_list"
+			],
+			[
+				"vma_re",
+				"vma_resolve_symrefs_expr"
+			],
+			[
+				"vma_expr_",
+				"vma_expr_node"
+			],
+			[
+				"vma_ex",
+				"vma_expr_list"
+			]
 		]
 	},
 	"buffers":
 	[
-		{
-			"file": "Makefile",
-			"settings":
-			{
-				"buffer_size": 857,
-				"line_ending": "Unix"
-			}
-		}
 	],
 	"build_system": "",
 	"command_palette":
@@ -40,10 +116,88 @@
 	},
 	"file_history":
 	[
+		"/home/user/Projects/mette/src/vm/vma/vma_out.c",
+		"/home/user/Projects/mette/src/vm/vm_loader.h",
+		"/home/user/Projects/mette/src/vm/vm_loader.c",
+		"/home/user/Projects/mette/src/main.c",
+		"/home/user/Projects/mette/src/vm/vm_core.c",
+		"/home/user/Projects/mette/src/vm/vma/vma_parser.y",
+		"/home/user/Projects/mette/src/vm/vma/vma_lexer.l",
+		"/home/user/Projects/mette/src/vm/vma/vma_asm.c",
+		"/home/user/Projects/mette/src/vm/vm_opcodes.in",
+		"/home/user/Projects/mette/src/vm/vma/vma.h",
+		"/home/user/Projects/mette/src/Makefile",
+		"/home/user/Projects/mette/src/vm/Makefile",
+		"/home/user/Projects/mette/src/vm/vm_stack.c",
+		"/home/user/Projects/mette/src/mette-mips.ldscript",
+		"/home/user/Projects/mette/src/Makefile.inc",
+		"/home/user/Projects/mette/src/vm/vm_debug.c",
+		"/home/user/Projects/mette/src/vm/vm_gen_thunks.pl",
+		"/home/user/Projects/mette/src/vm_thunks/vmt_thunks.c",
+		"/home/user/Projects/mette/src/vm/vm_thunks.c",
+		"/home/user/Projects/mette/src/rtl/rtl_memory.c",
+		"/home/user/Projects/mette/src/vm/vm_sysdeps.h",
+		"/home/user/Projects/mette/src/sysdep/syscalls.h",
+		"/home/user/Projects/mette/src/sysdep/syscalls.c",
+		"/home/user/Projects/mette/src/sysdep/mips/startup.S",
+		"/home/user/Projects/mette/src/vm/vm_thunks.h",
+		"/home/user/Projects/mette/Makefile",
+		"/home/user/Projects/mette/src/vm_thunks/Makefile",
+		"/home/user/Projects/mette/src/rtl/rtl_print.c",
+		"/home/user/Projects/mette/src/vm_thunks/vmt_rtl.c",
+		"/home/user/Projects/mette/src/vm_thunks/vmt_select.c",
+		"/home/user/Projects/mette/src/rtl/rtl_strbuf.c",
+		"/home/user/Projects/mette/src/rtl/Makefile",
+		"/home/user/Projects/mette/src/rtl/rtl_sockets.c",
+		"/home/user/Projects/mette/src/vm_thunks/vmt_sockets.c",
+		"/home/user/Projects/mette/src/rtl/rtl_select.c",
+		"/home/user/Projects/mette/src/rtl/rtl_print.h",
+		"/home/user/Projects/mette/src/rtl/rtl_strbuf.h",
+		"/home/user/Projects/mette/src/rtl/tests/Makefile",
+		"/home/user/Projects/mette/src/vm/vm_gen_thunks/vm_gen_thunks.c",
+		"/home/user/Projects/mette/src/vm/vm_gen_thunks/vm_gen_thunks",
+		"/home/user/Projects/mette/tests/testing.c",
+		"/home/user/Projects/mette/tests/testing.h",
+		"/usr/include/assert.h",
+		"/home/user/Projects/mette/src/sysdep/xstring.c",
+		"/home/user/Projects/mette/src/sysdep/xstring.h",
+		"/home/user/Projects/mette/src/sysdep/Makefile",
+		"/home/user/Projects/mette/src/sysdep/mips/syscalls.h",
+		"/home/user/Projects/mette/src/sysdep/syscalls-i386.h",
+		"/home/user/Projects/mette/src/rtl/rtl_memory.h",
+		"/home/user/Projects/mette/src/sysdep/syscalls-mips.c",
+		"/home/user/Projects/mette/src/sysdep/syscalls-mips.h",
+		"/home/user/Projects/mette/src/rtl/rtl_thunks.c",
+		"/home/user/Projects/mette/src/vm/vm_gen_thunks/Makefile",
+		"/home/user/Projects/mette/src/vm/vm_ncallhash.inc",
+		"/home/user/Projects/mette/src/vm/vma/Makefile",
+		"/home/user/Projects/mette/src/Makefile.host.inc",
+		"/home/user/Projects/mette/src/Makefile.target.inc",
+		"/home/user/Projects/mette/src/vma/Makefile",
+		"/home/user/Projects/mette/src/vm/vma_test.aa",
+		"/home/user/Projects/mette/src/vm/vma.h",
+		"/home/user/Projects/mette/src/vm/vma_asm.c",
+		"/home/user/Projects/mette/src/vm/vma_parser.y",
+		"/home/user/Projects/mette/src/vm/vma.c",
+		"/home/user/Projects/mette/src/vm/vma_out.c",
+		"/home/user/Projects/mette/src/vm/vma_lexer.l",
+		"/home/user/Projects/mette/src/vm/vma_insn.c",
+		"/home/user/Projects/mette/src/vm/vma_expr.c",
+		"/home/user/Projects/mette/src/vm/vma_syms.c",
+		"/home/user/Projects/mette/src/vm/vma_parser.txt",
+		"/home/user/Projects/mette/src/vm/vm_gen_opcodes.c",
+		"/home/user/Projects/mette/src/vm/vma_misc.c",
+		"/home/user/Projects/mette/src/vm/vma.l",
+		"/home/user/Projects/mette/src/vm/vma.y",
+		"/home/user/Projects/mette/src/vm/vma_syms.h",
+		"/home/user/Projects/mette/src/vm/vm_asm.l.ops.tab",
+		"/home/user/Projects/mette/src/vm/vm_asm_expr.c",
+		"/home/user/Projects/mette/src/vm/vm_asm_misc.c",
+		"/home/user/Projects/mette/src/vm/vm_misc.h"
 	],
 	"find":
 	{
-		"height": 0.0
+		"height": 35.0
 	},
 	"find_in_files":
 	{
@@ -57,13 +211,86 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"pdr",
+			"__asciiz2uint",
+			"pctx->put_proc",
+			"weak, ",
+			"noreturn, ",
+			"DECLARE",
+			"i386",
+			"FOR_TARGET",
+			"struct vma_context",
+			"vma_build_insn",
+			"struct vma_insn_node",
+			"struct vma_context",
+			"struct vma_insn_node",
+			"enum vma_insn_type",
+			"vma_expr_list_init",
+			"vma_evaluate_expr",
+			"node",
+			"struct vma_insn_node",
+			"vma_build_parent_expr",
+			"vma_append_expr_list",
+			"struct vma_symref",
+			"struct vma_insn_node",
+			"struct vma_expr_node",
+			"struct vma_expr_list",
+			"struct vma_expr",
+			"expr_node",
+			"vma_init_symref",
+			"parser_state",
+			"vma_parser_state",
+			" ,",
+			"$",
+			".* OP_",
+			";",
+			".* return ",
+			"_asm.",
+			"->value",
+			"$$->value",
+			"value",
+			" $$->",
+			"YYSTYPE"
 		],
 		"highlight": true,
 		"in_selection": false,
 		"preserve_case": false,
-		"regex": false,
+		"regex": true,
 		"replace_history":
 		[
+			"put_char",
+			"",
+			"DEFINE",
+			"mips",
+			"FOR_HOST",
+			"vma_context_t",
+			"vma_insn_build",
+			"vma_insn_t",
+			"vma_context_t",
+			"vma_insn_t",
+			"vma_insn_type_t",
+			"vma_expr_list_create",
+			"vma_expr_evaluate",
+			"vma_insn_t",
+			"vma_expr_build_parent",
+			"vma_expr_list_append",
+			"vma_symref_t",
+			"vma_insn_t",
+			"vma_expr_t",
+			"vma_expr_list_t",
+			"vma_expr_t",
+			"expr",
+			"vma_symref_init",
+			"context",
+			"vma_context",
+			",",
+			"\\tINSN_",
+			"%token OP_",
+			" ",
+			"\\t| ",
+			"a_",
+			"",
+			"$$"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -76,32 +303,6 @@
 		{
 			"sheets":
 			[
-				{
-					"buffer": 0,
-					"file": "Makefile",
-					"settings":
-					{
-						"buffer_size": 857,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Makefile/Makefile.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"type": "text"
-				}
 			]
 		}
 	],
@@ -111,7 +312,7 @@
 	},
 	"input":
 	{
-		"height": 0.0
+		"height": 33.0
 	},
 	"layout":
 	{
@@ -136,9 +337,13 @@
 		]
 	},
 	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 27.0
+	},
 	"replace":
 	{
-		"height": 0.0
+		"height": 64.0
 	},
 	"save_all_on_build": true,
 	"select_file":
@@ -161,6 +366,6 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 188.0,
+	"side_bar_width": 191.0,
 	"status_bar_visible": true
 }

@@ -1,4 +1,5 @@
-/* Script for -z combreloc: combine and sort reloc sections */
+/* http://www.delorie.com/gnu/docs/binutils/ld_6.html */
+
 OUTPUT_FORMAT("elf32-tradbigmips", "elf32-tradbigmips", "elf32-tradlittlemips")
 OUTPUT_ARCH(mips)
 ENTRY(__start)

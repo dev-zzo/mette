@@ -13,32 +13,26 @@ static const vm_opcode_info_t opcodes[] = {
 
 	{
 		"ADD", "Addition",
-		//0x00,
 		2, 1,
 	},
 	{
 		"SUB", "Subtraction",
-		//0x01, 
 		2, 1,
 	},
 	{
 		"MULU", "Multiplication (unsigned*unsigned)",
-		//0x04, 
 		2, 2,
 	},
 	{
 		"MULS", "Multiplication (signed*signed)",
-		//0x05, 
 		2, 2,
 	},
 	{
 		"DIVU", "Division (unsigned/unsigned)",
-		//0x06, 
 		2, 2,
 	},
 	{
 		"DIVS", "Division (signed/signed)",
-		//0x07, 
 		2, 2,
 	},
 	
@@ -46,37 +40,30 @@ static const vm_opcode_info_t opcodes[] = {
 
 	{
 		"AND", "Bitwise AND",
-		//0x10, 
 		2, 1,
 	},
 	{
 		"OR", "Bitwise OR",
-		//0x11, 
 		2, 1,
 	},
 	{
 		"XOR", "Bitwise XOR",
-		//0x12, 
 		2, 1,
 	},
 	{
 		"NOT", "Bitwise NOT",
-		//0x13, 
 		2, 1,
 	},
 	{
 		"LSL", "Logical shift left",
-		//0x18, 
 		2, 1,
 	},
 	{
 		"LSR", "Logical shift right",
-		//0x19, 
 		2, 1,
 	},
 	{
 		"ASR", "Arithmetic shift right",
-		//0x1A, 
 		2, 1,
 	},
 	
@@ -84,52 +71,22 @@ static const vm_opcode_info_t opcodes[] = {
 
 	{
 		"CMP.LT", "Compare (less than)",
-		//0x40, 
 		2, 1,
 	},
 	{
 		"CMP.GT", "Compare (greater than)",
-		//0x41, 
-		2, 1,
-	},
-	{
-		"CMP.LE", "Compare (less than or equal)",
-		//0x42, 
-		2, 1,
-	},
-	{
-		"CMP.GE", "Compare (greater than or equal)",
-		//0x43, 
 		2, 1,
 	},
 	{
 		"CMP.B", "Compare (below)",
-		//0x44, 
 		2, 1,
 	},
 	{
 		"CMP.A", "Compare (above)",
-		//0x45, 
-		2, 1,
-	},
-	{
-		"CMP.BE", "Compare (below or equal)",
-		//0x46, 
-		2, 1,
-	},
-	{
-		"CMP.AE", "Compare (above or equal)",
-		//0x47, 
 		2, 1,
 	},
 	{
 		"CMP.EQ", "Compare (equal)",
-		//0x48, 
-		2, 1,
-	},
-	{
-		"CMP.NE", "Compare (not equal)",
-		//0x49, 
 		2, 1,
 	},
 	
@@ -137,32 +94,26 @@ static const vm_opcode_info_t opcodes[] = {
 	
 	{
 		"LDC.0", "Load 0 on the stack",
-		//0xC0, 
 		0, 1,
 	},
 	{
 		"LDC.1", "Load 1 on the stack",
-		//0xC1, 
 		0, 1,
 	},
 	{
 		"LDC.2", "Load 2 on the stack",
-		//0xC2, 
 		0, 1,
 	},
 	{
 		"LDC.8.U", "Load an unsigned byte on the stack",
-		//0xC8, 
 		0, 1,
 	},
 	{
 		"LDC.8.S", "Load a signed byte on the stack",
-		//0xC9, 
 		0, 1,
 	},
 	{
 		"LDC.32", "Load a 32-bit value on the stack",
-		//0xCA, 
 		0, 1,
 	},
 	
@@ -170,27 +121,22 @@ static const vm_opcode_info_t opcodes[] = {
 	
 	{
 		"LDM.8.U", "Load a 8-bit unsigned from memory",
-		//0xD0, 
 		1, 1,
 	},
 	{
 		"LDM.8.S", "Load a 8-bit signed from memory",
-		//0xD1, 
 		1, 1,
 	},
 	{
 		"LDM.16.U", "Load a 16-bit unsigned from memory",
-		//0xD2, 
 		1, 1,
 	},
 	{
 		"LDM.16.S", "Load a 16-bit signed from memory",
-		//0xD3, 
 		1, 1,
 	},
 	{
 		"LDM.32", "Load a 32-bit from memory",
-		//0xD4, 
 		1, 1,
 	},
 	
@@ -198,17 +144,14 @@ static const vm_opcode_info_t opcodes[] = {
 
 	{
 		"STM.8", "Store a 8-bit to memory",
-		//0xD8, 
 		2, 0,
 	},
 	{
 		"STM.16", "Store a 16-bit to memory",
-		//0xD9, 
 		2, 0,
 	},
 	{
 		"STM.32", "Store a 32-bit to memory",
-		//0xDA, 
 		2, 0,
 	},
 	
@@ -216,17 +159,14 @@ static const vm_opcode_info_t opcodes[] = {
 	
 	{
 		"LOCALS", "Create a space for local vars",
-		//0xDC, 
 		1, 0,
 	},
 	{
 		"LDLOC", "Load a local",
-		//0xDD, 
 		1, 1,
 	},
 	{
 		"STLOC", "Store a local",
-		//0xDE, 
 		2, 0,
 	},
 	
@@ -234,17 +174,14 @@ static const vm_opcode_info_t opcodes[] = {
 	
 	{
 		"DUP", "Duplicate the topmost entry on the stack",
-		//0xE0, 
 		1, 2,
 	},
 	{
 		"SWAP", "Swap two entries on the top of the stack",
-		//0xE2, 
 		2, 2,
 	},
 	{
 		"POP", "Discard the topmost entry on the stack",
-		//0xE8, 
 		1, 0,
 	},
 	
@@ -252,47 +189,34 @@ static const vm_opcode_info_t opcodes[] = {
 	
 	{
 		"BR.S", "Branch short (8-bit offset)",
-		//0xF0, 
-		0, 0,
-	},
-	{
-		"BR.L", "Branch long (32-bit offset)",
-		//0xF1, 
 		0, 0,
 	},
 	{
 		"BR.T", "Branch if true (8-bit offset)",
-		//0xF2, 
 		1, 0,
 	},
 	{
 		"BR.F", "Branch if false (8-bit offset)",
-		//0xF3, 
 		1, 0,
 	},
 	{
 		"CALL", "Call a subroutine (32-bit offset)",
-		//0xF8, 
 		0, 0,
 	},
 	{
 		"RET", "Return from the subroutine",
-		//0xF9, 
 		0, 0,
 	},
 	{
 		"ICALL", "Indirect call",
-		//0xFA, 
 		1, 0,
 	},
 	{
 		"IJMP", "Indirect jump",
-		//0xFB, 
 		1, 0,
 	},
 	{
 		"NCALL", "Call a native subroutine",
-		//0xFC, 
 		0, 0,
 	},
 };

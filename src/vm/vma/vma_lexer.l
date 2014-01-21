@@ -59,14 +59,9 @@ ID		{ALPHA}{ALNUM}*
 [aA][sS][rR] return OP_ASR;
 [cC][mM][pP][.][lL][tT] return OP_CMP_LT;
 [cC][mM][pP][.][gG][tT] return OP_CMP_GT;
-[cC][mM][pP][.][lL][eE] return OP_CMP_LE;
-[cC][mM][pP][.][gG][eE] return OP_CMP_GE;
 [cC][mM][pP][.][bB] return OP_CMP_B;
 [cC][mM][pP][.][aA] return OP_CMP_A;
-[cC][mM][pP][.][bB][eE] return OP_CMP_BE;
-[cC][mM][pP][.][aA][eE] return OP_CMP_AE;
 [cC][mM][pP][.][eE][qQ] return OP_CMP_EQ;
-[cC][mM][pP][.][nN][eE] return OP_CMP_NE;
 [lL][dD][cC][.][0] return OP_LDC_0;
 [lL][dD][cC][.][1] return OP_LDC_1;
 [lL][dD][cC][.][2] return OP_LDC_2;
@@ -88,7 +83,6 @@ ID		{ALPHA}{ALNUM}*
 [sS][wW][aA][pP] return OP_SWAP;
 [pP][oO][pP] return OP_POP;
 [bB][rR][.][sS] return OP_BR_S;
-[bB][rR][.][lL] return OP_BR_L;
 [bB][rR][.][tT] return OP_BR_T;
 [bB][rR][.][fF] return OP_BR_F;
 [cC][aA][lL][lL] return OP_CALL;

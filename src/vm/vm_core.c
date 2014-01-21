@@ -134,29 +134,14 @@ op_CMP_LT:
 op_CMP_GT:
 	r0 = ((vm_soperand_t)op0) > ((vm_soperand_t)op1);
 	goto push_1;
-op_CMP_LE:
-	r0 = ((vm_soperand_t)op0) <= ((vm_soperand_t)op1);
-	goto push_1;
-op_CMP_GE:
-	r0 = ((vm_soperand_t)op0) >= ((vm_soperand_t)op1);
-	goto push_1;
 op_CMP_B:
 	r0 = ((vm_uoperand_t)op0) < ((vm_uoperand_t)op1);
 	goto push_1;
 op_CMP_A:
 	r0 = ((vm_uoperand_t)op0) > ((vm_uoperand_t)op1);
 	goto push_1;
-op_CMP_BE:
-	r0 = ((vm_uoperand_t)op0) <= ((vm_uoperand_t)op1);
-	goto push_1;
-op_CMP_AE:
-	r0 = ((vm_uoperand_t)op0) >= ((vm_uoperand_t)op1);
-	goto push_1;
 op_CMP_EQ:
 	r0 = op0 == op1;
-	goto push_1;
-op_CMP_NE:
-	r0 = op0 != op1;
 	goto push_1;
 op_LDC_0:
 	r0 = 0;
@@ -246,11 +231,6 @@ op_POP:
 op_BR_S: {
 	int8_t offset = *(int8_t *)(pc);
 	pc = pc + 1 + offset;
-	goto push_none;
-}
-op_BR_L: {
-	int32_t offset = (int32_t)vm_fetch32_ua(pc);
-	pc = pc + 4 + offset;
 	goto push_none;
 }
 op_BR_T: {
