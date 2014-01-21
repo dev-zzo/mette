@@ -164,6 +164,11 @@ op_LDC_32:
 	r0 = vm_fetch32_ua(pc);
 	pc += 4;
 	goto push_1;
+op_LEA:
+	r0 = vm_fetch32_ua(pc);
+	pc += 4;
+	r0 += pc;
+	goto push_1;
 op_LDM_8_U:
 	r0 = (vm_uoperand_t)*(uint8_t *)(op0);
 	goto push_1;
@@ -228,7 +233,7 @@ op_SWAP: {
 }
 op_POP:
 	goto push_none;
-op_BR_S: {
+op_BR: {
 	int8_t offset = *(int8_t *)(pc);
 	pc = pc + 1 + offset;
 	goto push_none;

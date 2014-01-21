@@ -68,6 +68,7 @@ ID		{ALPHA}{ALNUM}*
 [lL][dD][cC][.][8][.][uU] return OP_LDC_8_U;
 [lL][dD][cC][.][8][.][sS] return OP_LDC_8_S;
 [lL][dD][cC][.][3][2] return OP_LDC_32;
+[lL][eE][aA] return OP_LEA;
 [lL][dD][mM][.][8][.][uU] return OP_LDM_8_U;
 [lL][dD][mM][.][8][.][sS] return OP_LDM_8_S;
 [lL][dD][mM][.][1][6][.][uU] return OP_LDM_16_U;
@@ -82,7 +83,7 @@ ID		{ALPHA}{ALNUM}*
 [dD][uU][pP] return OP_DUP;
 [sS][wW][aA][pP] return OP_SWAP;
 [pP][oO][pP] return OP_POP;
-[bB][rR][.][sS] return OP_BR_S;
+[bB][rR] return OP_BR;
 [bB][rR][.][tT] return OP_BR_T;
 [bB][rR][.][fF] return OP_BR_F;
 [cC][aA][lL][lL] return OP_CALL;

@@ -59,15 +59,8 @@ void vma_generate(vma_context_t *ctx)
 	stream = ctx->output;
 
 	size_in_memory = ctx->end_va - ctx->start_va;
-	size_in_memory = VMA_ALIGN(size_in_memory, 16) / 16;
 	size_in_file = ctx->bss_va - ctx->start_va;
-	size_in_file = VMA_ALIGN(size_in_file, 16) / 16;
-	vma_debug_print("memory: %08X/%08X file: %08X/%08X",
-		ctx->end_va - ctx->start_va, size_in_memory * 16,
-		ctx->bss_va - ctx->start_va, size_in_file * 16);
-	if (size_in_memory > 0xFFFF || size_in_file > 0xFFFF) {
-		vma_abort("resulting code does not fit into image");
-	}
+	vma_debug_print("memory: %08X file: %08X", size_in_memory, size_in_file);
 
 	vma_output_u8('B'); vma_output_u8('A'); vma_output_u8('R'); vma_output_u8('F');
 	vma_output_u32(ctx->start_va);

@@ -116,6 +116,10 @@ static const vm_opcode_info_t opcodes[] = {
 		"LDC.32", "Load a 32-bit value on the stack",
 		0, 1,
 	},
+	{
+		"LEA", "Load an effective address on the stack",
+		0, 1,
+	},
 	
 	/* Memory access: loads */
 	
@@ -188,7 +192,7 @@ static const vm_opcode_info_t opcodes[] = {
 	/* Control flow insns */
 	
 	{
-		"BR.S", "Branch short (8-bit offset)",
+		"BR", "Branch short (8-bit offset)",
 		0, 0,
 	},
 	{

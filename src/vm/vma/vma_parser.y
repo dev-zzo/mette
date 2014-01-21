@@ -58,12 +58,12 @@ static void yyerror(vma_context_t *ctx, const char *msg);
 %token OP_ADD OP_SUB OP_MULU OP_MULS OP_DIVU OP_DIVS 
 %token OP_AND OP_OR OP_XOR OP_NOT OP_LSL OP_LSR OP_ASR 
 %token OP_CMP_LT OP_CMP_GT OP_CMP_B OP_CMP_A OP_CMP_EQ
-%token OP_LDC_0 OP_LDC_1 OP_LDC_2 OP_LDC_8_U OP_LDC_8_S OP_LDC_32 
+%token OP_LDC_0 OP_LDC_1 OP_LDC_2 OP_LDC_8_U OP_LDC_8_S OP_LDC_32 OP_LEA 
 %token OP_LDM_8_U OP_LDM_8_S OP_LDM_16_U OP_LDM_16_S OP_LDM_32 
 %token OP_STM_8 OP_STM_16 OP_STM_32 
 %token OP_LOCALS OP_LDLOC OP_STLOC 
 %token OP_DUP OP_SWAP OP_POP 
-%token OP_BR_S OP_BR_L OP_BR_T OP_BR_F 
+%token OP_BR OP_BR_L OP_BR_T OP_BR_F 
 %token OP_CALL OP_RET 
 %token OP_ICALL OP_IJMP 
 %token OP_NCALL
@@ -156,6 +156,8 @@ insn
 		{ $$ = vma_insn_build(INSN_LDC_8_S); $$->u.expr = $2; }
 	| OP_LDC_32 expr
 		{ $$ = vma_insn_build(INSN_LDC_32); $$->u.expr = $2; }
+	| OP_LEA IDENTIFIER
+		{ $$ = vma_insn_build(INSN_LEA); vma_symref_init(&$$->u.symref, $2); }
 	| OP_LDM_8_U
 		{ $$ = vma_insn_build(INSN_LDM_8_U); }
 	| OP_LDM_8_S
@@ -184,8 +186,8 @@ insn
 		{ $$ = vma_insn_build(INSN_SWAP); }
 	| OP_POP
 		{ $$ = vma_insn_build(INSN_POP); }
-	| OP_BR_S IDENTIFIER
-		{ $$ = vma_insn_build(INSN_BR_S); vma_symref_init(&$$->u.symref, $2); }
+	| OP_BR IDENTIFIER
+		{ $$ = vma_insn_build(INSN_BR); vma_symref_init(&$$->u.symref, $2); }
 	| OP_BR_T IDENTIFIER
 		{ $$ = vma_insn_build(INSN_BR_T); vma_symref_init(&$$->u.symref, $2); }
 	| OP_BR_F IDENTIFIER

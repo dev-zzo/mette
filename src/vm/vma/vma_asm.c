@@ -270,8 +270,8 @@ void vma_insn_evaluate(vma_insn_t *insn, vma_context_t *ctx)
 			vma_expr_list_evaluate(insn->u.expr_list, ctx);
 			break;
 
-		case INSN_BR_S:
-		case INSN_BR_L:
+		case INSN_LEA:
+		case INSN_BR:
 		case INSN_BR_T:
 		case INSN_BR_F:
 		case INSN_CALL:
@@ -307,10 +307,11 @@ void vma_insn_emit(vma_insn_t *node)
 			vma_output_u8((uint8_t)node->u.expr->value);
 			break;
 
-		case INSN_BR_S:
+		case INSN_BR:
 		case INSN_BR_T:
 		case INSN_BR_F:
-			diff = node->u.expr->value - node->start_addr;
+			/* Relative to insn end. */
+			diff = node->u.expr->value - node->start_addr + 2; /* hard-coded :( */
 			if (diff & 0xFFFFFF00) {
 				vma_error("branch target out of range");
 			}
@@ -326,9 +327,10 @@ void vma_insn_emit(vma_insn_t *node)
 			vma_output_u32(node->u.expr->value);
 			break;
 
-		case INSN_BR_L:
+		case INSN_LEA:
 		case INSN_CALL:
-			diff = node->u.expr->value - node->start_addr;
+			/* Relative to insn end. */
+			diff = node->u.expr->value - node->start_addr + 5; /* hard-coded :( */
 			vma_output_u32(diff);
 			break;
 			
@@ -447,7 +449,7 @@ static void vma_insns_allocate(vma_context_t *ctx)
 			case INSN_LOCALS:
 			case INSN_LDLOC:
 			case INSN_STLOC:
-			case INSN_BR_S:
+			case INSN_BR:
 			case INSN_BR_T:
 			case INSN_BR_F:
 				next_va += 1 + 1;
@@ -460,6 +462,7 @@ static void vma_insns_allocate(vma_context_t *ctx)
 				break;
 				
 			case INSN_LDC_32:
+			case INSN_LEA:
 			case INSN_CALL:
 				next_va += 1 + 4;
 				bss_va = next_va;
