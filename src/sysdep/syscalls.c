@@ -40,7 +40,7 @@ __DEFINE_SYSCALL3(open, int, const char *path, int flags, int mode);
 __DEFINE_SYSCALL3(read, int, int fd, void *buf, size_t count);
 __DEFINE_SYSCALL3(write, int, int fd, const void *buf, size_t count);
 __DEFINE_SYSCALL1(close, int, int fd);
-__DEFINE_SYSCALL2(lseek, int, off_t offset, int origin);
+__DEFINE_SYSCALL3(lseek, int, int fd, off_t offset, int origin);
 //#define sys_flock(fd, cmd) __SYSCALL(flock, 2, fd, cmd)
 __DEFINE_SYSCALL5(_newselect, int, int n, fd_set *inp, fd_set *outp, fd_set *exp, struct timeval *tvp);
 //#define sys_pipe(pipefd) __SYSCALL(pipe, 1, pipefd)

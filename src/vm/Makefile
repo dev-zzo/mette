@@ -30,7 +30,7 @@ SUBTARGETS:= \
 include $(SOURCES_ROOT)/Makefile.target.inc
 
 # Override CFLAGS
-CFLAGS+=-I$(SOURCES_ROOT)/sysdep
+CFLAGS+=-I$(SOURCES_ROOT)/sysdep -I$(SOURCES_ROOT)/rtl
 
 # Additional rules
 # Hack: vma should not be built before generator runs.

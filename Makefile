@@ -22,7 +22,7 @@ endif
 
 # Target build tools
 export CC_FOR_TARGET:=$(TOOLS_PATH)gcc
-export LD_FOR_TARGET:=$(TOOLS_PATH)gcc
+export LD_FOR_TARGET:=$(TOOLS_PATH)ld
 export AR_FOR_TARGET:=$(TOOLS_PATH)ar
 export RANLIB_FOR_TARGET:=$(TOOLS_PATH)ranlib
 export SIZE_FOR_TARGET:=$(TOOLS_PATH)size

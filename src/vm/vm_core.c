@@ -319,7 +319,7 @@ int vm_load_exec(const char *path)
 	vm_module_t *module;
 	vm_context_t *context;
 	
-	fd = vm_open(path, O_RDONLY);
+	fd = vm_open(path, O_RDONLY, 0);
 	if (fd < 0) {
 		vm_panic("vm_load_exec: failed to open the image.");
 	}

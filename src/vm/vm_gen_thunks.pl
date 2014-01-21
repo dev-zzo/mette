@@ -3,6 +3,9 @@
 use strict;
 use warnings;
 
+my @decls = ();
+my @inits = ();
+
 sub make_hash {
 	my $id = shift;
 	my $hash = 0;
@@ -20,8 +23,8 @@ sub process_thunks {
 		if (/VM_THUNK\s*[(]([_a-zA-Z0-9]+)\s*[)]/) {
 			my $id = $1;
 			my $hash = make_hash($id);
-			print "void __thunkproc_$id(vm_context_t *ctx);\n";
-			print "vm_thunk_record_t __thunkrec_$id __attribute__ ((section (\".thunks\"))) = { $hash, __thunkproc_$id };\n";
+			push @decls, "void __thunkproc_$id(vm_context_t *ctx);\n";
+			push @inits, "\t{ $hash, __thunkproc_$id },\n";
 		}
 	}
 }
@@ -31,3 +34,13 @@ foreach my $fname (@ARGV) {
 	process_thunks($fh);
 	close $fh;
 }
+
+foreach (@decls) {
+	print;
+}
+
+print "\nconst vm_thunk_record_t vm_thunks[] __attribute__((section(\".vm.thunks\"))) = {\n";
+foreach (@inits) {
+	print;
+}
+print "};\n\n";

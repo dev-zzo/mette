@@ -5,7 +5,6 @@
 	.ent	__start
 
 __start:
-	la		$28, _gp
 	move	$31, $0
 
 	lw		$4, 0($29) /* argc */

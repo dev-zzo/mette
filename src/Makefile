@@ -12,6 +12,7 @@ SOURCES:= \
 
 # Additional libs to link
 LIBS:= \
+	vm/mette-vm.a \
 	vm_thunks/mette-vmt.a \
 	vm/mette-vm.a \
 	rtl/mette-rtl.a \
@@ -21,8 +22,8 @@ LIBS:= \
 SUBTARGETS:= \
 	sysdep \
 	rtl \
-	vm \
 	vm_thunks \
+	vm \
 
 GENERATED:= \
 	mette.map
@@ -32,7 +33,6 @@ include $(SOURCES_ROOT)/Makefile.target.inc
 
 # Override CFLAGS
 CFLAGS+=-I$(SOURCES_ROOT)/sysdep/ -I$(SOURCES_ROOT)/vm/ -I$(SOURCES_ROOT)/rtl/ 
-LDFLAGS+=-nostdlib -Wl,--gc-sections -Wl,-Map,mette.map
+LDFLAGS+=-nostdlib --script=mette-mips.ldscript -Map=mette.map
 
 # Additional rules
-rtl: vm
