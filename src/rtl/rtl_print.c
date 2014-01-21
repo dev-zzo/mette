@@ -279,7 +279,7 @@ static uintptr_t nextarg_stack(__print_context_t *pctx)
 
 static void flush_sb(__print_context_t *pctx)
 {
-
+	rtl_strbuf_append_bytes(pctx->writer_data.sb, pctx->buffer, pctx->buffer_mark);
 }
 
 static void flush_fd(__print_context_t *pctx)

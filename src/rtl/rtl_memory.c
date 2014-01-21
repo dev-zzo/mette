@@ -1,6 +1,6 @@
 #include "xstring.h"
 #include "syscalls.h"
-#include "vm_thunks.h"
+#include "rtl_print.h"
 #include <stdint.h>
 
 /*
@@ -239,43 +239,15 @@ void *rtl_realloc(void *ptr, size_t size)
 	return new;
 }
 
-VM_THUNK(rtl_alloc)
-{
-	void *ptr;
-	VM_THUNK_ARGS_START
-		VM_THUNK_ARG(size_t size);
-	VM_THUNK_ARGS_END
-	ptr = rtl_alloc(args.size);
-	VM_THUNK_RETURN(ptr);
-}
-
-VM_THUNK(rtl_realloc)
-{
-	void *ptr;
-	VM_THUNK_ARGS_START
-		VM_THUNK_ARG(void * ptr);
-		VM_THUNK_ARG(size_t size);
-	VM_THUNK_ARGS_END
-	ptr = rtl_realloc(args.ptr, args.size);
-	VM_THUNK_RETURN(ptr);
-}
-
-VM_THUNK(rtl_free)
-{
-	VM_THUNK_ARGS_START
-		VM_THUNK_ARG(void *ptr);
-	VM_THUNK_ARGS_END
-	rtl_free(args.ptr);
-}
-
 #ifndef NDEBUG
 
 void rtl_alloc_dump(void)
 {
 	struct slot *s = first_slot;
 
+	rtl_print_fd(2, "Slots dump: \n");
 	while (s) {
-		/* "%p (%08X))", s, s->next_slot - s */
+		rtl_print_fd(2, "%08x (%08x)\n", s, s->next_slot - s);
 		s = s->next_slot;
 	}
 }

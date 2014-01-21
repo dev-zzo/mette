@@ -45,6 +45,9 @@ extern void
 rtl_strbuf_append(rtl_strbuf_t *sb, const rtl_strbuf_t *src);
 
 extern void
+rtl_strbuf_append_bytes(rtl_strbuf_t *sb, const void *src, uint16_t count);
+
+extern void
 rtl_strbuf_append_char(rtl_strbuf_t *sb, char ch);
 
 extern void

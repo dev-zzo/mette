@@ -36,7 +36,7 @@ ifeq ($(suffix $(TARGET)), .a)
 	$(AR) rcs $@ $^
 	$(SIZE) $@
 else
-	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ $^
 	$(SIZE) $@
 endif
 
