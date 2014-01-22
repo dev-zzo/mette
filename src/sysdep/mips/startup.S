@@ -11,10 +11,16 @@ __start:
 	addiu	$5, $29, 4 /* argv  */
 
 	jal		main
+	nop
 
 	/* Exit */
-	li		$4, 144
-	li		$2, 1
+	move	$4, $2
+	li		$2, 4001 /* hardcoded... not good. */
 	syscall
+
+hlt:
+	/* Hang.  */
+	b   hlt
+
 .size __start,.-__start
 .end __start
