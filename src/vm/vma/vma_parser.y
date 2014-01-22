@@ -26,7 +26,10 @@ static void yyerror(vma_context_t *ctx, const char *msg);
 
 %union {
 	int const_int;
-	const char *text;
+	struct {
+		unsigned length;
+		char *buffer;
+	} text;
 	vma_symbol_t *sym;
 	vma_expr_t *expr;
 	vma_expr_list_t *expr_list;
@@ -70,7 +73,7 @@ static void yyerror(vma_context_t *ctx, const char *msg);
 %token OP_NCALL
 
 %printer { fprintf(yyoutput, "%08X", $$); } INTEGER;
-%printer { fprintf(yyoutput, "%s", $$); } IDENTIFIER;
+%printer { fprintf(yyoutput, "%s", $$.buffer); } IDENTIFIER;
 
 %%
 
@@ -104,7 +107,7 @@ insn
 	| KW_DEFW expr_list
 		{ $$ = vma_insn_build(INSN_DEFW); $$->u.expr_list = $2; }
 	| KW_DEFS STRINGT
-		{ $$ = vma_insn_build(INSN_DEFS); $$->u.text = $2; }
+		{ $$ = vma_insn_build(INSN_DEFS); $$->u.text.length = $2.length; $$->u.text.buffer = $2.buffer; }
 	| KW_RESB expr
 		{ $$ = vma_insn_build(INSN_RESB); $$->u.expr = $2; }
 	| KW_RESH expr
@@ -160,7 +163,7 @@ insn
 	| OP_LDC_32 expr
 		{ $$ = vma_insn_build(INSN_LDC_32); $$->u.expr = $2; }
 	| OP_LEA IDENTIFIER
-		{ $$ = vma_insn_build(INSN_LEA); vma_symref_init(&$$->u.symref, $2); }
+		{ $$ = vma_insn_build(INSN_LEA); vma_symref_init(&$$->u.symref, $2.buffer); }
 	| OP_LDM_8_U
 		{ $$ = vma_insn_build(INSN_LDM_8_U); }
 	| OP_LDM_8_S
@@ -190,13 +193,13 @@ insn
 	| OP_POP
 		{ $$ = vma_insn_build(INSN_POP); }
 	| OP_BR IDENTIFIER
-		{ $$ = vma_insn_build(INSN_BR); vma_symref_init(&$$->u.symref, $2); }
+		{ $$ = vma_insn_build(INSN_BR); vma_symref_init(&$$->u.symref, $2.buffer); }
 	| OP_BR_T IDENTIFIER
-		{ $$ = vma_insn_build(INSN_BR_T); vma_symref_init(&$$->u.symref, $2); }
+		{ $$ = vma_insn_build(INSN_BR_T); vma_symref_init(&$$->u.symref, $2.buffer); }
 	| OP_BR_F IDENTIFIER
-		{ $$ = vma_insn_build(INSN_BR_F); vma_symref_init(&$$->u.symref, $2); }
+		{ $$ = vma_insn_build(INSN_BR_F); vma_symref_init(&$$->u.symref, $2.buffer); }
 	| OP_CALL IDENTIFIER
-		{ $$ = vma_insn_build(INSN_CALL); vma_symref_init(&$$->u.symref, $2); }
+		{ $$ = vma_insn_build(INSN_CALL); vma_symref_init(&$$->u.symref, $2.buffer); }
 	| OP_RET
 		{ $$ = vma_insn_build(INSN_RET); }
 	| OP_ICALL
@@ -206,13 +209,13 @@ insn
 	| OP_NCALL IDENTIFIER
 		{
 			$$ = vma_insn_build(INSN_NCALL);
-			$$->u.symref.u.sym = vma_symtab_define(&ctx->ncalls, $2, 0);
+			$$->u.symref.u.sym = vma_symtab_define(&ctx->ncalls, $2.buffer, 0);
 		}
 ;
 
 label
 	: IDENTIFIER ':'
-		{ $$ = vma_symtab_define(&ctx->labels, $1, 1); }
+		{ $$ = vma_symtab_define(&ctx->labels, $1.buffer, 1); }
 ;
 
 expr_list
@@ -226,7 +229,7 @@ expr
 	: INTEGER
 		{ $$ = vma_expr_build_constant($1); }
 	| '@' IDENTIFIER
-		{ $$ = vma_expr_build_symref($2); }
+		{ $$ = vma_expr_build_symref($2.buffer); }
 	| expr '|' expr
 		{ $$ = vma_expr_build_parent(EXPR_OR, $1, $3); }
 	| expr '&' expr

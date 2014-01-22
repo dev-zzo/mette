@@ -164,7 +164,10 @@ struct _vma_insn_t {
 		vma_symref_t symref;
 		vma_expr_t *expr;
 		vma_expr_list_t *expr_list;
-		const char *text;
+		struct {
+			unsigned length;
+			const char *buffer;
+		} text;
 	} u;
 };
 

@@ -1,6 +1,7 @@
 /*
  * VM assembly flex scanner.
  * ref: http://dinosaur.compilertools.net/flex/manpage.html
+ * ref: http://flex.sourceforge.net/manual/
  * ref: http://flex.sourceforge.net/manual/Bison-Bridge.html
  */
 
@@ -11,9 +12,12 @@
 
 #define YY_DECL int yylex(vma_context_t *state)
 
+static char unescape(char ch);
+
 %}
 
 %option noyywrap
+%array
 
  /* Start conditions */
 %x COMMENT
@@ -96,20 +100,74 @@ ID		{ALPHA}{ALNUM}*
 
  /* Identifiers */
 {ID} {
-	yylval.text = strdup(yytext);
+	yylval.text.length = strlen(yytext);
+	yylval.text.buffer = strdup(yytext);
 	return IDENTIFIER;
 }
 
  /* Strings */
 "\"" {
+	yylval.text.length = 0;
+	yylval.text.buffer = NULL;
 	BEGIN(STRING);
 }
-<STRING>[^"]* {
-	yylval.text = strdup(yytext);
+<STRING>[\\][x]{HEXDIGIT}{HEXDIGIT} {
+	while (yytext[yyleng - 1] != '\\')
+		yyleng--;
+	printf("Hex escape encountered: %s\n", &yytext[yyleng]);
+	yytext[yyleng - 1] = (char)strtol(&yytext[yyleng + 1], NULL, 16);
+	yytext[yyleng] = '\0';
+	yymore();
+}
+<STRING>[\\][0]{OCTDIGIT}*{OCTDIGIT}*{OCTDIGIT}* {
+	while (yytext[yyleng - 1] != '\\')
+		yyleng--;
+	printf("Oct escape encountered: %s\n", &yytext[yyleng]);
+	yytext[yyleng - 1] = (char)strtol(&yytext[yyleng], NULL, 8);
+	yytext[yyleng] = '\0';
+	yymore();
+}
+<STRING>[\\]["rnt\\] {
+	char ch;
+	yyleng -= 1;
+	switch (yytext[yyleng]) {
+		case '"':
+			ch = '"';
+			break;
+		case '\\':
+			ch = '\\';
+			break;
+		case 'r':
+			ch = '\r';
+			break;
+		case 'n':
+			ch = '\n';
+			break;
+		case 't':
+			ch = '\t';
+			break;
+	}
+	yytext[yyleng - 1] = ch;
+	yytext[yyleng] = '\0';
+	yymore();
+}
+<STRING>"\n" {
+	/* TODO: line number. */
+	fprintf(stderr, "Warning: string literal spans multiple lines.\n");
+	BEGIN(INITIAL);
 	return STRINGT;
 }
-<STRING>"\"" {
+<STRING>[^"] {
+	yymore();
+}
+<STRING>["] {
+	//printf("String: '%s'\n", yytext);
+	yylval.text.length = yyleng - 1;
+	yylval.text.buffer = malloc(yyleng);
+	/* Skip the quote */
+	memcpy(yylval.text.buffer, yytext, yyleng - 1);
 	BEGIN(INITIAL);
+	return STRINGT;
 }
 
  /* Comments */
@@ -139,7 +197,15 @@ ID		{ALPHA}{ALNUM}*
 
 %%
 
+static char unescape(char ch)
+{
+	switch (ch) {
+
+	}
+}
+
 void vma_lexer_set_input(FILE *input)
 {
 	yyrestart(input);
 }
+

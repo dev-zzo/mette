@@ -6,4 +6,5 @@ start:
 
 text:
 	.defs "Sample text!"
+	.defs "aaaa\n\n"
 

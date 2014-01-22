@@ -284,19 +284,18 @@ void vma_insn_evaluate(vma_insn_t *insn, vma_context_t *ctx)
 	}
 }
 
+#include "vm_opcodes.codes.tab"
+
 void vma_insn_emit(vma_insn_t *node)
 {
-#include "vma_insn.ops.tab"
-
 	uint32_t diff;
 	uint32_t count;
 	vma_expr_t *expr;
-	const char *text;
 
 	VMA_ASSERT(node);
 
 	if (node->type < INSN_ASM_KEYWORDS) {
-		vma_output_u8(vma_insn_to_opcode[node->type]);
+		vma_output_u8(vm_insn_to_opcode[node->type]);
 	}
 
 	switch (node->type) {
@@ -359,11 +358,14 @@ void vma_insn_emit(vma_insn_t *node)
 			}
 			break;
 
-		case INSN_DEFS:
-			text = node->u.text;
-			while (*text) {
-				vma_output_u8(*text);
-				++text;
+		case INSN_DEFS: {
+				const char *text = node->u.text.buffer;
+				unsigned count = node->u.text.length;
+				while (count) {
+					vma_output_u8(*text);
+					++text;
+					--count;
+				}
 			}
 			break;
 
@@ -478,8 +480,8 @@ static void vma_insns_allocate(vma_context_t *ctx)
 				break;
 				
 			case INSN_DEFS:
-				VMA_ASSERT(node->u.text);
-				next_va += strlen(node->u.text);
+				VMA_ASSERT(node->u.text.buffer);
+				next_va += node->u.text.length;
 				bss_va = next_va;
 				break;
 
