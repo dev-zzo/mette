@@ -1,9 +1,9 @@
 #include "xstring.h"
 #include "syscalls.h"
-#include "rtl_print.h"
 #include <stdint.h>
 
-//#define DBGPRINT
+//#define DEBUG_PRINTS
+#include "rtl_debug.h"
 
 /*
  * Many ideas stolen from Minix's implementation:
@@ -48,23 +48,17 @@ static int xmem_grow(size_t units, struct slot *last_free)
 	if (!arena_brk) {
 		arena_brk = DSEG_END;
 		first_slot = (struct slot *)DSEG_END;
-#ifdef DBGPRINT
-		rtl_print_fd(2, "xmem_grow: first start, arena break: %08X.\n", arena_brk);
-#endif
+		DBGPRINT("xmem_grow: first start, arena break: %08X.\n", arena_brk);
 	}
 	
 	new_slot = arena_brk;
 	arena_brk = (struct slot *)sys_brk(arena_brk + ALIGN(units * UNIT_SIZE, PAGE_SIZE));
 	if ((void *)new_slot == arena_brk) {
 		/* Seems that brk(2) has failed. Sorry. */
-#ifdef DBGPRINT
-		rtl_print_fd(2, "xmem_grow: brk() failed.\n");
-#endif
+		DBGPRINT("xmem_grow: brk() failed.\n");
 		return 0;
 	}
-#ifdef DBGPRINT
-	rtl_print_fd(2, "xmem_grow: arena break: %08x -> %08x.\n", new_slot, arena_brk);
-#endif
+	DBGPRINT("xmem_grow: arena break: %08x -> %08x.\n", new_slot, arena_brk);
 	
 	if (last_free) {
 		/* Simply append to the last free slot. */
@@ -86,9 +80,7 @@ void *rtl_alloc(size_t size)
 	/* Make up the total alloc size */
 	units = ALIGN(size, UNIT_SIZE) / UNIT_SIZE + 1;
 
-#ifdef DBGPRINT
-	rtl_print_fd(2, "rtl_alloc: 0x%x units (0x%x bytes)\n", units, units * UNIT_SIZE);
-#endif
+	DBGPRINT("rtl_alloc: 0x%x units (0x%x bytes)\n", units, units * UNIT_SIZE);
 	
 	/* Don't bother -- cannot allocate that much */
 	if (units > 0xFFFFFFU) {
@@ -100,18 +92,14 @@ void *rtl_alloc(size_t size)
 		/* Walk the free list, see if anything useful in there. */
 		prev_free = NULL;
 		curr_free = free_anchor;
-#ifdef DBGPRINT
-		rtl_print_fd(2, "rtl_alloc: c=%08x\n", curr_free);
-#endif
+		DBGPRINT("rtl_alloc: c=%08x\n", curr_free);
 		while (curr_free) {
 			struct slot *new_slot = curr_free + units;
 			/* Check for an overflow */
 			if (new_slot <= curr_free) {
 				return NULL;
 			}
-#ifdef DBGPRINT
-			rtl_print_fd(2, "rtl_alloc: c=%08x, n=%08x, nf=%08x\n", curr_free, curr_free->next_slot, curr_free->next_free);
-#endif
+			DBGPRINT("rtl_alloc: c=%08x, n=%08x, nf=%08x\n", curr_free, curr_free->next_slot, curr_free->next_free);
 			/* Too small. */
 			if (curr_free->next_slot < new_slot) {
 				/* Advance to the next item. */
@@ -121,19 +109,15 @@ void *rtl_alloc(size_t size)
 			}
 			/* Is it bigger, so it can be split? */
 			if (curr_free->next_slot > new_slot + 1 ) {
-#ifdef DBGPRINT
-				rtl_print_fd(2, "rtl_alloc: split\n");
-#endif
+				DBGPRINT("rtl_alloc: split\n");
 				/* Fill in the newly formed slot. */
 				new_slot->next_slot = curr_free->next_slot;
 				new_slot->next_free = curr_free->next_free;
 				/* Update this slot. */
 				curr_free->next_slot = new_slot;
 				curr_free->next_free = new_slot;
-#ifdef DBGPRINT
-				rtl_print_fd(2, "rtl_alloc: old=%08x, n=%08x, nf=%08x\n", curr_free, curr_free->next_slot, curr_free->next_free);
-				rtl_print_fd(2, "rtl_alloc: new=%08x, n=%08x, nf=%08x\n", new_slot, new_slot->next_slot, new_slot->next_free);
-#endif
+				DBGPRINT("rtl_alloc: old=%08x, n=%08x, nf=%08x\n", curr_free, curr_free->next_slot, curr_free->next_free);
+				DBGPRINT("rtl_alloc: new=%08x, n=%08x, nf=%08x\n", new_slot, new_slot->next_slot, new_slot->next_free);
 			}
 			/* Remove it from the list. */
 			if (prev_free) {
@@ -143,9 +127,7 @@ void *rtl_alloc(size_t size)
 			}
 			/* Delivered. */
 			curr_free->next_free = NULL;
-#ifdef DBGPRINT
-			rtl_print_fd(2, "rtl_alloc: result=%08x\n", curr_free);
-#endif
+			DBGPRINT("rtl_alloc: result=%08x\n", curr_free);
 			return curr_free + 1;
 		}
 		
@@ -268,7 +250,7 @@ void *rtl_realloc(void *ptr, size_t size)
 	return new;
 }
 
-#ifndef NDEBUG
+#ifdef DEBUG
 
 void rtl_alloc_dump(void)
 {
@@ -285,4 +267,4 @@ void rtl_alloc_dump(void)
 	rtl_print_fd(2, "Slots end.\n");
 }
 
-#endif // NDEBUG
+#endif // DEBUG
