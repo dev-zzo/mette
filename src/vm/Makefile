@@ -16,10 +16,9 @@ SOURCES:= \
 
 GENERATED:= \
 	vm_gen_opcodes.flag \
-	vm_opcodes.h \
-	vm_opcodes_switch.tab \
-	vma_lexer.ops.tab \
-	vma_insn.ops.tab \
+	vm_opcodes.switch.tab \
+	vm_opcodes.codes.tab \
+	vm_opcodes.names.tab \
 	vm_gen_opcodes \
 
 # Any additional subtargets here
@@ -36,9 +35,9 @@ CFLAGS+=-I$(SOURCES_ROOT)/sysdep -I$(SOURCES_ROOT)/rtl
 # Hack: vma should not be built before generator runs.
 vma: vm_gen_opcodes.flag
 
-vm_gen_opcodes.flag vm_opcodes.h vm_opcodes_switch.tab vma_l.ops.tab vma_insn.ops.tab: vm_gen_opcodes
-	touch vm_gen_opcodes.flag
+vm_gen_opcodes.flag vm_opcodes.switch.tab vm_opcodes.codes.tab vm_opcodes.names.tab: vm_gen_opcodes
 	./vm_gen_opcodes
+	touch vm_gen_opcodes.flag
 
 vm_gen_opcodes: vm_gen_opcodes.c vm_opcodes.in
 	$(CC_FOR_HOST) $(CFLAGS_FOR_HOST) -o $@ $<
