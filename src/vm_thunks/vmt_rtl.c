@@ -116,7 +116,7 @@ VM_THUNK(rtl_print_fd)
 		VM_THUNK_ARG(const char *format);
 	VM_THUNK_ARGS_END
 
-	VM_THUNK_RETURN(rtl_print_fd4(args.fd, args.format, nextarg_stack, ctx));
+	VM_THUNK_RETURN(rtl_xprint_fd(args.fd, args.format, nextarg_stack, ctx));
 }
 
 VM_THUNK(rtl_print_sb)
@@ -126,6 +126,6 @@ VM_THUNK(rtl_print_sb)
 		VM_THUNK_ARG(const char *format);
 	VM_THUNK_ARGS_END
 
-	VM_THUNK_RETURN(rtl_print_sb4(args.sb, args.format, nextarg_stack, ctx));
+	VM_THUNK_RETURN(rtl_xprint_sb(args.sb, args.format, nextarg_stack, ctx));
 }
 
