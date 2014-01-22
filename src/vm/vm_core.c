@@ -1,5 +1,5 @@
 #include "vm_internal.h"
-#include "vm_opcodes.h"
+//#include "vm_opcodes.h"
 #include "vm_thunks.h"
 #include "vm_loader.h"
 #include "vm_misc.h"
@@ -60,14 +60,14 @@ static uint32_t vm_fetch32_pc(vm_context_t *ctx)
 /* Emulate one VM insn. */
 void vm_step(vm_context_t *ctx)
 {
-#include "vm_opcodes_switch.tab"
+#include "vm_opcodes.switch.tab"
 	vm_operand_t op0, op1, op2, op3;
 	vm_operand_t r0, r1, r2, r3;
 	uint8_t *pc = ctx->pc;
 	unsigned opcount;
-	vm_opcode_t opcode;
+	uint8_t opcode;
 	
-	opcode = (const vm_opcode_t)(*pc);
+	opcode = *pc;
 	pc += 1;
 	opcount = opcode >> 6; /* 2 highest bits make for operand count. */
 
@@ -167,7 +167,7 @@ op_LDC_32:
 op_LEA:
 	r0 = vm_fetch32_ua(pc);
 	pc += 4;
-	r0 += pc;
+	r0 += (vm_uoperand_t)pc;
 	goto push_1;
 op_LDM_8_U:
 	r0 = (vm_uoperand_t)*(uint8_t *)(op0);
