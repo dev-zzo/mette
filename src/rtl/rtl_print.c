@@ -2,10 +2,7 @@
 #include "rtl_strbuf.h"
 #include "xstring.h"
 #include "syscalls.h"
-#include <stdarg.h>
 #include <stdint.h>
-
-//#define DBGPRINT
 
 typedef struct ___print_context_t __print_context_t;
 
@@ -122,11 +119,6 @@ static void conv_d(__print_context_t *pctx, int value)
 	char digits[34];
 	size_t digit_count;
 
-#ifdef DBGPRINT
-	xmemset(digits, 'X', 33);
-	digits[33] = '\n';
-#endif
-
 	if (value < 0) {
 		digit_count = conv_base(digits + 1, 10, -value) + 1;
 		digits[0] = '-';
@@ -135,9 +127,6 @@ static void conv_d(__print_context_t *pctx, int value)
 		digit_count = conv_base(digits, 10, value);
 		conv_text(pctx, digits, digit_count, pctx->flags.zero_padded ? '0' : ' ');
 	}
-#ifdef DBGPRINT
-	sys_write(2, digits, 34);
-#endif
 }
 
 static void conv_uox(__print_context_t *pctx, unsigned base, unsigned value)
@@ -145,18 +134,9 @@ static void conv_uox(__print_context_t *pctx, unsigned base, unsigned value)
 	char digits[33];
 	size_t digit_count;
 
-#ifdef DBGPRINT
-	xmemset(digits, 'X', 32);
-	digits[32] = '\n';
-#endif
-
 	digit_count = conv_base(digits, base, value);
 
 	conv_text(pctx, digits, digit_count, pctx->flags.zero_padded ? '0' : ' ');
-
-#ifdef DBGPRINT
-	sys_write(2, digits, 33);
-#endif
 }
 
 static void conv_strbuf(__print_context_t *pctx, const rtl_strbuf_t *sb)
@@ -211,17 +191,11 @@ static void __print_internal(const char *format, __print_context_t *pctx)
 			/* Zero padding flag */
 			pctx->flags.zero_padded = 1;
 			++cursor;
-#ifdef DBGPRINT
-			sys_write(2, "Z", 1);
-#endif
 		}
 		if (*cursor == '-') {
 			/* Left alignment flag */
 			pctx->flags.left_adjusted = 1;
 			++cursor;
-#ifdef DBGPRINT
-			sys_write(2, "L", 2);
-#endif
 		}
 		if (xisdigit(*cursor)) {
 			/* Field width specifier */
@@ -298,7 +272,7 @@ static void flush_fd(__print_context_t *pctx)
 	sys_write(pctx->writer_data.fd, pctx->buffer, pctx->buffer_mark);
 }
 
-int rtl_print_sb4(rtl_strbuf_t *sb, const char *format, rtl_print_nextarg_proc_t nextarg_proc, void *context)
+int rtl_xprint_sb(rtl_strbuf_t *sb, const char *format, rtl_print_nextarg_proc_t nextarg_proc, void *context)
 {
 	__print_context_t pctx;
 
@@ -321,14 +295,14 @@ int rtl_print_sb(rtl_strbuf_t *sb, const char *format, ...)
 
 	va_start(args, format);
 
-	result = rtl_print_sb4(sb, format, nextarg_va_list, &args);
+	result = rtl_xprint_sb(sb, format, nextarg_va_list, &args);
 
 	va_end(args);
 
 	return result;
 }
 
-int rtl_print_fd4(int fd, const char *format, rtl_print_nextarg_proc_t nextarg_proc, void *context)
+int rtl_xprint_fd(int fd, const char *format, rtl_print_nextarg_proc_t nextarg_proc, void *context)
 {
 	__print_context_t pctx;
 
@@ -344,6 +318,13 @@ int rtl_print_fd4(int fd, const char *format, rtl_print_nextarg_proc_t nextarg_p
 	return pctx.write_count;
 }
 
+int rtl_vprint_fd(int fd, const char *format, va_list args)
+{
+	int result;
+	result = rtl_xprint_fd(fd, format, nextarg_va_list, &args);
+	return result;
+}
+
 int rtl_print_fd(int fd, const char *format, ...)
 {
 	va_list args;
@@ -351,7 +332,7 @@ int rtl_print_fd(int fd, const char *format, ...)
 
 	va_start(args, format);
 
-	result = rtl_print_fd4(fd, format, nextarg_va_list, &args);
+	result = rtl_vprint_fd(fd, format, args);
 
 	va_end(args);
 
