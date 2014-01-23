@@ -4,6 +4,38 @@
 #include "syscalls.h"
 #include <stdint.h>
 
+static size_t conv_base(char *buffer, unsigned base, unsigned value);
+
+//#define DEBUG_PRINTS
+
+#ifdef DEBUG_PRINTS
+
+static void __dbg_print_hex(unsigned val)
+{
+	char buffer[16];
+	int offset;
+
+	xmemset(buffer, '0', 16);
+	offset = conv_base(buffer + 8, 16, val);
+	sys_write(2, buffer + offset, 8);
+}
+
+static void __dbg_print_asciiz(const char *str)
+{
+	size_t length = xstrlen(str);
+	sys_write(2, str, length);
+}
+
+#define DEBUG_PRINT_HEX(x) __dbg_print_hex((unsigned)(x))
+#define DEBUG_PRINT_ASCIIZ(x) __dbg_print_asciiz((x))
+
+#else
+
+#define DEBUG_PRINT_HEX(x)
+#define DEBUG_PRINT_ASCIIZ(x)
+
+#endif
+
 typedef struct ___print_context_t __print_context_t;
 
 typedef void (*__flush_proc_t)(__print_context_t *pctx);
@@ -169,6 +201,7 @@ static void __print_internal(const char *format, __print_context_t *pctx)
 	int done = 0;
 
 	do {
+		uintptr_t arg;
 
 		while (*cursor) {
 			if (*cursor != '%') {
@@ -210,35 +243,36 @@ static void __print_internal(const char *format, __print_context_t *pctx)
 			pctx->flags.prec_given = 1;
 			cursor += __ascii2uint(cursor, &pctx->prec);
 		}
+		arg = pctx->nextarg_proc(pctx->reader_data);
 		switch (*cursor) {
 			case 'd':
 				/* Signed decimal */
-				conv_d(pctx, (int)pctx->nextarg_proc(pctx));
+				conv_d(pctx, (int)arg);
 				break;
 			case 'u':
 				/* Unsigned decimal */
-				conv_uox(pctx, 10, (unsigned)pctx->nextarg_proc(pctx));
+				conv_uox(pctx, 10, (unsigned)arg);
 				break;
 			case 'o':
 				/* Unsigned octal */
-				conv_uox(pctx, 18, (unsigned)pctx->nextarg_proc(pctx));
+				conv_uox(pctx, 18, (unsigned)arg);
 				break;
 			case 'x':
 			case 'X':
 				/* Unsigned hex, upper-case */
-				conv_uox(pctx, 16, (unsigned)pctx->nextarg_proc(pctx));
+				conv_uox(pctx, 16, (unsigned)arg);
 				break;
 			case 'c':
 				/* A character */
-				put_char(pctx, (char)pctx->nextarg_proc(pctx));
+				put_char(pctx, (char)arg);
 				break;
 			case 's':
 				/* A strbuf */
-				conv_strbuf(pctx, (const rtl_strbuf_t *)pctx->nextarg_proc(pctx));
+				conv_strbuf(pctx, (const rtl_strbuf_t *)arg);
 				break;
 			case 'z':
 				/* An ASCIIZ string */
-				conv_asciiz(pctx, (const char *)pctx->nextarg_proc(pctx));
+				conv_asciiz(pctx, (const char *)arg);
 				break;
 			case '\0':
 				done = 1;
