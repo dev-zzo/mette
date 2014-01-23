@@ -9,9 +9,11 @@ Having this metadata simplifies things a lot, though the exact
 calling method is still platform dependent, as in C.
 */
 
-#define VM_THUNK_ARGS_START struct {
+#define VM_THUNK_ARGS_START \
+	struct {
 
-#define VM_THUNK_ARGS_END } args; \
+#define VM_THUNK_ARGS_END \
+	} args; \
 	vm_stack_popn(&ctx->dstack, sizeof(args) / sizeof(vm_operand_t), (vm_operand_t *)&args);
 
 #define VM_THUNK_ARG(decl) union { decl __attribute__ ((aligned (sizeof(vm_operand_t)))) ; }

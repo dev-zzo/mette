@@ -2,6 +2,9 @@
 #include "vm_internal.h"
 #include "vm_sysdeps.h"
 
+//#define DEBUG_PRINTS
+#include "rtl_debug.h"
+
 void vm_stack_init(vm_stack_t *stack)
 {
 	vm_chunk_t *chunk;
@@ -13,12 +16,14 @@ void vm_stack_init(vm_stack_t *stack)
 	
 	chunk->next = NULL;
 	stack->head = stack->top_chunk = chunk;
+	stack->top_index = -1;
 }
 
 void vm_stack_push(vm_stack_t *stack, vm_operand_t value)
 {
 	int next_index = stack->top_index + 1;
 	
+	DBGPRINT("vm_stack_push: pushing %08x\n", value);
 	if (next_index < 0) {
 		vm_panic("vm_stack_push: stack underflow detected.");
 	}
@@ -57,11 +62,13 @@ vm_operand_t vm_stack_pop(vm_stack_t *stack)
 		stack->top_index -= 1;
 	}
 	
+	DBGPRINT("vm_stack_pop: popped %08x\n", value);
 	return value;
 }
 
 void vm_stack_popn(vm_stack_t *stack, size_t n, vm_operand_t *dst)
 {
+	DBGPRINT("vm_stack_popn: popping %d over to %08x\n", n, dst);
 	while (n--) {
 		*dst++ = vm_stack_pop(stack);
 	}
