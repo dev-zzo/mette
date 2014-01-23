@@ -18,8 +18,13 @@ typedef struct _vm_context {
 	uint8_t *pc;
 	vm_locals_t *locals;
 	vm_module_t *module; /* Current module */
-	unsigned is_running : 1;
 } vm_context_t;
+
+/* Core VM functions */
+
+extern vm_context_t *vm_context_create(vm_module_t *module);
+
+extern void vm_step(vm_context_t *ctx);
 
 /* Miscellaneous VM functions */
 

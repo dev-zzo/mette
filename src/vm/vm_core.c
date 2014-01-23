@@ -1,8 +1,10 @@
 #include "vm_internal.h"
-//#include "vm_opcodes.h"
 #include "vm_thunks.h"
 #include "vm_loader.h"
 #include "vm_misc.h"
+
+#define DEBUG_PRINTS
+#include "rtl_debug.h"
 
 /* Assembly hacks (platform specific) thanks to GCC. */
 #if defined(TARGET_ARCH_mips)
@@ -34,28 +36,7 @@
 	r1 = quot;
 #endif
 
-/*
-static uint8_t vm_fetch8_pc(vm_context_t *ctx)
-{
-	uint8_t v = *ctx->pc;
-	ctx->pc += 1;
-	return v;
-}
-
-static uint16_t vm_fetch16_pc(vm_context_t *ctx)
-{
-	uint16_t v = vm_fetch16_ua(ctx->pc);
-	ctx->pc += sizeof(uint16_t);
-	return v;
-}
-
-static uint32_t vm_fetch32_pc(vm_context_t *ctx)
-{
-	uint32_t v = vm_fetch32_ua(ctx->pc);
-	ctx->pc += sizeof(uint32_t);
-	return v;
-}
-*/
+#include "vm_opcodes.names.tab"
 
 /* Emulate one VM insn. */
 void vm_step(vm_context_t *ctx)
@@ -68,8 +49,11 @@ void vm_step(vm_context_t *ctx)
 	uint8_t opcode;
 	
 	opcode = *pc;
+	DBGPRINT("vm_step: %08x -> %02x ", pc, opcode);
 	pc += 1;
 	opcount = opcode >> 6; /* 2 highest bits make for operand count. */
+	opcode &= 0x3F;
+	DBGPRINT("(%s / %d)\n", vm_insn_to_name[opcode], opcount);
 
 	switch (opcount) {
 	case 2:
@@ -80,7 +64,7 @@ void vm_step(vm_context_t *ctx)
 		break;
 	}
 	
-	goto *(&&op_invalid + offtab[opcode & 0x3F]);
+	goto *(&&op_invalid + offtab[opcode]);
 	
 op_invalid:
 	vm_panic("vm_step: unknown opcode.");
@@ -283,7 +267,11 @@ op_IJMP: {
 op_NCALL: {
 	int index = vm_fetch16_ua(pc); /* thunk index */
 	pc += 2;
-	vm_thunk_t thunk = (vm_thunk_t)ctx->module->ncalltab[index];
+	if (!ctx->module->ncalls_table) {
+		vm_panic("vm_step: no ncalls defined, but a ncall insn encountered.");
+	}
+	vm_thunk_t thunk = (vm_thunk_t)ctx->module->ncalls_table[index];
+	DBGPRINT("vm_step: NCALL: calling %d @%08X\n", index, thunk);
 	thunk(ctx);
 	goto push_none;
 }
@@ -298,37 +286,20 @@ push_none:
 	return;
 }
 
-int vm_load_exec(const char *path)
+vm_context_t *vm_context_create(vm_module_t *module)
 {
-	int fd;
-	vm_module_t *module;
-	vm_context_t *context;
-	
-	fd = vm_open(path, O_RDONLY, 0);
-	if (fd < 0) {
-		vm_panic("vm_load_exec: failed to open the image.");
+	vm_context_t *ctx;
+
+	ctx = (vm_context_t *)vm_alloc(sizeof(*ctx));
+	if (!ctx) {
+		vm_panic("vm_context_create: failed to allocate context.");
 	}
 	
-	module = vm_load_fd(fd);
-	vm_close(fd);
-	if (!module) {
-		vm_panic("vm_load_exec: failed to load the image.");
-	}
-	
-	context = (vm_context_t *)vm_alloc(sizeof(vm_context_t));
-	if (!context) {
-		vm_panic("vm_load_exec: failed to allocate context.");
-	}
-	
-	context->pc = module->entry;
-	context->module = module;
-	context->is_running = 1;
-	
-	while (context->is_running) {
-		vm_step(context);
-	}
-	
-	return 0;
+	vm_stack_init(&ctx->dstack);
+	vm_stack_init(&ctx->cstack);
+	ctx->pc = module->entry;
+	ctx->locals = NULL;
+	ctx->module = module;
+
+	return ctx;
 }
-
-

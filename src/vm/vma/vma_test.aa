@@ -1,6 +1,7 @@
 # Test file for the assembler
 
 start:
+	ldc.32 1234
 	ncall sys_exit
 	ret
 
