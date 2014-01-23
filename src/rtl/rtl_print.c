@@ -266,11 +266,11 @@ static void __print_internal(const char *format, __print_context_t *pctx)
 				/* A character */
 				put_char(pctx, (char)arg);
 				break;
-			case 's':
+			case 'b':
 				/* A strbuf */
 				conv_strbuf(pctx, (const rtl_strbuf_t *)arg);
 				break;
-			case 'z':
+			case 's':
 				/* An ASCIIZ string */
 				conv_asciiz(pctx, (const char *)arg);
 				break;
