@@ -36,7 +36,9 @@
 	r1 = quot;
 #endif
 
+#ifdef DEBUG_PRINTS
 #include "vm_opcodes.names.tab"
+#endif
 
 /* Emulate one VM insn. */
 void vm_step(vm_context_t *ctx)

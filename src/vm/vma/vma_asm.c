@@ -81,7 +81,6 @@ int vma_symref_resolve(vma_symref_t *ref, vma_symtab_t *symtab)
 
 	sym = vma_symtab_lookup(symtab, ref->u.name);
 	if (!sym) {
-		vma_error("unresolved symbol: `%s'", ref->u.name);
 		return 0;		
 	}
 	vma_debug_print("symref %p: symbol: `%s' -> %p (insn %p)", ref, ref->u.name, sym, sym->u.location);
@@ -94,12 +93,12 @@ int vma_symref_resolve(vma_symref_t *ref, vma_symtab_t *symtab)
  * Expressions
  */
 
-vma_expr_t *vma_expr_build_constant(int value)
+vma_expr_t *vma_expr_build_literal(int value)
 {
 	vma_expr_t *node = (vma_expr_t *)vma_malloc(sizeof(*node));
 
 	node->next = NULL;
-	node->type = EXPR_CONSTANT;
+	node->type = EXPR_LITERAL;
 	node->value = value;
 
 	return node;
@@ -136,13 +135,22 @@ uint32_t vma_expr_evaluate(vma_expr_t *expr, vma_context_t *ctx)
 
 	vma_debug_print("evaluating expr: %p", expr);
 	switch (expr->type) {
-		case EXPR_CONSTANT:
+		case EXPR_LITERAL:
 			break;
 
 		case EXPR_SYMREF:
 			if (vma_symref_resolve(&expr->u.symref, &ctx->labels)) {
-				expr->value = expr->u.symref.u.sym->u.location->start_addr;
+				vma_insn_t *target = expr->u.symref.u.sym->u.location;
+				if (!target->flags.allocated) {
+					vma_error("referring to symbol `%s' before its location is known.", expr->u.symref.u.sym->name);
+					expr->value = 0;
+				} else {
+					expr->value = target->start_addr;
+				}
+			} else if (vma_symref_resolve(&expr->u.symref, &ctx->constants)) {
+				expr->value = vma_expr_evaluate(expr->u.symref.u.sym->u.value, ctx);
 			} else {
+				vma_error("unresolved symbol: `%s'", expr->u.symref.u.name);
 				expr->value = 0;
 			}
 			break;
@@ -206,7 +214,7 @@ uint32_t vma_expr_evaluate(vma_expr_t *expr, vma_context_t *ctx)
 			break;
 
 		default:
-			vma_abort("%s:%d:internal error: unhandled expr type %d", __FILE__, __LINE__, expr->type);
+			vma_abort("%s:%d: internal error: unhandled expr type %d", __FILE__, __LINE__, expr->type);
 			return 0;
 	}
 	return expr->value;
@@ -291,11 +299,13 @@ void vma_insn_evaluate(vma_insn_t *insn, vma_context_t *ctx)
 		case INSN_BR_T:
 		case INSN_BR_F:
 		case INSN_CALL:
-			vma_symref_resolve(&insn->u.symref, &ctx->labels);
+			if (!vma_symref_resolve(&insn->u.symref, &ctx->labels)) {
+				vma_error("unresolved symbol: `%s'", insn->u.symref.u.name);
+			}
 			break;
 
 		case INSN_NCALL:
-			//vma_symref_resolve(&insn->u.symref, &ctx->ncalls);
+			/* No need to resolve NCALLs */
 			break;
 	}
 }
@@ -553,6 +563,7 @@ static void vma_insns_allocate(vma_context_t *ctx)
 
 		vma_debug_print("alloc: %p (%02X): at %08X", node, node->type, node->start_addr);
 
+		node->flags.allocated = 1;
 		node = node->next;
 	}
 

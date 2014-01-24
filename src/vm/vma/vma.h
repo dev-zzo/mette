@@ -23,6 +23,7 @@ struct _vma_symbol_t {
 	union {
 		unsigned id;
 		vma_insn_t *location;
+		vma_expr_t *value;
 	} u;
 };
 
@@ -52,7 +53,7 @@ extern int vma_symref_resolve(vma_symref_t *ref, vma_symtab_t *symtab);
 
 typedef enum _vma_expr_type_t vma_expr_type_t;
 enum _vma_expr_type_t {
-	EXPR_CONSTANT,
+	EXPR_LITERAL,
 	EXPR_SYMREF,
 	EXPR_OR,
 	EXPR_AND,
@@ -75,7 +76,7 @@ struct _vma_expr_t {
 	} u;
 };
 
-extern vma_expr_t *vma_expr_build_constant(int value);
+extern vma_expr_t *vma_expr_build_literal(int value);
 extern vma_expr_t *vma_expr_build_symref(const char *name);
 extern vma_expr_t *vma_expr_build_parent(vma_expr_type_t type, vma_expr_t *a, vma_expr_t *b);
 extern uint32_t vma_expr_evaluate(vma_expr_t *expr, vma_context_t *ctx);
@@ -169,6 +170,9 @@ struct _vma_insn_t {
 			const char *buffer;
 		} text;
 	} u;
+	struct {
+		unsigned allocated : 1;
+	} flags;
 };
 
 extern vma_insn_t *vma_insn_build(vma_insn_type_t type);
@@ -183,6 +187,7 @@ struct _vma_context_t {
 	FILE *output;
 	const char *start_symbol;
 	vma_symtab_t labels;
+	vma_symtab_t constants;
 	vma_symtab_t ncalls;
 	vma_insn_t *insns_head;
 	vma_insn_t *insns_tail;

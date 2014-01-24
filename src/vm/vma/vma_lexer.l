@@ -48,6 +48,7 @@ ID		{ALPHA}{ALNUM}*
 [.][rR][eE][sS][bB] return KW_RESB;
 [.][rR][eE][sS][hH] return KW_RESH;
 [.][rR][eE][sS][wW] return KW_RESW;
+[.][cC][oO][nN][sS][tT] return KW_CONST;
 
  /* Opcodes */
 [aA][dD][dD] return OP_ADD;

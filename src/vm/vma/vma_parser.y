@@ -22,6 +22,8 @@ extern int yylex(vma_context_t *ctx);
 
 static void yyerror(vma_context_t *ctx, const char *msg);
 
+static void append_insn(vma_context_t *ctx, vma_insn_t *insn);
+
 %}
 
 %union {
@@ -42,8 +44,11 @@ static void yyerror(vma_context_t *ctx, const char *msg);
 %type <sym> label
 %type <expr> expr
 %type <expr_list> expr_list
-%type <insn> insn
-%type <insn> stmt
+%type <insn> labeled_insn
+%type <insn> addressable_insn
+%type <insn> datadef_insn
+%type <insn> datares_insn
+%type <insn> machine_insn
 %left '|'
 %left '&'
 %left '^'
@@ -58,6 +63,7 @@ static void yyerror(vma_context_t *ctx, const char *msg);
 
 %token KW_DEFS KW_DEFB KW_DEFH KW_DEFW
 %token KW_RESB KW_RESH KW_RESW
+%token KW_CONST
 
 %token OP_ADD OP_SUB OP_MULU OP_MULS OP_DIVU OP_DIVS 
 %token OP_AND OP_OR OP_XOR OP_NOT OP_LSL OP_LSR OP_ASR 
@@ -80,26 +86,42 @@ static void yyerror(vma_context_t *ctx, const char *msg);
 unit
 	: /* empty */
 		{ ctx->insns_tail = ctx->insns_head = NULL; }
-	| unit stmt
-		{
-			if (ctx->insns_tail) {
-				ctx->insns_tail->next = $2;
-			} else {
-				ctx->insns_head = $2;				
-			}
-			ctx->insns_tail = $2;
-			vma_debug_print("appending insn %p", ctx->insns_tail);
-		}
+	| unit listed_stmt
+	| unit dropped_stmt
 ;
 
-stmt
-	: insn
-		{ $$ = $1; }
-	| label insn
+listed_stmt
+	: labeled_insn
+		{ append_insn(ctx, $1); }
+	| addressable_insn
+		{ append_insn(ctx, $1); }
+;
+
+dropped_stmt
+	: constdef_insn
+		{ }
+;
+
+labeled_insn
+	: label addressable_insn
 		{ $$ = $2; $1->u.location = $2; }
 ;
 
-insn
+addressable_insn
+	: machine_insn
+		{ $$ = $1; }
+	| datadef_insn
+		{ $$ = $1; }
+	| datares_insn
+		{ $$ = $1; }
+;
+
+constdef_insn
+	: IDENTIFIER KW_CONST expr
+		{ vma_symbol_t *c = vma_symtab_define(&ctx->constants, $1.buffer, 1); c->u.value = $3; }
+;
+
+datadef_insn
 	: KW_DEFB expr_list
 		{ $$ = vma_insn_build(INSN_DEFB); $$->u.expr_list = $2; }
 	| KW_DEFH expr_list
@@ -108,13 +130,19 @@ insn
 		{ $$ = vma_insn_build(INSN_DEFW); $$->u.expr_list = $2; }
 	| KW_DEFS STRINGT
 		{ $$ = vma_insn_build(INSN_DEFS); $$->u.text.length = $2.length; $$->u.text.buffer = $2.buffer; }
-	| KW_RESB expr
+;
+
+datares_insn
+	: KW_RESB expr
 		{ $$ = vma_insn_build(INSN_RESB); $$->u.expr = $2; }
 	| KW_RESH expr
 		{ $$ = vma_insn_build(INSN_RESH); $$->u.expr = $2; }
 	| KW_RESW expr
 		{ $$ = vma_insn_build(INSN_RESW); $$->u.expr = $2; }
-	| OP_ADD
+;
+
+machine_insn
+	: OP_ADD
 		{ $$ = vma_insn_build(INSN_ADD); }
 	| OP_SUB
 		{ $$ = vma_insn_build(INSN_SUB); }
@@ -227,9 +255,9 @@ expr_list
 
 expr
 	: INTEGER
-		{ $$ = vma_expr_build_constant($1); }
-	| '@' IDENTIFIER
-		{ $$ = vma_expr_build_symref($2.buffer); }
+		{ $$ = vma_expr_build_literal($1); }
+	| IDENTIFIER
+		{ $$ = vma_expr_build_symref($1.buffer); }
 	| expr '|' expr
 		{ $$ = vma_expr_build_parent(EXPR_OR, $1, $3); }
 	| expr '&' expr
@@ -269,4 +297,15 @@ int vma_parse_input(vma_context_t *ctx)
 	//yydebug = vma_debug;
 	vma_lexer_set_input(ctx->input);
 	return yyparse(ctx);
+}
+
+static void append_insn(vma_context_t *ctx, vma_insn_t *insn)
+{
+	if (ctx->insns_tail) {
+		ctx->insns_tail->next = insn;
+	} else {
+		ctx->insns_head = insn;
+	}
+	ctx->insns_tail = insn;
+	vma_debug_print("appending insn %p", ctx->insns_tail);
 }

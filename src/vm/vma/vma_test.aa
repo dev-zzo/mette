@@ -1,11 +1,12 @@
 # Test file for the assembler
+ccc	.const 1234
 
 start:
 	lea text
 	ldc.2
 	ncall rtl_print_fd
 
-	ldc.32 1234
+	ldc.32 ccc
 	ncall sys_exit
 	ret
 
