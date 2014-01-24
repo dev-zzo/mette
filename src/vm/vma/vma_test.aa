@@ -1,11 +1,15 @@
 # Test file for the assembler
 
 start:
+	lea text
+	ldc.2
+	ncall rtl_print_fd
+
 	ldc.32 1234
 	ncall sys_exit
 	ret
 
 text:
-	.defs "Sample text!"
+	.defs "Sample text!\n\000"
 	.defs "aaaa\n\n"
 

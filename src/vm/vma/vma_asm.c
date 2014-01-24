@@ -53,6 +53,21 @@ vma_symbol_t *vma_symtab_lookup(const vma_symtab_t *symtab, const char *name)
 	return sym;
 }
 
+void vma_symtab_dump(const vma_symtab_t *symtab, int resolved)
+{
+	vma_symbol_t *sym = symtab->head;
+
+	vma_debug_print("dumping symtab %p", symtab);
+	while (sym) {
+		if (resolved) {
+			vma_debug_print("%p %08X %s", sym, sym->u.location->start_addr, sym->name);
+		} else {
+			vma_debug_print("%p %8d %s", sym, sym->u.id, sym->name);
+		}
+		sym = sym->next;
+	}
+}
+
 void vma_symref_init(vma_symref_t *ref, const char *name)
 {
 	ref->u.name = name;
@@ -69,6 +84,7 @@ int vma_symref_resolve(vma_symref_t *ref, vma_symtab_t *symtab)
 		vma_error("unresolved symbol: `%s'", ref->u.name);
 		return 0;		
 	}
+	vma_debug_print("symref %p: symbol: `%s' -> %p (insn %p)", ref, ref->u.name, sym, sym->u.location);
 
 	ref->u.sym = sym;
 	return 1;
@@ -250,7 +266,7 @@ vma_insn_t *vma_insn_build(vma_insn_type_t type)
 
 void vma_insn_evaluate(vma_insn_t *insn, vma_context_t *ctx)
 {
-	vma_debug_print("evaluating insn %p", insn);
+	vma_debug_print("evaluating insn: %p", insn);
 	switch (insn->type) {
 		case INSN_LDC_8_U:
 		case INSN_LDC_8_S:
@@ -311,7 +327,8 @@ void vma_insn_emit(vma_insn_t *node)
 		case INSN_BR_T:
 		case INSN_BR_F:
 			/* Relative to insn end. */
-			diff = node->u.expr->value - node->start_addr + 2; /* hard-coded :( */
+			VMA_ASSERT(node->u.symref.u.sym);
+			diff = node->u.symref.u.sym->u.location->start_addr - (node->start_addr + 2); /* hard-coded :( */
 			if (diff & 0xFFFFFF00) {
 				vma_error("branch target out of range");
 			}
@@ -330,7 +347,8 @@ void vma_insn_emit(vma_insn_t *node)
 		case INSN_LEA:
 		case INSN_CALL:
 			/* Relative to insn end. */
-			diff = node->u.expr->value - node->start_addr + 5; /* hard-coded :( */
+			VMA_ASSERT(node->u.symref.u.sym);
+			diff = node->u.symref.u.sym->u.location->start_addr - (node->start_addr + 5); /* hard-coded :( */
 			vma_output_u32(diff);
 			break;
 			
@@ -400,6 +418,7 @@ static void vma_insns_evaluate(vma_context_t *ctx)
 {
 	vma_insn_t *node = ctx->insns_head;
 
+	vma_debug_print("evaluating insns...");
 	while (node) {
 		vma_insn_evaluate(node, ctx);
 		node = node->next;
@@ -413,6 +432,7 @@ static void vma_insns_allocate(vma_context_t *ctx)
 	vma_vaddr_t next_va = ctx->start_va;
 	vma_vaddr_t bss_va = ctx->start_va;
 
+	vma_debug_print("evaluating insn lengths...");
 	while (node) {
 		node->start_addr = next_va;
 		switch (node->type) {
@@ -531,7 +551,7 @@ static void vma_insns_allocate(vma_context_t *ctx)
 				break;
 		}
 
-		vma_debug_print("alloc: %p (%d): at %08X", node, node->type, node->start_addr);
+		vma_debug_print("alloc: %p (%02X): at %08X", node, node->type, node->start_addr);
 
 		node = node->next;
 	}
@@ -544,9 +564,11 @@ void vma_assemble(vma_context_t *ctx)
 {
 	VMA_ASSERT(ctx);
 
-	vma_debug_print("%p: %p/%p", ctx, ctx->insns_head, ctx->insns_tail);
+	vma_debug_print("vma_assemble: %p: %p/%p", ctx, ctx->insns_head, ctx->insns_tail);
 	vma_insns_evaluate(ctx);
 	vma_abort_on_errors();
 	vma_insns_allocate(ctx);
 	vma_abort_on_errors();
+
+	vma_symtab_dump(&ctx->labels, 1);
 }

@@ -12,7 +12,7 @@
 
 #define YY_DECL int yylex(vma_context_t *state)
 
-static char unescape(char ch);
+static void dump_yytext();
 
 %}
 
@@ -114,18 +114,18 @@ ID		{ALPHA}{ALNUM}*
 <STRING>[\\][x]{HEXDIGIT}{HEXDIGIT} {
 	while (yytext[yyleng - 1] != '\\')
 		yyleng--;
-	printf("Hex escape encountered: %s\n", &yytext[yyleng]);
 	yytext[yyleng - 1] = (char)strtol(&yytext[yyleng + 1], NULL, 16);
 	yytext[yyleng] = '\0';
-	yymore();
+	/* Dirty, dirty hack! yymore() uses strlen, which doesn't allow for NULL chars. */
+	(yy_more_offset) = yyleng;
 }
-<STRING>[\\][0]{OCTDIGIT}*{OCTDIGIT}*{OCTDIGIT}* {
+<STRING>[\\]{OCTDIGIT}{OCTDIGIT}?{OCTDIGIT}? {
 	while (yytext[yyleng - 1] != '\\')
 		yyleng--;
-	printf("Oct escape encountered: %s\n", &yytext[yyleng]);
 	yytext[yyleng - 1] = (char)strtol(&yytext[yyleng], NULL, 8);
 	yytext[yyleng] = '\0';
-	yymore();
+	/* Dirty, dirty hack! yymore() uses strlen, which doesn't allow for NULL chars. */
+	(yy_more_offset) = yyleng;
 }
 <STRING>[\\]["rnt\\] {
 	char ch;
@@ -161,7 +161,6 @@ ID		{ALPHA}{ALNUM}*
 	yymore();
 }
 <STRING>["] {
-	//printf("String: '%s'\n", yytext);
 	yylval.text.length = yyleng - 1;
 	yylval.text.buffer = malloc(yyleng);
 	/* Skip the quote */
@@ -175,7 +174,6 @@ ID		{ALPHA}{ALNUM}*
 	BEGIN(COMMENT);
 }
 <COMMENT>[^\n]+ /* Ignored */ {
-	//printf("Comment: %s\n", yytext);
 	BEGIN(INITIAL);
 }
 
@@ -197,11 +195,15 @@ ID		{ALPHA}{ALNUM}*
 
 %%
 
-static char unescape(char ch)
+static void dump_yytext()
 {
-	switch (ch) {
+	int i = 0;
 
+	while (i < yyleng) {
+		printf("%02X ", (unsigned char)yytext[i]);
+		++i;
 	}
+	printf("\n");
 }
 
 void vma_lexer_set_input(FILE *input)

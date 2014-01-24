@@ -88,7 +88,7 @@ unit
 				ctx->insns_head = $2;				
 			}
 			ctx->insns_tail = $2;
-			vma_debug_print("%p/%p", ctx->insns_head, ctx->insns_tail);
+			vma_debug_print("appending insn %p", ctx->insns_tail);
 		}
 ;
 
@@ -96,7 +96,7 @@ stmt
 	: insn
 		{ $$ = $1; }
 	| label insn
-		{ $$ = $2; $1->u.location = $$; }
+		{ $$ = $2; $1->u.location = $2; }
 ;
 
 insn
