@@ -198,9 +198,8 @@ static int __ascii2uint(const char *text, unsigned *result)
 static void __print_internal(const char *format, __print_context_t *pctx)
 {
 	const char *cursor = format;
-	int done = 0;
 
-	do {
+	for(;;) {
 		uintptr_t arg;
 
 		while (*cursor) {
@@ -213,6 +212,9 @@ static void __print_internal(const char *format, __print_context_t *pctx)
 				break;
 			}
 		}
+
+		if (*cursor == '\0')
+			break;
 
 		if (*cursor == '%') {
 			put_char(pctx, *cursor);
@@ -274,15 +276,12 @@ static void __print_internal(const char *format, __print_context_t *pctx)
 				/* An ASCIIZ string */
 				conv_asciiz(pctx, (const char *)arg);
 				break;
-			case '\0':
-				done = 1;
-				break;
 			default:
 				/* Incorrect specifier */
 				break;						
 		}
 		++cursor;
-	} while (!done);
+	}
 
 	if (pctx->buffer_mark) {
 		pctx->flush_proc(pctx);
@@ -339,6 +338,12 @@ int rtl_print_sb(rtl_strbuf_t *sb, const char *format, ...)
 int rtl_xprint_fd(int fd, const char *format, rtl_print_nextarg_proc_t nextarg_proc, void *context)
 {
 	__print_context_t pctx;
+
+	DEBUG_PRINT_ASCIIZ("rtl_xprint_fd: format=");
+	DEBUG_PRINT_HEX(format);
+	DEBUG_PRINT_ASCIIZ(" ");
+	DEBUG_PRINT_ASCIIZ(format);
+	DEBUG_PRINT_ASCIIZ("\n");
 
 	pctx.nextarg_proc = nextarg_proc;
 	pctx.reader_data = context;
