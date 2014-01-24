@@ -38,7 +38,7 @@ ifeq ($(suffix $(TARGET)), .a)
 else
 	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 	$(SIZE) $@
-	objdump -h $@
+	objdump -x $@
 endif
 
 #
