@@ -181,6 +181,7 @@ op_STM_32:
 	goto push_none;
 op_LOCALS: {
 	uint8_t count = *(uint8_t *)(pc);
+	pc += 1;
 	ctx->locals = (vm_locals_t *)vm_alloc(sizeof(vm_locals_t) + (count - 1) * sizeof(vm_operand_t));
 	ctx->locals->count = count;
 	goto push_none;
@@ -221,20 +222,23 @@ op_POP:
 	goto push_none;
 op_BR: {
 	int8_t offset = *(int8_t *)(pc);
-	pc = pc + 1 + offset;
+	pc += 1;
+	pc = pc + offset;
 	goto push_none;
 }
 op_BR_T: {
 	int8_t offset = *(int8_t *)(pc);
+	pc += 1;
 	if (op0) {
-		pc = pc + 1 + offset;
+		pc = pc + offset;
 	}
 	goto push_none;
 }
 op_BR_F: {
 	int8_t offset = *(int8_t *)(pc);
+	pc += 1;
 	if (!op0) {
-		pc = pc + 1 + offset;
+		pc = pc + offset;
 	}
 	goto push_none;
 }

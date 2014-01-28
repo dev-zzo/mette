@@ -163,15 +163,15 @@ static const vm_opcode_info_t opcodes[] = {
 	
 	{
 		"LOCALS", "Create a space for local vars",
-		1, 0,
+		0, 0,
 	},
 	{
 		"LDLOC", "Load a local",
-		1, 1,
+		0, 1,
 	},
 	{
 		"STLOC", "Store a local",
-		2, 0,
+		1, 0,
 	},
 	
 	/* Stack manipulations */
