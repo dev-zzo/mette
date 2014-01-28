@@ -72,16 +72,30 @@ VM_THUNK(sockaddr_get_port)
 	VM_THUNK_RETURN(rtl_ntohs(args.sa->sin_port));
 }
 
+/*
+ * Reality check: They could not make their mind with SOCK_* constants.
+ * Verify: /usr/include/bits/socket.h
+ * TODO: make this pretty.
+ */
+
 VM_THUNK(socket_create)
 {
 	int sockfd;
+	int sysdep_type;
 
 	VM_THUNK_ARGS_START
 		VM_THUNK_ARG(int type);
 		VM_THUNK_ARG(int protocol);
 	VM_THUNK_ARGS_END
 
-	sockfd = sys_socket(AF_INET, args.type, args.protocol);
+	switch(args.type) {
+		case 1: sysdep_type = SOCK_STREAM; break;
+		case 2: sysdep_type = SOCK_DGRAM; break;
+		case 3: sysdep_type = SOCK_RAW; break;
+		default: sysdep_type = -1; break;
+	}
+
+	sockfd = sys_socket(AF_INET, sysdep_type, args.protocol);
 
 	VM_THUNK_RETURN(sockfd);
 }
@@ -198,66 +212,54 @@ VM_THUNK(socket_sendto)
 	VM_THUNK_RETURN(result);
 }
 
-VM_THUNK(socket_recv)
+static rtl_strbuf_t *socket_recvfrom(int sockfd, size_t max_length, struct sockaddr *sa)
 {
 	rtl_strbuf_t *sb;
 	int result;
+	int addrlen = sizeof(*sa);
 
+	sys_errno = 0;
+
+	sb = rtl_strbuf_alloc(max_length);
+	if (!sb) {
+		sys_errno = ENOMEM;
+		return NULL;
+	}
+
+	result = sys_recvfrom(
+		sockfd,
+		rtl_strbuf_get_buffer(sb), rtl_strbuf_get_size(sb),
+		0,
+		sa, &addrlen);
+
+	if (result >= 0) {
+		rtl_strbuf_set_length(sb, result);
+		return sb;
+	}
+
+	rtl_strbuf_free(sb);
+	return NULL;
+}
+
+VM_THUNK(socket_recv)
+{
 	VM_THUNK_ARGS_START
 		VM_THUNK_ARG(int sockfd);
 		VM_THUNK_ARG(size_t max_length);
 	VM_THUNK_ARGS_END
 
-	sb = rtl_strbuf_alloc(args.max_length);
-	if (!sb) {
-		sys_errno = ENOMEM;
-		VM_THUNK_RETURN(0);
-	}
-
-	result = sys_recv(
-		args.sockfd,
-		rtl_strbuf_get_buffer(sb), rtl_strbuf_get_size(sb),
-		0);
-
-	if (result >= 0) {
-		rtl_strbuf_set_length(sb, result);
-		VM_THUNK_RETURN(sb);
-	} else {
-		rtl_strbuf_free(sb);
-		VM_THUNK_RETURN(0);
-	}
+	VM_THUNK_RETURN(socket_recvfrom(args.sockfd, args.max_length, NULL));
 }
 
 VM_THUNK(socket_recvfrom)
 {
-	rtl_strbuf_t *sb;
-	int result;
-
 	VM_THUNK_ARGS_START
 		VM_THUNK_ARG(int sockfd);
 		VM_THUNK_ARG(size_t max_length);
 		VM_THUNK_ARG(struct sockaddr *sa);
 	VM_THUNK_ARGS_END
 
-	sb = rtl_strbuf_alloc(args.max_length);
-	if (!sb) {
-		sys_errno = ENOMEM;
-		VM_THUNK_RETURN(0);
-	}
-
-	result = sys_recvfrom(
-		args.sockfd,
-		rtl_strbuf_get_buffer(sb), rtl_strbuf_get_size(sb),
-		0,
-		args.sa, sizeof(*args.sa));
-
-	if (result >= 0) {
-		rtl_strbuf_set_length(sb, result);
-		VM_THUNK_RETURN(sb);
-	} else {
-		rtl_strbuf_free(sb);
-		VM_THUNK_RETURN(0);
-	}
+	VM_THUNK_RETURN(socket_recvfrom(args.sockfd, args.max_length, args.sa));
 }
 
 VM_THUNK(socket_shutdown)

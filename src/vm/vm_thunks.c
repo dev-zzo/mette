@@ -1,9 +1,7 @@
 #include "vm_internal.h"
 #include "vm_thunks.h"
 
-/*
-#define DEBUG_PRINTS
-*/
+//#define DEBUG_PRINTS
 #include "rtl_debug.h"
 
 /* Linker defined */

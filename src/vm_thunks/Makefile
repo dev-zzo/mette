@@ -11,6 +11,7 @@ SOURCES_RAW:= \
 	vmt_sockets.c \
 	vmt_select.c \
 	vmt_misc.c \
+	vmt_io.c \
 
 GENERATED:= \
 	vmt_thunks.c \
