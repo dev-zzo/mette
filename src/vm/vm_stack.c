@@ -2,7 +2,7 @@
 #include "vm_internal.h"
 #include "vm_sysdeps.h"
 
-//#define DEBUG_PRINTS
+#define DEBUG_PRINTS
 #include "rtl_debug.h"
 
 void vm_stack_init(vm_stack_t *stack)

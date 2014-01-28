@@ -10,17 +10,17 @@
 #if defined(TARGET_ARCH_mips)
 #define TARGET_MULU(a,b,c,d) \
 	__asm__ __volatile__( \
-		"multu %0, %1\n\t" \
-		"mfhi %2\n\t" \
-		"mflo %3\n\t" \
+		"multu %2, %3\n\t" \
+		"mfhi %0\n\t" \
+		"mflo %1\n\t" \
 		: "=r"(c), "=r"(d) \
 		: "r"(a), "r"(b) \
 		)
 #define TARGET_MULS(a,b,c,d) \
 	__asm__ __volatile__( \
-		"mult %0, %1\n\t" \
-		"mfhi %2\n\t" \
-		"mflo %3\n\t" \
+		"mult %2, %3\n\t" \
+		"mfhi %0\n\t" \
+		"mflo %1\n\t" \
 		: "=r"(c), "=r"(d) \
 		: "r"(a), "r"(b) \
 		)
@@ -72,10 +72,10 @@ op_invalid:
 	vm_panic("vm_step: unknown opcode.");
 
 op_ADD:
-	r0 = op0 + op1;
+	r0 = op1 + op0;
 	goto push_1;
 op_SUB:
-	r0 = op0 - op1;
+	r0 = op1 - op0;
 	goto push_1;
 op_MULU: {
 	TARGET_MULU(op0, op1, r0, r1);
@@ -94,13 +94,13 @@ op_DIVS: {
 	goto push_2;
 }
 op_AND:
-	r0 = op0 & op1;
+	r0 = op1 & op0;
 	goto push_1;
 op_OR:
-	r0 = op0 | op1;
+	r0 = op1 | op0;
 	goto push_1;
 op_XOR:
-	r0 = op0 ^ op1;
+	r0 = op1 ^ op0;
 	goto push_1;
 op_NOT:
 	r0 = ~op0;
@@ -115,19 +115,20 @@ op_ASR:
 	r0 = ((vm_soperand_t)op0) >> op1;
 	goto push_1;
 op_CMP_LT:
-	r0 = ((vm_soperand_t)op0) < ((vm_soperand_t)op1);
+	r0 = ((vm_soperand_t)op1) < ((vm_soperand_t)op0);
 	goto push_1;
 op_CMP_GT:
-	r0 = ((vm_soperand_t)op0) > ((vm_soperand_t)op1);
+	r0 = ((vm_soperand_t)op1) > ((vm_soperand_t)op0);
+	DBGPRINT("op_CMP_GT: %d > %d = %d\n", op1, op0, r0);
 	goto push_1;
 op_CMP_B:
-	r0 = ((vm_uoperand_t)op0) < ((vm_uoperand_t)op1);
+	r0 = ((vm_uoperand_t)op1) < ((vm_uoperand_t)op0);
 	goto push_1;
 op_CMP_A:
-	r0 = ((vm_uoperand_t)op0) > ((vm_uoperand_t)op1);
+	r0 = ((vm_uoperand_t)op1) > ((vm_uoperand_t)op0);
 	goto push_1;
 op_CMP_EQ:
-	r0 = op0 == op1;
+	r0 = op1 == op0;
 	goto push_1;
 op_LDC_0:
 	r0 = 0;
@@ -171,13 +172,13 @@ op_LDM_32:
 	r0 = *(vm_operand_t *)(op0);
 	goto push_1;
 op_STM_8:
-	*(uint8_t *)(op0) = (uint8_t)op1;
+	*(uint8_t *)(op1) = (uint8_t)op0;
 	goto push_none;
 op_STM_16:
-	*(uint16_t *)(op0) = (uint16_t)op1;
+	*(uint16_t *)(op1) = (uint16_t)op0;
 	goto push_none;
 op_STM_32:
-	*(vm_operand_t *)(op0) = op1;
+	*(vm_operand_t *)(op1) = op0;
 	goto push_none;
 op_LOCALS: {
 	uint8_t count = *(uint8_t *)(pc);

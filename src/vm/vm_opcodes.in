@@ -13,81 +13,81 @@ static const vm_opcode_info_t opcodes[] = {
 
 	{
 		"ADD", "Addition",
-		2, 1,
+		2, 1, /* a b -- (a + b) */
 	},
 	{
 		"SUB", "Subtraction",
-		2, 1,
+		2, 1, /* a b -- (a - b) */
 	},
 	{
 		"MULU", "Multiplication (unsigned*unsigned)",
-		2, 2,
+		2, 2, /* a b -- hi(a * b) lo(a * b) */
 	},
 	{
 		"MULS", "Multiplication (signed*signed)",
-		2, 2,
+		2, 2, /* a b -- hi(a * b) lo(a * b) */
 	},
 	{
 		"DIVU", "Division (unsigned/unsigned)",
-		2, 2,
+		2, 2, /* a b -- rem(a / b) quot(a / b) */
 	},
 	{
 		"DIVS", "Division (signed/signed)",
-		2, 2,
+		2, 2, /* a b -- rem(a / b) quot(a / b) */
 	},
 	
 	/* Bitwise operations */
 
 	{
 		"AND", "Bitwise AND",
-		2, 1,
+		2, 1, /* a b -- (a & b) */
 	},
 	{
 		"OR", "Bitwise OR",
-		2, 1,
+		2, 1, /* a b -- (a & b) */
 	},
 	{
 		"XOR", "Bitwise XOR",
-		2, 1,
+		2, 1, /* a b -- (a ^ b) */
 	},
 	{
 		"NOT", "Bitwise NOT",
-		2, 1,
+		2, 1, /* a -- (~a) */
 	},
 	{
 		"LSL", "Logical shift left",
-		2, 1,
+		2, 1, /* a b -- (b << a) */
 	},
 	{
 		"LSR", "Logical shift right",
-		2, 1,
+		2, 1, /* a b -- (b >> a) */
 	},
 	{
 		"ASR", "Arithmetic shift right",
-		2, 1,
+		2, 1, /* a b -- (b >> a) */
 	},
 	
 	/* Conditionals */
 
 	{
 		"CMP.LT", "Compare (less than)",
-		2, 1,
+		2, 1, /* a b -- (a > b) */
 	},
 	{
 		"CMP.GT", "Compare (greater than)",
-		2, 1,
+		2, 1, /* a b -- (a < b) */
 	},
 	{
 		"CMP.B", "Compare (below)",
-		2, 1,
+		2, 1, /* a b -- (a < b) */
 	},
 	{
 		"CMP.A", "Compare (above)",
-		2, 1,
+		2, 1, /* a b -- (a > b) */
 	},
 	{
 		"CMP.EQ", "Compare (equal)",
-		2, 1,
+		2, 1, /* a b -- (a == b) */
 	},
 	
 	/* Constant loading */
@@ -148,15 +148,15 @@ static const vm_opcode_info_t opcodes[] = {
 
 	{
 		"STM.8", "Store a 8-bit to memory",
-		2, 0,
+		2, 0, /* addr value -- */
 	},
 	{
 		"STM.16", "Store a 16-bit to memory",
-		2, 0,
+		2, 0, /* addr value -- */
 	},
 	{
 		"STM.32", "Store a 32-bit to memory",
-		2, 0,
+		2, 0, /* addr value -- */
 	},
 	
 	/* Memory access: locals */
