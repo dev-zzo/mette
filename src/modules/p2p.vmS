@@ -1,0 +1,154 @@
+#
+# Peer to peer comms module (main one)
+#
+
+# socket_create() type values
+SOCK_STREAM		.const 1	# Sequenced, reliable, connection-based byte streams.
+SOCK_DGRAM		.const 2	# Connectionless, unreliable datagrams of fixed maximum length.
+SOCK_RAW		.const 3	# Raw protocol interface.
+
+# socket_create() proto values
+IPPROTO_TCP		.const 6
+IPPROTO_UDP		.const 17
+
+
+# socket_shutdown() options
+SHUT_RD		.const 0	# No more receptions.
+SHUT_WR		.const 1	# No more transmissions.
+SHUT_RDWR	.const 2	# No more receptions or transmissions.
+
+
+comm_port .const 9771
+
+start:
+	call main
+	ncall sys_exit
+# End of start routine
+
+main:
+	locals	2
+
+create_comm_socket:
+	# Create a UDP socket.
+	ldc.8.u	IPPROTO_UDP # protocol
+	ldc.8.u	SOCK_DGRAM # type
+	ncall	socket_create
+	dup
+	stloc	0
+
+	ldc.0
+	cmp.gt	# 0 > x
+	br.f	comm_socket_create_ok
+	lea		socket_creation_failed_text
+	br		print_error_and_exit
+
+comm_socket_create_ok:
+	# Bind to 0.0.0.0:comm_port.
+	ldc.32	comm_port # port
+	ldc.0	# ip
+	ncall	sockaddr_create
+	dup
+	stloc	1
+	ldloc	0
+	ncall	socket_bind
+
+	ldc.0
+	cmp.gt
+	br.f	comm_socket_bind_ok
+	lea		socket_bind_failed_text
+	br		print_error_and_exit
+
+comm_socket_bind_ok:
+	# The socket is connectionless, so no listen.
+	lea		comm_loop_enter_text
+	ldc.2
+	ncall	rtl_print_fd
+
+comm_recv_loop:
+	ldloc	1 # sockaddr*
+	ldc.32	0x1000 # maxlength
+	ldloc	0 # sockfd
+	ncall	socket_recvfrom
+
+	dup
+	dup
+	ldc.0
+	cmp.eq
+	br.f	comm_recv_ok
+	lea		socket_recv_failed_text
+	br		print_error_and_exit
+
+comm_recv_ok:
+	# Process the packet
+	ldloc	1
+	ldloc	0
+	call	comm_process_packet
+
+	ncall	rtl_free
+
+	# See if we are still running.
+	lea		comm_running
+	ldm.8.u
+	ldc.0
+	cmp.eq
+	br.f	comm_recv_loop
+
+	lea		comm_loop_leave_text
+	ldc.2
+	ncall	rtl_print_fd
+
+comm_socket_close:
+	ldc.8.u	SHUT_RDWR
+	ldloc	0
+	ncall	socket_shutdown
+
+	ldloc	0
+	ncall	io_close
+
+	lea		comm_done_text
+	ldc.2
+	ncall	rtl_print_fd
+
+	ret
+
+print_error_and_exit:
+	ldc.2
+	ncall	rtl_print_fd
+	pop
+	ldc.1
+	ncall	sys_exit
+# End of main routine
+
+
+comm_process_packet:
+	pop # fd
+	pop # from
+	lea		incoming_packet_text
+	ldc.2
+	ncall	rtl_print_fd
+	ret
+# End of comm_process_packet routine
+
+socket_creation_failed_text:
+	.defs	"main: failed to create socket.\n\0"
+socket_bind_failed_text:
+	.defs	"main: failed to bind socket.\n\0"
+socket_recv_failed_text:
+	.defs	"main: failed to recv from socket.\n\0"
+comm_loop_enter_text:
+	.defs	"main: entering processing loop.\n\0"
+comm_loop_leave_text:
+	.defs	"main: leaving processing loop.\n\0"
+comm_done_text:
+	.defs	"main: done!\n\0"
+comm_running:
+	.defb	1
+incoming_packet_text:
+	.defs	"comm_process_packet: got: %s\n\0"
+
+#
+# .bss section start
+#
+
+comm_socket:
+	.resw	1
