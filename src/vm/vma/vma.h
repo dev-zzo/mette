@@ -183,6 +183,7 @@ extern void vma_output_insn(vma_insn_t *node);
  */
 
 struct _vma_context_t {
+	const char *input_name;
 	FILE *input;
 	FILE *output;
 	const char *start_symbol;

@@ -14,6 +14,10 @@
 
 static void dump_yytext();
 
+static int line_counter;
+
+#define YY_USER_ACTION do { yylloc.first_line = yylloc.last_line = line_counter; } while(0);
+
 %}
 
 %option noyywrap
@@ -153,7 +157,7 @@ ID		{ALPHA}{ALNUM}*
 	yymore();
 }
 <STRING>"\n" {
-	/* TODO: line number. */
+	++line_counter;
 	fprintf(stderr, "Warning: string literal spans multiple lines.\n");
 	BEGIN(INITIAL);
 	return STRINGT;
@@ -183,7 +187,10 @@ ID		{ALPHA}{ALNUM}*
  /* Punctuation */
 [:,()+*-/|&^.@~] return yytext[0];
 
-"\n" { }
+"\n" {
+	++line_counter;
+	return NEWLINE;
+}
 
 <<EOF>> {
 	return END;
@@ -210,5 +217,5 @@ static void dump_yytext()
 void vma_lexer_set_input(FILE *input)
 {
 	yyrestart(input);
+	line_counter = 1;
 }
-

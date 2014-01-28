@@ -86,8 +86,17 @@ static void append_insn(vma_context_t *ctx, vma_insn_t *insn);
 unit
 	: /* empty */
 		{ ctx->insns_tail = ctx->insns_head = NULL; }
+	| unit NEWLINE
+		/* Eat newlines */
 	| unit listed_stmt
+		/* No action. */
 	| unit dropped_stmt
+		/* No action. */
+	| unit error NEWLINE
+		{
+			vma_error("%s:%d: syntax error.", ctx->input_name, @2.first_line);
+			yyerrok;
+		}
 ;
 
 listed_stmt
@@ -242,7 +251,7 @@ machine_insn
 ;
 
 label
-	: IDENTIFIER ':'
+	: IDENTIFIER ':' newline.opt
 		{ $$ = vma_symtab_define(&ctx->labels, $1.buffer, 1); }
 ;
 
@@ -280,11 +289,16 @@ expr
 		{ $$ = $2; }
 ;
 
+newline.opt
+	: /* empty */
+	| newline.opt NEWLINE
+;
+
 %%
 
-void yyerror(vma_context_t *ctx, const char *msg)
+static void yyerror(vma_context_t *ctx, const char *msg)
 {
-	vma_error(msg);
+	/* Nothing. */
 }
 
 extern void vma_lexer_set_input(FILE *input);

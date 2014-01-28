@@ -10,7 +10,6 @@ int vma_debug = 1;
 
 static char *output_path = "./vma.out";
 static char *input_path;
-static vma_vaddr_t load_va = 0x00A00000U;
 
 static void print_help(void)
 {
@@ -21,7 +20,6 @@ static void print_help(void)
 static struct option long_options[] = {
 	{ "help", no_argument, 0, 'h' },
 	{ "debug", no_argument, &vma_debug, 1 },
-	{ "load-va", required_argument, 0, 'l' },
 	{ "output", required_argument, 0, 'o' },
 	{ 0, 0, 0, 0 }
 };
@@ -42,10 +40,6 @@ static void parse_args(int argc, char *argv[])
 
 			case 0:
 				/* long option as a flag (handled by getopt_long) */
-				break;
-
-			case 'l':
-				load_va = strtol(optarg, NULL, 16);
 				break;
 
 			case 'o':
@@ -75,7 +69,6 @@ static void parse_args(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 	int rv = 0;
-	FILE *input = NULL;
 	vma_context_t context;
 
 	vma_context_init(&context);
@@ -97,11 +90,20 @@ int main(int argc, char *argv[])
 		vma_abort("could not open input file '%s'.", input_path);
 	}
 
+	context.input_name = strrchr(input_path, '/');
+	if (!context.input_name) {
+		context.input_name = input_path;
+	} else {
+		++context.input_name;
+	}
+
 	vma_debug_print("stage: parser");
 	vma_parse_input(&context);
 	vma_abort_on_errors();
+	
+	fclose(context.input);
 
-	context.start_va = load_va;
+	context.start_va = 0; /* Not used for now. */
 	context.bss_va = 0;
 	context.end_va = 0;
 
@@ -109,13 +111,11 @@ int main(int argc, char *argv[])
 	vma_assemble(&context);
 	vma_abort_on_errors();
 
-	/* TBD: write the result */
 	vma_debug_print("stage: writer");
 	vma_generate(&context);
 	vma_abort_on_errors();
 
 	fclose(context.output);
-	fclose(context.input);
 
 	return rv;
 }
