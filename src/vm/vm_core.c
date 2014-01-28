@@ -215,8 +215,8 @@ op_DUP:
 	r1 = r0 = op0;
 	goto push_2;
 op_SWAP: {
-	r1 = op0;
-	r0 = op1;
+	r1 = op1;
+	r0 = op0;
 	goto push_2;
 }
 op_POP:

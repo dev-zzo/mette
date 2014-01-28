@@ -178,11 +178,11 @@ static const vm_opcode_info_t opcodes[] = {
 	
 	{
 		"DUP", "Duplicate the topmost entry on the stack",
-		1, 2,
+		1, 2, /* a -- a a */
 	},
 	{
 		"SWAP", "Swap two entries on the top of the stack",
-		2, 2,
+		2, 2, /* a b -- b a */
 	},
 	{
 		"POP", "Discard the topmost entry on the stack",
