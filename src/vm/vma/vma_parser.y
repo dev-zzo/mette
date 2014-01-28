@@ -40,7 +40,7 @@ static void append_insn(vma_context_t *ctx, vma_insn_t *insn);
 }
 
 %token END 0 "end of file"
-%token NEWLINE
+%token NEWLINE 1 "newline"
 %type <sym> label
 %type <expr> expr
 %type <expr_list> expr_list

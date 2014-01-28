@@ -2,13 +2,20 @@
 ccc	.const 1234
 
 start:
-	lea text
-	ldc.2
-	ncall rtl_print_fd
+	call print_hello
 
 	ldc.32 ccc
 	ncall sys_exit
+
+print_hello:
+	lea hello_msg
+	ldc.2
+	ncall rtl_print_fd
+	pop
 	ret
+
+hello_msg:
+	.defs "Hello world from a subroutine!\n\0"
 
 text:
 	.defs "Sample text!\n\000"

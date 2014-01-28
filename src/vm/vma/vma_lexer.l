@@ -178,8 +178,12 @@ ID		{ALPHA}{ALNUM}*
 "#" {
 	BEGIN(COMMENT);
 }
-<COMMENT>[^\n]+ /* Ignored */ {
+<COMMENT>[^\n]* /* Ignored */ {
+}
+<COMMENT>[\n] {
 	BEGIN(INITIAL);
+	++line_counter;
+	return NEWLINE;
 }
 
 {WSPACE}+ /* Ignored */
@@ -207,6 +211,7 @@ static void dump_yytext()
 {
 	int i = 0;
 
+	printf("yytext: ");
 	while (i < yyleng) {
 		printf("%02X ", (unsigned char)yytext[i]);
 		++i;
@@ -217,5 +222,7 @@ static void dump_yytext()
 void vma_lexer_set_input(FILE *input)
 {
 	yyrestart(input);
+	//yy_flex_debug = vma_debug;
+	yy_flex_debug = 0;
 	line_counter = 1;
 }

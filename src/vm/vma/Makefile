@@ -33,5 +33,5 @@ vma_parser.c: vma_parser.y
 	bison --defines=./vma_tokens.h --report=all --report-file=vma_parser.txt -o $@ $<
 
 vma_lexer.c: vma_lexer.l
-	flex -f -o $@ $<
+	flex -d -f -o $@ $<
 
