@@ -94,16 +94,16 @@ unit
 		/* No action. */
 	| unit error NEWLINE
 		{
-			vma_error("%s:%d: syntax error.", ctx->input_name, @2.first_line);
+			vma_error("line %d: syntax error.", @2.first_line);
 			yyerrok;
 		}
 ;
 
 listed_stmt
 	: labeled_insn
-		{ append_insn(ctx, $1); }
+		{ $1->line = @1.first_line; append_insn(ctx, $1); }
 	| addressable_insn
-		{ append_insn(ctx, $1); }
+		{ $1->line = @1.first_line; append_insn(ctx, $1); }
 ;
 
 dropped_stmt

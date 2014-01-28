@@ -173,6 +173,7 @@ struct _vma_insn_t {
 	struct {
 		unsigned allocated : 1;
 	} flags;
+	int line;
 };
 
 extern vma_insn_t *vma_insn_build(vma_insn_type_t type);

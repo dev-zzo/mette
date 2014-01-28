@@ -300,7 +300,7 @@ void vma_insn_evaluate(vma_insn_t *insn, vma_context_t *ctx)
 		case INSN_BR_F:
 		case INSN_CALL:
 			if (!vma_symref_resolve(&insn->u.symref, &ctx->labels)) {
-				vma_error("unresolved symbol: `%s'", insn->u.symref.u.name);
+				vma_error("line %d: unresolved symbol: `%s'", insn->line, insn->u.symref.u.name);
 			}
 			break;
 
@@ -314,7 +314,7 @@ void vma_insn_evaluate(vma_insn_t *insn, vma_context_t *ctx)
 
 void vma_insn_emit(vma_insn_t *node)
 {
-	uint32_t diff;
+	int32_t diff;
 	uint32_t count;
 	vma_expr_t *expr;
 
@@ -339,8 +339,8 @@ void vma_insn_emit(vma_insn_t *node)
 			/* Relative to insn end. */
 			VMA_ASSERT(node->u.symref.u.sym);
 			diff = node->u.symref.u.sym->u.location->start_addr - (node->start_addr + 2); /* hard-coded :( */
-			if (diff & 0xFFFFFF00) {
-				vma_error("branch target out of range");
+			if (diff > 127 || diff < -128) {
+				vma_error("line %d: branch target out of range (%+d bytes).", node->line, diff);
 			}
 			vma_output_u8((uint8_t)diff);
 			break;
