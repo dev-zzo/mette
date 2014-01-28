@@ -86,6 +86,26 @@ VM_THUNK(socket_create)
 	VM_THUNK_RETURN(sockfd);
 }
 
+VM_THUNK(socket_set_blocking)
+{
+	unsigned long flags;
+	int result;
+
+	VM_THUNK_ARGS_START
+		VM_THUNK_ARG(int sockfd);
+		VM_THUNK_ARG(int blocking);
+	VM_THUNK_ARGS_END
+
+	flags = sys_fcntl(args.sockfd, F_GETFL, 0);
+	if (flags < 0) {
+		VM_THUNK_RETURN(-1);
+	}
+	flags = args.blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
+	result = sys_fcntl(args.sockfd, F_SETFL, flags);
+
+	VM_THUNK_RETURN(result);
+}
+
 VM_THUNK(socket_bind)
 {
 	int result;
