@@ -64,7 +64,7 @@ void vma_generate(vma_context_t *ctx)
 	size_in_file = ctx->bss_va - ctx->start_va;
 	vma_debug_print("memory: %08X file: %08X", size_in_memory, size_in_file);
 
-	ep_sym = vma_symtab_lookup(&ctx->labels, ctx->start_symbol);
+	ep_sym = vma_symtab_lookup(&ctx->globals, ctx->start_symbol);
 	if (!ep_sym) {
 		vma_abort("start symbol '%s' not defined", ctx->start_symbol);
 	}
@@ -82,7 +82,7 @@ void vma_generate(vma_context_t *ctx)
 
 	insn = ctx->insns_head;
 	while (insn && insn->start_addr < ctx->bss_va) {
-		vma_insn_emit(insn);
+		vma_emit_insn(ctx, insn);
 		insn = insn->next;
 	}
 

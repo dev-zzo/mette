@@ -1,5 +1,6 @@
 #include "vma.h"
 #include <stdint.h>
+#include <string.h>
 
 /*******************************************************************************
  * Symbols
@@ -7,26 +8,31 @@
 
 void vma_symtab_init(vma_symtab_t *symtab)
 {
-	symtab->tail = symtab->head = NULL;
-	symtab->count = 0;
+	memset(symtab, 0, sizeof(*symtab));
 }
 
-vma_symbol_t *vma_symtab_define(vma_symtab_t *symtab, const char *name, int unique)
+vma_symbol_t *vma_symtab_define(vma_symtab_t *symtab, const char *name, vma_symbol_type_t type, vma_symbol_t **prev_def)
 {
 	vma_symbol_t *sym = vma_symtab_lookup(symtab, name);
 	if (sym) {
-		if (unique) {
-			vma_error("symbol '%s' already defined", name);
-			return NULL;
+		if (prev_def) {
+			*prev_def = sym;
 		}
 		return sym;
 	}
 
+	if (prev_def) {
+		*prev_def = NULL;
+	}
 	sym = (vma_symbol_t *)vma_malloc(sizeof(*sym));
+	memset(sym, 0, sizeof(*sym));
 
-	sym->next = NULL;
 	sym->name = name;
-	sym->u.id = symtab->count++;
+	sym->type = type;
+	if (type == SYM_NCALL) {
+		sym->u.id = symtab->count;
+	}
+	symtab->count++;
 	if (symtab->tail) {
 		symtab->tail->next = sym;
 	} else {
@@ -34,7 +40,7 @@ vma_symbol_t *vma_symtab_define(vma_symtab_t *symtab, const char *name, int uniq
 	}
 	symtab->tail = sym;
 
-	vma_debug_print("symtab %p: new symbol: `%s' (%d/%p)", symtab, name, sym->u.id, sym);
+	vma_debug_print("symtab %p: new symbol: `%s' (%p)", symtab, name, sym);
 
 	return sym;
 }
@@ -51,6 +57,19 @@ vma_symbol_t *vma_symtab_lookup(const vma_symtab_t *symtab, const char *name)
 	}
 
 	return sym;
+}
+
+vma_symbol_t *vma_symtab_lookup_chain(const vma_symtab_t *head, const char *name)
+{
+	while (head) {
+		vma_symbol_t *sym = vma_symtab_lookup(head, name);
+		if (sym) {
+			return sym;
+		}
+		head = head->lookup_next;
+	}
+
+	return NULL;
 }
 
 void vma_symtab_dump(const vma_symtab_t *symtab, int resolved)
@@ -79,7 +98,7 @@ int vma_symref_resolve(vma_symref_t *ref, vma_symtab_t *symtab)
 
 	VMA_ASSERT(ref->u.name);
 
-	sym = vma_symtab_lookup(symtab, ref->u.name);
+	sym = vma_symtab_lookup_chain(symtab, ref->u.name);
 	if (!sym) {
 		return 0;		
 	}
@@ -127,99 +146,6 @@ vma_expr_t *vma_expr_build_parent(vma_expr_type_t type, vma_expr_t *a, vma_expr_
 	return node;
 }
 
-uint32_t vma_expr_evaluate(vma_expr_t *expr, vma_context_t *ctx)
-{
-	uint32_t lhs, rhs;
-
-	VMA_ASSERT(expr);
-
-	vma_debug_print("evaluating expr: %p", expr);
-	switch (expr->type) {
-		case EXPR_LITERAL:
-			break;
-
-		case EXPR_SYMREF:
-			if (vma_symref_resolve(&expr->u.symref, &ctx->labels)) {
-				vma_insn_t *target = expr->u.symref.u.sym->u.location;
-				if (!target->flags.allocated) {
-					vma_error("referring to symbol `%s' before its location is known.", expr->u.symref.u.sym->name);
-					expr->value = 0;
-				} else {
-					expr->value = target->start_addr;
-				}
-			} else if (vma_symref_resolve(&expr->u.symref, &ctx->constants)) {
-				expr->value = vma_expr_evaluate(expr->u.symref.u.sym->u.value, ctx);
-			} else {
-				vma_error("unresolved symbol: `%s'", expr->u.symref.u.name);
-				expr->value = 0;
-			}
-			break;
-
-		case EXPR_OR:
-			lhs = vma_expr_evaluate(expr->u.child[0], ctx);
-			rhs = vma_expr_evaluate(expr->u.child[1], ctx);
-			expr->value = lhs | rhs;
-			break;
-
-		case EXPR_AND:
-			lhs = vma_expr_evaluate(expr->u.child[0], ctx);
-			rhs = vma_expr_evaluate(expr->u.child[1], ctx);
-			expr->value = lhs & rhs;
-			break;
-
-		case EXPR_XOR:
-			lhs = vma_expr_evaluate(expr->u.child[0], ctx);
-			rhs = vma_expr_evaluate(expr->u.child[1], ctx);
-			expr->value = lhs ^ rhs;
-			break;
-
-		case EXPR_ADD:
-			lhs = vma_expr_evaluate(expr->u.child[0], ctx);
-			rhs = vma_expr_evaluate(expr->u.child[1], ctx);
-			expr->value = lhs + rhs;
-			break;
-
-		case EXPR_SUB:
-			lhs = vma_expr_evaluate(expr->u.child[0], ctx);
-			rhs = vma_expr_evaluate(expr->u.child[1], ctx);
-			expr->value = lhs - rhs;
-			break;
-
-		case EXPR_MUL:
-			lhs = vma_expr_evaluate(expr->u.child[0], ctx);
-			rhs = vma_expr_evaluate(expr->u.child[1], ctx);
-			expr->value = lhs * rhs;
-			break;
-
-		case EXPR_DIV:
-			lhs = vma_expr_evaluate(expr->u.child[0], ctx);
-			rhs = vma_expr_evaluate(expr->u.child[1], ctx);
-			if (rhs == 0) {
-				/* TODO: location tracking. */
-				vma_error("divisor evaluates to zero");
-				expr->value = 1;
-			} else {
-				expr->value = lhs / rhs;
-			}
-			break;
-
-		case EXPR_NEG:
-			rhs = vma_expr_evaluate(expr->u.child[0], ctx);
-			expr->value = -rhs;
-			break;
-
-		case EXPR_NOT:
-			rhs = vma_expr_evaluate(expr->u.child[0], ctx);
-			expr->value = ~rhs;
-			break;
-
-		default:
-			vma_abort("%s:%d: internal error: unhandled expr type %d", __FILE__, __LINE__, expr->type);
-			return 0;
-	}
-	return expr->value;
-}
-
 /*******************************************************************************
  * Expression lists
  */
@@ -245,19 +171,6 @@ vma_expr_list_t *vma_expr_list_append(vma_expr_list_t *list, vma_expr_t *node)
 	return list;
 }
 
-void vma_expr_list_evaluate(vma_expr_list_t *list, vma_context_t *ctx)
-{
-	vma_expr_t *expr;
-
-	VMA_ASSERT(list);
-
-	expr = list->head;
-	while (expr) {
-		vma_expr_evaluate(expr, ctx);
-		expr = expr->next;
-	}
-}
-
 /*******************************************************************************
  * Instructions
  */
@@ -266,129 +179,396 @@ vma_insn_t *vma_insn_build(vma_insn_type_t type)
 {
 	vma_insn_t *insn = (vma_insn_t *)vma_malloc(sizeof(*insn));
 
-	insn->next = NULL;
+	memset(insn, 0, sizeof(*insn));
 	insn->type = type;
 
 	return insn;
 }
 
-void vma_insn_evaluate(vma_insn_t *insn, vma_context_t *ctx)
+/*******************************************************************************
+ * Assembly pass 1 (estimate insn sizes and allocate addresses)
+ */
+
+static int vma_passx_evaluate_expr(vma_context_t *ctx, vma_expr_t *expr);
+
+static int vma_passx_evaluate_symref(vma_context_t *ctx, vma_symref_t *symref, uint32_t *value)
 {
-	vma_debug_print("evaluating insn: %p", insn);
-	switch (insn->type) {
-		case INSN_LDC_8_U:
-		case INSN_LDC_8_S:
-		case INSN_LDC_32:
-		case INSN_LOCALS:
-		case INSN_LDLOC:
-		case INSN_STLOC:
-		case INSN_RESB:
-		case INSN_RESH:
-		case INSN_RESW:
-			vma_expr_evaluate(insn->u.expr, ctx);
-			break;
-			
-		case INSN_DEFB:
-		case INSN_DEFH:
-		case INSN_DEFW:
-			vma_expr_list_evaluate(insn->u.expr_list, ctx);
+	vma_symbol_t *sym;
+	vma_insn_t *label_target;
+
+	if (!vma_symref_resolve(symref, ctx->lookup_stack)) {
+		vma_error("unresolved symbol: `%s'.", symref->u.name);
+		return 0;
+	}
+
+	sym = symref->u.sym;
+	VMA_ASSERT(sym);
+
+	switch (sym->type) {
+		case SYM_LABEL:
+			label_target = sym->u.location;
+			if (label_target->flags.allocated) {
+				*value = label_target->start_addr;
+				return 1;
+			}
+			vma_error("referring to symbol `%s' before its location is known.", sym->name);
 			break;
 
-		case INSN_LEA:
-		case INSN_BR:
-		case INSN_BR_T:
-		case INSN_BR_F:
-		case INSN_CALL:
-			if (!vma_symref_resolve(&insn->u.symref, &ctx->labels)) {
-				vma_error("line %d: unresolved symbol: `%s'", insn->line, insn->u.symref.u.name);
+		case SYM_CONSTANT:
+			/* TODO: don't evaluate this multiple times. */
+			if (vma_passx_evaluate_expr(ctx, sym->u.value)) {
+				*value = sym->u.value->value;
+				return 1;
 			}
 			break;
 
-		case INSN_NCALL:
-			/* No need to resolve NCALLs */
+		case SYM_NCALL:
+			vma_error("referring to NCALL-defined symbol `%s' outside of NCALL.", sym->name);
 			break;
+
+		default:
+			vma_abort("%s:%d: internal error: unhandled symbol type %d", __FILE__, __LINE__, sym->type);
+			break;
+	}
+	return 0;
+}
+
+static int vma_passx_evaluate_expr(vma_context_t *ctx, vma_expr_t *expr)
+{
+	uint32_t lhs, rhs;
+
+	VMA_ASSERT(expr);
+
+	vma_debug_print("evaluating expr: %p", expr);
+	switch (expr->type) {
+		case EXPR_LITERAL:
+			/* Already in expr->value. */
+			return 1;
+
+		case EXPR_SYMREF:
+			return vma_passx_evaluate_symref(ctx, &expr->u.symref, &expr->value);
+
+		case EXPR_OR:
+		case EXPR_AND:
+		case EXPR_XOR:
+		case EXPR_ADD:
+		case EXPR_SUB:
+		case EXPR_MUL:
+		case EXPR_DIV:
+			if (!vma_passx_evaluate_expr(ctx, expr->u.child[0])) {
+				return 0;
+			}
+			if (!vma_passx_evaluate_expr(ctx, expr->u.child[1])) {
+				return 0;
+			}
+
+			lhs = expr->u.child[0]->value;
+			rhs = expr->u.child[1]->value;
+
+			switch (expr->type) {
+				case EXPR_OR:
+					expr->value = lhs | rhs;
+					break;
+				case EXPR_AND:
+					expr->value = lhs & rhs;
+					break;
+				case EXPR_XOR:
+					expr->value = lhs ^ rhs;
+					break;
+				case EXPR_ADD:
+					expr->value = lhs + rhs;
+					break;
+				case EXPR_SUB:
+					expr->value = lhs - rhs;
+					break;
+				case EXPR_MUL:
+					expr->value = lhs * rhs;
+					break;
+				case EXPR_DIV:
+					if (rhs == 0) {
+						/* TODO: location tracking. */
+						vma_error("divisor evaluates to zero");
+						expr->value = 1;
+					} else {
+						expr->value = lhs / rhs;
+					}
+					break;
+			}
+			break;
+
+		case EXPR_NEG:
+		case EXPR_NOT:
+			if (!vma_passx_evaluate_expr(ctx, expr->u.child[0])) {
+				return 0;
+			}
+
+			rhs = expr->u.child[0]->value;
+
+			switch (expr->type) {
+				case EXPR_NEG:
+					expr->value = -rhs;
+					break;
+				case EXPR_NOT:
+					expr->value = ~rhs;
+					break;
+			}
+			return 1;
+
+		default:
+			vma_abort("%s:%d: internal error: unhandled expr type %d", __FILE__, __LINE__, expr->type);
+			return 0;
+	}
+	return 0;
+}
+
+static unsigned vma_pass1_insn_estimate_size(vma_context_t *ctx, vma_insn_t *insn)
+{
+	switch (insn->type) {
+		case INSN_CONST:
+		case INSN_SUBSTART:
+		case INSN_SUBEND:
+			return 0;
+
+		case INSN_ADD:
+		case INSN_SUB:
+		case INSN_MULU:
+		case INSN_MULS:
+		case INSN_DIVU:
+		case INSN_DIVS:
+		case INSN_AND:
+		case INSN_OR:
+		case INSN_XOR:
+		case INSN_NOT:
+		case INSN_LSL:
+		case INSN_LSR:
+		case INSN_ASR:
+		case INSN_CMP_LT:
+		case INSN_CMP_GT:
+		case INSN_CMP_B:
+		case INSN_CMP_A:
+		case INSN_CMP_EQ:
+		case INSN_LDC_0:
+		case INSN_LDC_1:
+		case INSN_LDC_2:
+		case INSN_LDM_8_U:
+		case INSN_LDM_8_S:
+		case INSN_LDM_16_U:
+		case INSN_LDM_16_S:
+		case INSN_LDM_32:
+		case INSN_STM_8:
+		case INSN_STM_16:
+		case INSN_STM_32:
+		case INSN_DUP:
+		case INSN_SWAP:
+		case INSN_POP:
+		case INSN_RET:
+		case INSN_ICALL:
+		case INSN_IJMP:
+			return 1;
+
+		case INSN_LDC_8_U:
+		case INSN_LDC_8_S:
+		case INSN_LOCALS:
+		case INSN_LDLOC:
+		case INSN_STLOC:
+		case INSN_BR:
+		case INSN_BR_T:
+		case INSN_BR_F:
+			return 1 + 1;
+
+		case INSN_NCALL:
+			return 1 + 2;
+			
+		case INSN_LDC_32:
+		case INSN_LEA:
+		case INSN_CALL:
+			return 1 + 4;
+			
+		case INSN_DEFS:
+			VMA_ASSERT(insn->u.text.buffer);
+			return insn->u.text.length;
+
+		case INSN_DEFB:
+			VMA_ASSERT(insn->u.expr_list);
+			return sizeof(uint8_t) * insn->u.expr_list->count;
+
+		case INSN_DEFH:
+			VMA_ASSERT(insn->u.expr_list);
+			return sizeof(uint16_t) * insn->u.expr_list->count;
+
+		case INSN_DEFW:
+			VMA_ASSERT(insn->u.expr_list);
+			return sizeof(uint32_t) * insn->u.expr_list->count;
+
+		case INSN_RESB:
+			VMA_ASSERT(insn->u.expr);
+			if (!vma_passx_evaluate_expr(ctx, insn->u.expr)) {
+				vma_error("cannot estimate amount of memory for .RESx keyword.");
+				return 0;
+			}
+			return sizeof(uint8_t) * insn->u.expr->value;
+
+		case INSN_RESH:
+			VMA_ASSERT(insn->u.expr);
+			if (!vma_passx_evaluate_expr(ctx, insn->u.expr)) {
+				vma_error("cannot estimate amount of memory for .RESx keyword.");
+				return 0;
+			}
+			return sizeof(uint16_t) * insn->u.expr->value;
+
+		case INSN_RESW:
+			VMA_ASSERT(insn->u.expr);
+			if (!vma_passx_evaluate_expr(ctx, insn->u.expr)) {
+				vma_error("cannot estimate amount of memory for .RESx keyword.");
+				return 0;
+			}
+			return sizeof(uint32_t) * insn->u.expr->value;
+
+		default:
+			vma_abort("%s:%d:internal error: unhandled insn type %d", __FILE__, __LINE__, insn->type);
+			return 0;
 	}
 }
 
+static void vma_pass1(vma_context_t *ctx)
+{
+	vma_insn_t *insn = ctx->insns_head;
+	vma_vaddr_t next_va = ctx->start_va;
+	vma_vaddr_t bss_va = ctx->start_va;
+
+	vma_debug_print("running pass1...");
+	while (insn) {
+
+		switch (insn->type) {
+			case INSN_DEFH:
+			case INSN_RESH:
+				insn->align_bytes = VMA_ALIGN(next_va, 2) - next_va;
+				next_va = VMA_ALIGN(next_va, 2);
+				break;
+
+			case INSN_DEFW:
+			case INSN_RESW:
+				insn->align_bytes = VMA_ALIGN(next_va, 4) - next_va;
+				next_va = VMA_ALIGN(next_va, 4);
+				break;
+
+			case INSN_SUBSTART:
+				/* A bit ugly, but... */
+				ctx->lookup_stack = &insn->u.symtab;
+				break;
+
+			case INSN_SUBEND:
+				/* A bit ugly, but... */
+				ctx->lookup_stack = &ctx->globals;
+				break;
+		}
+
+		ctx->current_va = next_va;
+
+		insn->start_addr = next_va;
+		insn->flags.allocated = 1;
+		next_va += vma_pass1_insn_estimate_size(ctx, insn);
+
+		if (insn->type < INSN_ALLOCATE) {
+			bss_va = next_va;
+		}
+
+		insn = insn->next;
+	}
+
+	ctx->end_va = next_va;
+	ctx->bss_va = bss_va;
+
+	vma_abort_on_errors();
+}
+
+/*******************************************************************************
+ * Assembly pass 2 (evaluate and emit insn bits)
+ */
+
 #include "vm_opcodes.codes.tab"
 
-void vma_insn_emit(vma_insn_t *node)
+void vma_emit_insn(vma_context_t *ctx, vma_insn_t *insn)
 {
 	int32_t diff;
 	uint32_t count;
 	vma_expr_t *expr;
 
-	VMA_ASSERT(node);
+	VMA_ASSERT(insn);
 
-	if (node->type < INSN_ASM_KEYWORDS) {
-		vma_output_u8(vm_insn_to_opcode[node->type]);
+	if (insn->type < INSN_ASM_KEYWORDS) {
+		vma_output_u8(vm_insn_to_opcode[insn->type]);
 	}
 
-	switch (node->type) {
+	switch (insn->type) {
+		case INSN_DEFH:
+		case INSN_RESH:
+		case INSN_DEFW:
+		case INSN_RESW:
+			count = insn->align_bytes;
+			while (count--) {
+				vma_output_u8(0xAA);
+			}
+			break;
+	}
+
+	switch (insn->type) {
+		case INSN_SUBSTART:
+			/* A bit ugly, but... */
+			ctx->lookup_stack = &insn->u.symtab;
+			break;
+
+		case INSN_SUBEND:
+			/* A bit ugly, but... */
+			ctx->lookup_stack = &ctx->globals;
+			break;
+
 		case INSN_LDC_8_U:
 		case INSN_LDC_8_S:
 		case INSN_LOCALS:
 		case INSN_LDLOC:
 		case INSN_STLOC:
-			vma_output_u8((uint8_t)node->u.expr->value);
+			vma_passx_evaluate_expr(ctx, insn->u.expr);
+			if (insn->u.expr->value > 0xFF) {
+				vma_error("line %d: expression value out of bounds (0x%08X, max 0xFF).", insn->line, insn->u.expr->value);
+				break;
+			}
+			vma_output_u8((uint8_t)insn->u.expr->value);
 			break;
 
 		case INSN_BR:
 		case INSN_BR_T:
 		case INSN_BR_F:
 			/* Relative to insn end. */
-			VMA_ASSERT(node->u.symref.u.sym);
-			diff = node->u.symref.u.sym->u.location->start_addr - (node->start_addr + 2); /* hard-coded :( */
+			vma_passx_evaluate_expr(ctx, insn->u.expr);
+			diff = insn->u.expr->value - (insn->start_addr + 2); /* hard-coded :( */
 			if (diff > 127 || diff < -128) {
-				vma_error("line %d: branch target out of range (%+d bytes).", node->line, diff);
+				vma_error("line %d: branch target out of range (%+d bytes).", insn->line, diff);
 			}
 			vma_output_u8((uint8_t)diff);
 			break;
 
 		case INSN_NCALL:
-			VMA_ASSERT(node->u.symref.u.sym);
-			vma_output_u16(node->u.symref.u.sym->u.id);
+			VMA_ASSERT(insn->u.symref.u.sym);
+			vma_output_u16(insn->u.symref.u.sym->u.id);
 			break;
 			
 		case INSN_LDC_32:
-			vma_output_u32(node->u.expr->value);
+			vma_passx_evaluate_expr(ctx, insn->u.expr);
+			vma_output_u32(insn->u.expr->value);
 			break;
 
 		case INSN_LEA:
 		case INSN_CALL:
 			/* Relative to insn end. */
-			VMA_ASSERT(node->u.symref.u.sym);
-			diff = node->u.symref.u.sym->u.location->start_addr - (node->start_addr + 5); /* hard-coded :( */
+			vma_passx_evaluate_expr(ctx, insn->u.expr);
+			diff = insn->u.expr->value - (insn->start_addr + 5); /* hard-coded :( */
 			vma_output_u32(diff);
 			break;
 			
-		case INSN_DEFB:
-			expr = node->u.expr_list->head;
-			while (expr) {
-				vma_output_u8((uint8_t)expr->value);
-				expr = expr->next;
-			}
-			break;
-
-		case INSN_DEFH:
-			expr = node->u.expr_list->head;
-			while (expr) {
-				vma_output_u16((uint16_t)expr->value);
-				expr = expr->next;
-			}
-			break;
-
-		case INSN_DEFW:
-			expr = node->u.expr_list->head;
-			while (expr) {
-				vma_output_u32((uint32_t)expr->value);
-				expr = expr->next;
-			}
-			break;
-
 		case INSN_DEFS: {
-				const char *text = node->u.text.buffer;
-				unsigned count = node->u.text.length;
+				const char *text = insn->u.text.buffer;
+				unsigned count = insn->u.text.length;
 				while (count) {
 					vma_output_u8(*text);
 					++text;
@@ -397,22 +577,49 @@ void vma_insn_emit(vma_insn_t *node)
 			}
 			break;
 
+		case INSN_DEFB:
+			expr = insn->u.expr_list->head;
+			while (expr) {
+				vma_passx_evaluate_expr(ctx, expr);
+				vma_output_u8((uint8_t)expr->value);
+				expr = expr->next;
+			}
+			break;
+
+		case INSN_DEFH:
+			expr = insn->u.expr_list->head;
+			while (expr) {
+				vma_passx_evaluate_expr(ctx, expr);
+				vma_output_u16((uint16_t)expr->value);
+				expr = expr->next;
+			}
+			break;
+
+		case INSN_DEFW:
+			expr = insn->u.expr_list->head;
+			while (expr) {
+				vma_passx_evaluate_expr(ctx, expr);
+				vma_output_u32((uint32_t)expr->value);
+				expr = expr->next;
+			}
+			break;
+
 		case INSN_RESB:
-			count = node->u.expr->value;
+			count = insn->u.expr->value;
 			while (count--) {
 				vma_output_u8(0xCC);
 			}
 			break;
 
 		case INSN_RESH:
-			count = node->u.expr->value;
+			count = insn->u.expr->value;
 			while (count--) {
 				vma_output_u16(0xCCCC);
 			}
 			break;
 			
 		case INSN_RESW:
-			count = node->u.expr->value;
+			count = insn->u.expr->value;
 			while (count--) {
 				vma_output_u32(0xCCCCCCCC);
 			}
@@ -420,166 +627,10 @@ void vma_insn_emit(vma_insn_t *node)
 	}
 }
 
-/*******************************************************************************
- * Assembly
- */
-
-static void vma_insns_evaluate(vma_context_t *ctx)
-{
-	vma_insn_t *node = ctx->insns_head;
-
-	vma_debug_print("evaluating insns...");
-	while (node) {
-		vma_insn_evaluate(node, ctx);
-		node = node->next;
-	}
-}
-
-/* Walk the list and estimate insn VAs and sizes */
-static void vma_insns_allocate(vma_context_t *ctx)
-{
-	vma_insn_t *node = ctx->insns_head;
-	vma_vaddr_t next_va = ctx->start_va;
-	vma_vaddr_t bss_va = ctx->start_va;
-
-	vma_debug_print("evaluating insn lengths...");
-	while (node) {
-		node->start_addr = next_va;
-		switch (node->type) {
-			case INSN_ADD:
-			case INSN_SUB:
-			case INSN_MULU:
-			case INSN_MULS:
-			case INSN_DIVU:
-			case INSN_DIVS:
-			case INSN_AND:
-			case INSN_OR:
-			case INSN_XOR:
-			case INSN_NOT:
-			case INSN_LSL:
-			case INSN_LSR:
-			case INSN_ASR:
-			case INSN_CMP_LT:
-			case INSN_CMP_GT:
-			case INSN_CMP_B:
-			case INSN_CMP_A:
-			case INSN_CMP_EQ:
-			case INSN_LDC_0:
-			case INSN_LDC_1:
-			case INSN_LDC_2:
-			case INSN_LDM_8_U:
-			case INSN_LDM_8_S:
-			case INSN_LDM_16_U:
-			case INSN_LDM_16_S:
-			case INSN_LDM_32:
-			case INSN_STM_8:
-			case INSN_STM_16:
-			case INSN_STM_32:
-			case INSN_DUP:
-			case INSN_SWAP:
-			case INSN_POP:
-			case INSN_RET:
-			case INSN_ICALL:
-			case INSN_IJMP:
-				next_va += 1;
-				bss_va = next_va;
-				break;
-
-			case INSN_LDC_8_U:
-			case INSN_LDC_8_S:
-			case INSN_LOCALS:
-			case INSN_LDLOC:
-			case INSN_STLOC:
-			case INSN_BR:
-			case INSN_BR_T:
-			case INSN_BR_F:
-				next_va += 1 + 1;
-				bss_va = next_va;
-				break;
-
-			case INSN_NCALL:
-				next_va += 1 + 2;
-				bss_va = next_va;
-				break;
-				
-			case INSN_LDC_32:
-			case INSN_LEA:
-			case INSN_CALL:
-				next_va += 1 + 4;
-				bss_va = next_va;
-				break;
-				
-			case INSN_DEFS:
-				VMA_ASSERT(node->u.text.buffer);
-				next_va += node->u.text.length;
-				bss_va = next_va;
-				break;
-
-			case INSN_DEFB:
-				VMA_ASSERT(node->u.expr_list);
-				next_va += sizeof(uint8_t) * node->u.expr_list->count;
-				bss_va = next_va;
-				break;
-
-			case INSN_DEFH:
-				VMA_ASSERT(node->u.expr_list);
-				node->start_addr = VMA_ALIGN(node->start_addr, 2);
-				next_va = VMA_ALIGN(next_va, 2);
-				next_va += sizeof(uint16_t) * node->u.expr_list->count;
-				bss_va = next_va;
-				break;
-
-			case INSN_DEFW:
-				VMA_ASSERT(node->u.expr_list);
-				node->start_addr = VMA_ALIGN(node->start_addr, 4);
-				next_va = VMA_ALIGN(next_va, 4);
-				next_va += sizeof(uint32_t) * node->u.expr_list->count;
-				bss_va = next_va;
-				break;
-
-			case INSN_RESB:
-				VMA_ASSERT(node->u.expr);
-				next_va += sizeof(uint8_t) * node->u.expr->value;
-				break;
-
-			case INSN_RESH:
-				VMA_ASSERT(node->u.expr);
-				node->start_addr = VMA_ALIGN(node->start_addr, 2);
-				next_va = VMA_ALIGN(next_va, 2);
-				next_va += sizeof(uint16_t) * node->u.expr->value;
-				break;
-
-			case INSN_RESW:
-				VMA_ASSERT(node->u.expr);
-				node->start_addr = VMA_ALIGN(node->start_addr, 4);
-				next_va = VMA_ALIGN(next_va, 4);
-				next_va += sizeof(uint32_t) * node->u.expr->value;
-				break;
-
-			default:
-				vma_abort("%s:%d:internal error: unhandled insn type %d", __FILE__, __LINE__, node->type);
-				break;
-		}
-
-		vma_debug_print("alloc: %p (%02X): at %08X", node, node->type, node->start_addr);
-
-		node->flags.allocated = 1;
-		node = node->next;
-	}
-
-	ctx->end_va = next_va;
-	ctx->bss_va = bss_va;
-}
-
 void vma_assemble(vma_context_t *ctx)
 {
 	VMA_ASSERT(ctx);
 
 	vma_debug_print("vma_assemble: %p: %p/%p", ctx, ctx->insns_head, ctx->insns_tail);
-	vma_insns_evaluate(ctx);
-	vma_abort_on_errors();
-	vma_insns_allocate(ctx);
-	vma_abort_on_errors();
-
-	vma_symtab_dump(&ctx->labels, 1);
+	vma_pass1(ctx);
 }

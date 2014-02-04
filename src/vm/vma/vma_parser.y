@@ -46,9 +46,12 @@ static void append_insn(vma_context_t *ctx, vma_insn_t *insn);
 %type <expr_list> expr_list
 %type <insn> labeled_insn
 %type <insn> addressable_insn
+%type <insn> constdef_insn
 %type <insn> datadef_insn
 %type <insn> datares_insn
 %type <insn> machine_insn
+%type <insn> substart_insn
+%type <insn> subend_insn
 %left '|'
 %left '&'
 %left '^'
@@ -64,6 +67,7 @@ static void append_insn(vma_context_t *ctx, vma_insn_t *insn);
 %token KW_DEFS KW_DEFB KW_DEFH KW_DEFW
 %token KW_RESB KW_RESH KW_RESW
 %token KW_CONST
+%token KW_SUBSTART KW_SUBEND
 
 %token OP_ADD OP_SUB OP_MULU OP_MULS OP_DIVU OP_DIVS 
 %token OP_AND OP_OR OP_XOR OP_NOT OP_LSL OP_LSR OP_ASR 
@@ -90,8 +94,6 @@ unit
 		/* Eat newlines */
 	| unit listed_stmt
 		/* No action. */
-	| unit dropped_stmt
-		/* No action. */
 	| unit error NEWLINE
 		{
 			vma_error("line %d: syntax error.", @2.first_line);
@@ -104,11 +106,10 @@ listed_stmt
 		{ $1->line = @1.first_line; append_insn(ctx, $1); }
 	| addressable_insn
 		{ $1->line = @1.first_line; append_insn(ctx, $1); }
-;
-
-dropped_stmt
-	: constdef_insn
-		{ }
+	| constdef_insn
+		{ $1->line = @1.first_line; append_insn(ctx, $1); }
+	| subend_insn
+		{ $1->line = @1.first_line; append_insn(ctx, $1); }
 ;
 
 labeled_insn
@@ -123,11 +124,35 @@ addressable_insn
 		{ $$ = $1; }
 	| datares_insn
 		{ $$ = $1; }
+	| substart_insn
+		{ $$ = $1; }
 ;
 
 constdef_insn
 	: IDENTIFIER KW_CONST expr
-		{ vma_symbol_t *c = vma_symtab_define(&ctx->constants, $1.buffer, 1); c->u.value = $3; }
+		{
+			vma_symbol_t *c = vma_symbol_define(ctx, $1.buffer, SYM_CONSTANT, @1.first_line);
+			c->u.value = $3;
+			$$ = vma_insn_build(INSN_CONST);
+		}
+;
+
+substart_insn
+	: KW_SUBSTART
+		{
+			$$ = vma_insn_build(INSN_SUBSTART);
+			vma_symtab_init(&$$->u.symtab);
+			$$->u.symtab.lookup_next = &ctx->globals;
+			ctx->lookup_stack = &$$->u.symtab;
+		}
+;
+
+subend_insn
+	: KW_SUBEND
+		{
+			$$ = vma_insn_build(INSN_SUBEND);
+			ctx->lookup_stack = &ctx->globals;
+		}
 ;
 
 datadef_insn
@@ -199,8 +224,8 @@ machine_insn
 		{ $$ = vma_insn_build(INSN_LDC_8_S); $$->u.expr = $2; }
 	| OP_LDC_32 expr
 		{ $$ = vma_insn_build(INSN_LDC_32); $$->u.expr = $2; }
-	| OP_LEA IDENTIFIER
-		{ $$ = vma_insn_build(INSN_LEA); vma_symref_init(&$$->u.symref, $2.buffer); }
+	| OP_LEA expr
+		{ $$ = vma_insn_build(INSN_LEA); $$->u.expr = $2; }
 	| OP_LDM_8_U
 		{ $$ = vma_insn_build(INSN_LDM_8_U); }
 	| OP_LDM_8_S
@@ -229,14 +254,14 @@ machine_insn
 		{ $$ = vma_insn_build(INSN_SWAP); }
 	| OP_POP
 		{ $$ = vma_insn_build(INSN_POP); }
-	| OP_BR IDENTIFIER
-		{ $$ = vma_insn_build(INSN_BR); vma_symref_init(&$$->u.symref, $2.buffer); }
-	| OP_BR_T IDENTIFIER
-		{ $$ = vma_insn_build(INSN_BR_T); vma_symref_init(&$$->u.symref, $2.buffer); }
-	| OP_BR_F IDENTIFIER
-		{ $$ = vma_insn_build(INSN_BR_F); vma_symref_init(&$$->u.symref, $2.buffer); }
-	| OP_CALL IDENTIFIER
-		{ $$ = vma_insn_build(INSN_CALL); vma_symref_init(&$$->u.symref, $2.buffer); }
+	| OP_BR expr
+		{ $$ = vma_insn_build(INSN_BR); $$->u.expr = $2; }
+	| OP_BR_T expr
+		{ $$ = vma_insn_build(INSN_BR_T); $$->u.expr = $2; }
+	| OP_BR_F expr
+		{ $$ = vma_insn_build(INSN_BR_F); $$->u.expr = $2; }
+	| OP_CALL expr
+		{ $$ = vma_insn_build(INSN_CALL); $$->u.expr = $2; }
 	| OP_RET
 		{ $$ = vma_insn_build(INSN_RET); }
 	| OP_ICALL
@@ -246,13 +271,15 @@ machine_insn
 	| OP_NCALL IDENTIFIER
 		{
 			$$ = vma_insn_build(INSN_NCALL);
-			$$->u.symref.u.sym = vma_symtab_define(&ctx->ncalls, $2.buffer, 0);
+			$$->u.symref.u.sym = vma_symtab_define(&ctx->ncalls, $2.buffer, SYM_NCALL, NULL);
 		}
 ;
 
 label
 	: IDENTIFIER ':' newline.opt
-		{ $$ = vma_symtab_define(&ctx->labels, $1.buffer, 1); }
+		{
+			$$ = vma_symbol_define(ctx, $1.buffer, SYM_LABEL, @1.first_line);
+		}
 ;
 
 expr_list

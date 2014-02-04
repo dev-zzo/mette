@@ -13,35 +13,49 @@ typedef struct _vma_expr_t vma_expr_t;
 typedef struct _vma_expr_list_t vma_expr_list_t;
 typedef struct _vma_insn_t vma_insn_t;
 typedef struct _vma_context_t vma_context_t;
+
 /*
  * Symbols
  */
 
+typedef enum _vma_symbol_type_t vma_symbol_type_t;
+enum _vma_symbol_type_t {
+	SYM_INVALID,
+	SYM_LABEL,
+	SYM_CONSTANT,
+	SYM_NCALL,
+};
+
 struct _vma_symbol_t {
 	vma_symbol_t *next;
+	vma_symbol_type_t type;
 	const char *name;
 	union {
-		unsigned id;
-		vma_insn_t *location;
-		vma_expr_t *value;
+		vma_insn_t *location; /* Labels */
+		vma_expr_t *value; /* Constants */
+		unsigned id; /* NCALLs */
 	} u;
+	int line;
 };
 
 struct _vma_symtab_t {
 	vma_symbol_t *head;
 	vma_symbol_t *tail;
 	unsigned count;
+	vma_symtab_t *lookup_next;
 };
 
 extern void vma_symtab_init(vma_symtab_t *symtab);
-extern vma_symbol_t *vma_symtab_define(vma_symtab_t *symtab, const char *name, int unique);
+extern vma_symbol_t *vma_symtab_define(vma_symtab_t *symtab, const char *name, vma_symbol_type_t type, vma_symbol_t **prev_def);
 extern vma_symbol_t *vma_symtab_lookup(const vma_symtab_t *symtab, const char *name);
+extern vma_symbol_t *vma_symtab_lookup_chain(const vma_symtab_t *head, const char *name);
 
 struct _vma_symref_t {
 	union {
 		const char *name;
 		vma_symbol_t *sym;
 	} u;
+	int line;
 };
 
 extern void vma_symref_init(vma_symref_t *ref, const char *name);
@@ -74,12 +88,12 @@ struct _vma_expr_t {
 		vma_expr_t *child[2]; /* lhs, rhs */
 		vma_symref_t symref;
 	} u;
+	int line;
 };
 
 extern vma_expr_t *vma_expr_build_literal(int value);
 extern vma_expr_t *vma_expr_build_symref(const char *name);
 extern vma_expr_t *vma_expr_build_parent(vma_expr_type_t type, vma_expr_t *a, vma_expr_t *b);
-extern uint32_t vma_expr_evaluate(vma_expr_t *expr, vma_context_t *ctx);
 
 struct _vma_expr_list_t {
 	vma_expr_t *head;
@@ -144,15 +158,21 @@ enum _vma_insn_type_t {
 	INSN_IJMP,
 	INSN_NCALL,
 
-	INSN_ASM_KEYWORDS,
+	INSN_ASM_KEYWORDS, /* Insns above this are actual machine insns. */
 
 	INSN_DEFB,
 	INSN_DEFH,
 	INSN_DEFW,
 	INSN_DEFS,
+
+	INSN_ALLOCATE, /* Insn above this allocate memory. */
+
 	INSN_RESB,
 	INSN_RESH,
 	INSN_RESW,
+	INSN_CONST,
+	INSN_SUBSTART,
+	INSN_SUBEND,
 
 	INSN_MAX,
 };
@@ -161,8 +181,10 @@ struct _vma_insn_t {
 	vma_insn_t *next;
 	vma_insn_type_t type;
 	vma_vaddr_t start_addr;
+	unsigned align_bytes;
 	union {
 		vma_symref_t symref;
+		vma_symtab_t symtab;
 		vma_expr_t *expr;
 		vma_expr_list_t *expr_list;
 		struct {
@@ -177,7 +199,6 @@ struct _vma_insn_t {
 };
 
 extern vma_insn_t *vma_insn_build(vma_insn_type_t type);
-extern void vma_output_insn(vma_insn_t *node);
 
 /*
  * Parsing
@@ -188,18 +209,25 @@ struct _vma_context_t {
 	FILE *input;
 	FILE *output;
 	const char *start_symbol;
-	vma_symtab_t labels;
-	vma_symtab_t constants;
+
+	vma_symtab_t globals;
 	vma_symtab_t ncalls;
+	vma_symtab_t *lookup_stack;
+
 	vma_insn_t *insns_head;
 	vma_insn_t *insns_tail;
+
 	vma_vaddr_t start_va;
 	vma_vaddr_t bss_va;
 	vma_vaddr_t end_va;
+
+	vma_vaddr_t current_va;
 };
 
 extern void vma_context_init(vma_context_t *ctx);
+extern vma_symbol_t *vma_symbol_define(vma_context_t *ctx, const char *name, vma_symbol_type_t type, int line);
 extern void vma_assemble(vma_context_t *ctx);
+extern void vma_emit_insn(vma_context_t *ctx, vma_insn_t *insn);
 
 /*
  * Output generation

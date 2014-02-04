@@ -31,8 +31,8 @@ static int line_counter;
 DIGIT	[0-9]
 HEXDIGIT [0-9a-fA-F]
 OCTDIGIT [0-7]
-ALNUM	[0-9a-zA-Z_]
-ALPHA	[a-zA-Z_]
+ALNUM	[0-9a-zA-Z_@]
+ALPHA	[a-zA-Z_@]
 WSPACE	[\t\v\r ]
 ID		{ALPHA}{ALNUM}*
 
@@ -53,6 +53,8 @@ ID		{ALPHA}{ALNUM}*
 [.][rR][eE][sS][hH] return KW_RESH;
 [.][rR][eE][sS][wW] return KW_RESW;
 [.][cC][oO][nN][sS][tT] return KW_CONST;
+[.][sS][uU][bB] return KW_SUBSTART;
+[.][eE][nN][dD][sS][uU][bB] return KW_SUBEND;
 
  /* Opcodes */
 [aA][dD][dD] return OP_ADD;
