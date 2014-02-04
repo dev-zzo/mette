@@ -39,7 +39,7 @@ VM_THUNK(rtl_free)
 VM_THUNK(rtl_strbuf_alloc)
 {
 	VM_THUNK_ARGS_START
-		VM_THUNK_ARG(uint16_t size);
+		VM_THUNK_ARG(size_t size);
 	VM_THUNK_ARGS_END
 
 	VM_THUNK_RETURN(rtl_strbuf_alloc(args.size));
@@ -85,7 +85,7 @@ VM_THUNK(rtl_strbuf_set_length)
 {
 	VM_THUNK_ARGS_START
 		VM_THUNK_ARG(rtl_strbuf_t *sb);
-		VM_THUNK_ARG(uint16_t new_length);
+		VM_THUNK_ARG(size_t new_length);
 	VM_THUNK_ARGS_END
 
 	rtl_strbuf_set_length(args.sb, args.new_length);
@@ -95,7 +95,7 @@ VM_THUNK(rtl_strbuf_resize)
 {
 	VM_THUNK_ARGS_START
 		VM_THUNK_ARG(rtl_strbuf_t *sb);
-		VM_THUNK_ARG(uint16_t new_size);
+		VM_THUNK_ARG(size_t new_size);
 	VM_THUNK_ARGS_END
 
 	VM_THUNK_RETURN(rtl_strbuf_resize(args.sb, args.new_size));

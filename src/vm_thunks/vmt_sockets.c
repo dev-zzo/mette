@@ -6,6 +6,9 @@
 #include <netinet/in.h>
 #include <errno.h>
 
+#define DEBUG_PRINTS
+#include "rtl_debug.h"
+
 #if TARGET_IS_BE == 0
 
 static unsigned short rtl_htons(unsigned short x)
@@ -41,8 +44,10 @@ VM_THUNK(sockaddr_create)
 
 	VM_THUNK_ARGS_START
 		VM_THUNK_ARG(unsigned long ip);
-		VM_THUNK_ARG(unsigned short port);
+		VM_THUNK_ARG(unsigned long port);
 	VM_THUNK_ARGS_END
+
+	DBGPRINT("sockaddr_create: %08X %d\n", args.ip, args.port);
 
 	sa = (struct sockaddr_in *)rtl_alloc(sizeof(*sa));
 	sa->sin_family = AF_INET;

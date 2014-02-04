@@ -135,17 +135,18 @@ main:
 # End of main routine
 
 comm_process_packet:
-	.sub
-	pop # fd
-	pop # from
+	.sub # ( fd from packet -- )
+	pop
+	pop
 	lea		incoming_packet_text
-	ldc.2
+	ldc.1
 	ncall	rtl_print_fd
+	pop
 	ret
 	.endsub
 
 incoming_packet_text:
-	.defs	"comm_process_packet: got: %s\n\0"
+	.defs	"comm_process_packet: got: %b\n\0"
 # End of comm_process_packet routine
 
 #
