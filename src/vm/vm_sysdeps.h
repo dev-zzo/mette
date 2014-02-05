@@ -12,6 +12,9 @@ typedef  intptr_t vm_soperand_t;
 typedef uintptr_t vm_uoperand_t;
 typedef vm_uoperand_t vm_operand_t;
 
+#define __USE_MISC
+#include <sys/mman.h>
+
 #if 1
 #include "rtl_memory.h"
 #include "syscalls.h"
@@ -19,6 +22,7 @@ typedef vm_uoperand_t vm_operand_t;
 #define vm_read sys_read
 #define vm_lseek sys_lseek
 #define vm_close sys_close
+#define vm_mmap sys_mmap
 #define vm_alloc rtl_alloc
 #define vm_free rtl_free
 #else
@@ -27,17 +31,9 @@ typedef vm_uoperand_t vm_operand_t;
 #define vm_read read
 #define vm_lseek lseek
 #define vm_close close
+#define vm_mmap mmap
 #define vm_alloc malloc
 #define vm_free free
-#endif
-
-
-#define __USE_MISC
-#include <sys/mman.h>
-#define vm_mmap mmap
-
-#ifndef MAP_UNINITIALIZED
-#define MAP_UNINITIALIZED (0)
 #endif
 
 #endif // __mette_vm_sysdeps_h_included

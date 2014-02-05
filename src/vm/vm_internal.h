@@ -12,8 +12,8 @@ typedef struct _vm_locals {
 
 /* VM context -- where all the state is. */
 typedef struct _vm_context {
-	vm_stack_t dstack; /* Stack for data ops */
-	vm_stack_t cstack; /* Stack for control flow ops */
+	vm_stack_t *dstack; /* Stack for data ops */
+	vm_stack_t *cstack; /* Stack for control flow ops */
 	
 	uint8_t *pc;
 	vm_locals_t *locals;

@@ -2,6 +2,7 @@
 #define __mette_vm_thunks_h_included
 
 #include "vm_internal.h"
+#include "vm_stack.h"
 
 /*
 Here is defined a thunk interface between VM and native code.
@@ -14,12 +15,12 @@ calling method is still platform dependent, as in C.
 
 #define VM_THUNK_ARGS_END \
 	} args; \
-	vm_stack_popn(&ctx->dstack, sizeof(args) / sizeof(vm_operand_t), (vm_operand_t *)&args);
+	vm_stack_pop3(ctx->dstack, (vm_operand_t *)&args, sizeof(args) / sizeof(vm_operand_t));
 
 #define VM_THUNK_ARG(decl) union { decl __attribute__ ((aligned (sizeof(vm_operand_t)))) ; }
 
 #define VM_THUNK_RETURN(what) \
-	vm_stack_push(&ctx->dstack, (vm_operand_t)what)
+	vm_stack_push(ctx->dstack, (vm_operand_t)what)
 
 typedef void (*vm_thunk_t)(vm_context_t *ctx);
 

@@ -105,8 +105,10 @@ VM_THUNK(rtl_strbuf_resize)
 
 static uintptr_t nextarg_stack(void *context)
 {
+	uintptr_t value;
 	vm_context_t *ctx = (vm_context_t *)context;
-	return vm_stack_pop(&ctx->dstack);
+	vm_stack_pop3(ctx->dstack, &value, 1);
+	return value;
 }
 
 VM_THUNK(rtl_print_fd)
