@@ -36,6 +36,9 @@
 #include "vm_opcodes.names.tab"
 #endif
 
+#define ARG1 (buf[0])
+#define ARG2 (buf[1])
+
 /* Emulate one VM insn. */
 void vm_step(vm_context_t *ctx)
 {
@@ -60,62 +63,62 @@ op_invalid:
 	vm_panic("vm_step: unknown opcode.");
 
 op_ADD:
-	r0 = buf[0] + buf[1];
+	r0 = ARG1 + ARG2;
 	goto push_1;
 op_SUB:
-	r0 = buf[0] - buf[1];
+	r0 = ARG1 - ARG2;
 	goto push_1;
 op_MULU: {
-	TARGET_MULU(buf[0], buf[1], r0, r1);
+	TARGET_MULU(ARG1, ARG2, r0, r1);
 	goto push_2;
 }
 op_MULS: {
-	TARGET_MULS(buf[0], buf[1], r0, r1);
+	TARGET_MULS(ARG1, ARG2, r0, r1);
 	goto push_2;
 }
 op_DIVU: {
-	TARGET_DIVU(buf[0], buf[1]);
+	TARGET_DIVU(ARG1, ARG2);
 	goto push_2;
 }
 op_DIVS: {
-	TARGET_DIVS(buf[0], buf[1]);
+	TARGET_DIVS(ARG1, ARG2);
 	goto push_2;
 }
 op_AND:
-	r0 = buf[0] & buf[1];
+	r0 = ARG1 & ARG2;
 	goto push_1;
 op_OR:
-	r0 = buf[0] | buf[1];
+	r0 = ARG1 | ARG2;
 	goto push_1;
 op_XOR:
-	r0 = buf[0] ^ buf[1];
+	r0 = ARG1 ^ ARG2;
 	goto push_1;
 op_NOT:
-	r0 = ~buf[0];
+	r0 = ~ARG1;
 	goto push_1;
 op_LSL:
-	r0 = buf[1] << buf[0];
+	r0 = ARG2 << ARG1;
 	goto push_1;
 op_LSR:
-	r0 = ((vm_uoperand_t)buf[1]) >> buf[0];
+	r0 = ((vm_uoperand_t)ARG2) >> ARG1;
 	goto push_1;
 op_ASR:
-	r0 = ((vm_soperand_t)buf[1]) >> buf[0];
+	r0 = ((vm_soperand_t)ARG2) >> ARG1;
 	goto push_1;
 op_CMP_LT:
-	r0 = ((vm_soperand_t)buf[0]) < ((vm_soperand_t)buf[1]);
+	r0 = ((vm_soperand_t)ARG1) < ((vm_soperand_t)ARG2);
 	goto push_1;
 op_CMP_GT:
-	r0 = ((vm_soperand_t)buf[0]) > ((vm_soperand_t)buf[1]);
+	r0 = ((vm_soperand_t)ARG1) > ((vm_soperand_t)ARG2);
 	goto push_1;
 op_CMP_B:
-	r0 = ((vm_uoperand_t)buf[0]) < ((vm_uoperand_t)buf[1]);
+	r0 = ((vm_uoperand_t)ARG1) < ((vm_uoperand_t)ARG2);
 	goto push_1;
 op_CMP_A:
-	r0 = ((vm_uoperand_t)buf[0]) > ((vm_uoperand_t)buf[1]);
+	r0 = ((vm_uoperand_t)ARG1) > ((vm_uoperand_t)ARG2);
 	goto push_1;
 op_CMP_EQ:
-	r0 = buf[1] == buf[0];
+	r0 = ARG2 == ARG1;
 	goto push_1;
 op_LDC_0:
 	r0 = 0;
@@ -144,28 +147,28 @@ op_LEA:
 	r0 += (vm_uoperand_t)pc;
 	goto push_1;
 op_LDM_8_U:
-	r0 = (vm_uoperand_t)*(uint8_t *)(buf[0]);
+	r0 = (vm_uoperand_t)*(uint8_t *)(ARG1);
 	goto push_1;
 op_LDM_8_S:
-	r0 = (vm_soperand_t)*(int8_t *)(buf[0]);
+	r0 = (vm_soperand_t)*(int8_t *)(ARG1);
 	goto push_1;
 op_LDM_16_U:
-	r0 = (vm_uoperand_t)*(uint16_t *)(buf[0]);
+	r0 = (vm_uoperand_t)*(uint16_t *)(ARG1);
 	goto push_1;
 op_LDM_16_S:
-	r0 = (vm_soperand_t)*(int16_t *)(buf[0]);
+	r0 = (vm_soperand_t)*(int16_t *)(ARG1);
 	goto push_1;
 op_LDM_32:
-	r0 = *(vm_operand_t *)(buf[0]);
+	r0 = *(vm_operand_t *)(ARG1);
 	goto push_1;
 op_STM_8:
-	*(uint8_t *)(buf[0]) = (uint8_t)buf[1];
+	*(uint8_t *)(ARG1) = (uint8_t)ARG2;
 	goto push_none;
 op_STM_16:
-	*(uint16_t *)(buf[0]) = (uint16_t)buf[1];
+	*(uint16_t *)(ARG1) = (uint16_t)ARG2;
 	goto push_none;
 op_STM_32:
-	*(vm_operand_t *)(buf[0]) = buf[1];
+	*(vm_operand_t *)(ARG1) = ARG2;
 	goto push_none;
 op_LOCALS: {
 	uint8_t count = *(uint8_t *)(pc);
@@ -195,15 +198,15 @@ op_STLOC: {
 	if (index >= ctx->locals->count) {
 		vm_panic("vm_step: local index out of bounds.");
 	}
-	ctx->locals->data[index] = buf[0];
+	ctx->locals->data[index] = ARG1;
 	goto push_none;
 }
 op_DUP:
-	r1 = r0 = buf[0];
+	r1 = r0 = ARG1;
 	goto push_2;
 op_SWAP: {
-	r1 = buf[0];
-	r0 = buf[1];
+	r1 = ARG1;
+	r0 = ARG2;
 	goto push_2;
 }
 op_POP:
@@ -217,7 +220,7 @@ op_BR: {
 op_BR_T: {
 	int8_t offset = *(int8_t *)(pc);
 	pc += 1;
-	if (buf[0]) {
+	if (ARG1) {
 		pc = pc + offset;
 	}
 	goto push_none;
@@ -225,7 +228,7 @@ op_BR_T: {
 op_BR_F: {
 	int8_t offset = *(int8_t *)(pc);
 	pc += 1;
-	if (!buf[0]) {
+	if (!ARG1) {
 		pc = pc + offset;
 	}
 	goto push_none;
@@ -244,19 +247,19 @@ op_RET: {
 		vm_free(ctx->locals);
 	}
 	vm_stack_pop3(ctx->cstack, buf, 2);
-	ctx->locals = (void *)buf[0];
-	pc = (uint8_t *)buf[1];
+	ctx->locals = (void *)ARG1;
+	pc = (uint8_t *)ARG2;
 	goto push_none;
 }
 op_ICALL: {
 	vm_stack_push(ctx->cstack, (vm_operand_t)pc);
 	vm_stack_push(ctx->cstack, (vm_operand_t)ctx->locals);
 	ctx->locals = NULL;
-	pc = (uint8_t *)buf[0];
+	pc = (uint8_t *)ARG1;
 	goto push_none;
 }
 op_IJMP: {
-	pc = (uint8_t *)buf[0];
+	pc = (uint8_t *)ARG1;
 	goto push_none;
 }
 op_NCALL: {
@@ -272,10 +275,10 @@ op_NCALL: {
 }
 
 push_2:
-	buf[1] = r1;
+	ARG2 = r1;
 	ops_out++;
 push_1:
-	buf[0] = r0;
+	ARG1 = r0;
 	ops_out++;
 	vm_stack_push3(ctx->dstack, buf, ops_out);
 push_none:
