@@ -3,8 +3,7 @@
 #
 
 # Main target in this dir
-TARGET:= \
-	vmasm \
+TARGET:=vmasm
 
 # What to build from
 SOURCES:= \
@@ -29,8 +28,11 @@ CFLAGS+=-I$(SOURCES_ROOT)/vm/ -I$(SOURCES_ROOT)/vm_arch/
 
 # Additional rules
 
+.INTERMEDIATE: vma_parser.c vma_lexer.c
+
 vma_parser.c: vma_parser.y
-	bison --defines=./vma_tokens.h --report=all --report-file=vma_parser.txt -o $@ $<
+	# bison --defines=./vma_tokens.h --report=all --report-file=$(BUILD_DIR)/vma_parser.txt -o $@ $<
+	bison --defines=./vma_tokens.h -o $@ $<
 
 vma_lexer.c: vma_lexer.l
 	flex -d -f -o $@ $<

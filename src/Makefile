@@ -3,8 +3,7 @@
 #
 
 # Main target in this dir
-TARGET:= \
-	mette \
+TARGET:=mette-$(TARGET_ARCH)
 
 # What to build from
 SOURCES:= \
@@ -27,14 +26,11 @@ SUBTARGETS:= \
 	vm \
 	vma \
 
-GENERATED:= \
-	mette.map
-
 # Include either target or host
 include $(SOURCES_ROOT)/Makefile.target.inc
 
 # Override CFLAGS
 CFLAGS+=-I$(SOURCES_ROOT)/sysdep/ -I$(SOURCES_ROOT)/vm/ -I$(SOURCES_ROOT)/rtl/ 
-LDFLAGS+=-nostdlib --script=mette-mips.ldscript -Map=mette.map
+LDFLAGS+=-nostdlib --script=$(TARGET).ldscript -Map=$(TARGET_DIR)/$(TARGET).map
 
 # Additional rules

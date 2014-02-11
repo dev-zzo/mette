@@ -2,8 +2,7 @@
 # Makefile for VM system dependent library
 #
 
-TARGET:= \
-	mette-sysdep.a \
+TARGET:=mette-sysdep.a
 
 SOURCES:= \
 	syscalls.c \
