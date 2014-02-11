@@ -1,0 +1,3 @@
+
+# Where your tools are located
+TOOLS_PATH:=$(HOME)/x-tools/$(TOOLS_SPEC)/bin/$(TOOLS_SPEC)-
