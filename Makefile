@@ -45,14 +45,19 @@ export CFLAGS_FOR_HOST:=-g -D_BSD_SOURCE=1
 export LDFLAGS_FOR_HOST:=-g
 
 export SOURCES_ROOT=$(shell pwd)/src
+export BUILD_ROOT=$(shell pwd)/.objs
 
 .PHONY: all src clean
 
 all: src
 
 src:
-	$(MAKE) -C $@
+	mkdir -p $(BUILD_ROOT)
+	mkdir -p $(BUILD_ROOT)/$(TARGET_ARCH)
+	$(MAKE) -C src all
 
 clean:
-	$(MAKE) -C src clean
+	rm -rf $(BUILD_ROOT)
 
+distclean: clean
+	$(MAKE) -C src distclean

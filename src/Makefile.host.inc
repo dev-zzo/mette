@@ -11,4 +11,7 @@ SIZE:=$(SIZE_FOR_HOST)
 CFLAGS:=$(CFLAGS_FOR_HOST)
 LDFLAGS:=$(LDFLAGS_FOR_HOST)
 
+BUILD_DIR:=$(BUILD_ROOT)/$(shell basename `dirname \`pwd\`/x`)
+TARGET_DIR:=$(BUILD_ROOT)
+
 include $(SOURCES_ROOT)/Makefile.inc

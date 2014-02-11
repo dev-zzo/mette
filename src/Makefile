@@ -12,20 +12,20 @@ SOURCES:= \
 
 # Additional libs to link
 LIBS:= \
-	vm/mette-vm.a \
-	vm_thunks/mette-vmt.a \
-	vm/mette-vm.a \
-	rtl/mette-rtl.a \
-	sysdep/mette-sysdep.a \
+	mette-vm.a \
+	mette-vmt.a \
+	mette-vm.a \
+	mette-rtl.a \
+	mette-sysdep.a \
 
 # Any additional subtargets here
 SUBTARGETS:= \
 	sysdep \
 	rtl \
 	vm_arch \
-	vma \
 	vm_thunks \
 	vm \
+	vma \
 
 GENERATED:= \
 	mette.map

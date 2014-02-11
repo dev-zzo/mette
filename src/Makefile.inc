@@ -2,41 +2,53 @@
 # Generic rules for making binaries
 #
 
-OBJECTS:= \
-	$(OBJECTS) \
-	$(patsubst %.c, %.o, $(SOURCES)) \
-	$(patsubst %.S, %.o, $(ASMSOURCES)) \
-
 #
 # Making
 #
 
 .PHONY: all $(SUBTARGETS)
 
-all: $(SUBTARGETS) $(TARGET)
+all: prebuild $(SUBTARGETS) $(TARGET)
 
 $(SUBTARGETS): 
 	$(MAKE) -C $@ all
 
-ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(MAKECMDGOALS),distclean)
 include $(SOURCES:.c=.d)
 endif
 
 %.d: %.c
 	-$(CC) -MM -MG $(CFLAGS) $< | sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' > $@;
 
-%.o: %.c
+$(BUILD_DIR)/%.o: %.c
+	mkdir -p `dirname $@`
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-%.o: %.S
+$(BUILD_DIR)/%.o: %.S
+	mkdir -p `dirname $@`
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-$(TARGET): $(OBJECTS) $(LIBS)
+prebuild:
+
+OBJECTS:= \
+	$(OBJECTS) \
+	$(SOURCES:.c=.o) \
+	$(ASMSOURCES:.S=.o)
+
+REAL_OBJECTS:=$(patsubst %, $(BUILD_DIR)/%, $(OBJECTS))
+REAL_LIBS:=$(patsubst %, $(TARGET_DIR)/%, $(LIBS))
+REAL_TARGET:=$(TARGET_DIR)/$(TARGET)
+
+.PHONY: $(TARGET)
+
+$(TARGET): $(REAL_TARGET)
+
+$(REAL_TARGET): $(REAL_OBJECTS) $(REAL_LIBS)
 ifeq ($(suffix $(TARGET)), .a)
 	$(AR) rcs $@ $^
 	$(SIZE) $@
 else
-	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ $^ $(REAL_LIBS)
 ifeq ("$(LD)", "$(LD_FOR_TARGET)")
 	$(SIZE) $@
 	objdump -x $@
@@ -47,12 +59,11 @@ endif
 # Cleaning
 #
 
-SUBTARGETS_clean:=$(addsuffix _clean, $(SUBTARGETS))
-.PHONY: clean $(SUBTARGETS_clean)
+.PHONY: clean distclean
 
-$(SUBTARGETS_clean): 
-	$(MAKE) -C $(subst _clean,,$@) clean
+clean:
 
-clean: $(SUBTARGETS_clean)
-	$(RM) $(TARGET) *.o *.d $(patsubst %.c, %.i, $(SOURCES)) $(patsubst %.c, %.s, $(SOURCES)) $(GENERATED)
+distclean:
+	$(RM) $(TARGET) *.d $(SOURCES:.c=.i) $(SOURCES:.c=.s) $(GENERATED)
+	for target in $(SUBTARGETS) ; do $(MAKE) -C $$target $@ ; done
 

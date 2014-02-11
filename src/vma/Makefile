@@ -4,7 +4,7 @@
 
 # Main target in this dir
 TARGET:= \
-	vma \
+	vmasm \
 
 # What to build from
 SOURCES:= \
