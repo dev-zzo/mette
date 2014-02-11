@@ -57,4 +57,16 @@ VM_THUNK(io_close)
 	sys_close(args.fd);
 }
 
+VM_THUNK(io_ioctl)
+{
+	int rv;
+	VM_THUNK_ARGS_START
+		VM_THUNK_ARG(int fd);
+		VM_THUNK_ARG(unsigned int cmd);
+		VM_THUNK_ARG(unsigned long arg);
+	VM_THUNK_ARGS_END
 
+	rv = sys_ioctl(args.fd, args.cmd, args.arg);
+
+	VM_THUNK_RETURN(rv);
+}

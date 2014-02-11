@@ -42,6 +42,7 @@ __DEFINE_SYSCALL3(write, int, int fd, const void *buf, size_t count);
 __DEFINE_SYSCALL1(close, int, int fd);
 __DEFINE_SYSCALL3(lseek, int, int fd, off_t offset, int origin);
 __DEFINE_SYSCALL2(flock, int, int fd, unsigned int cmd);
+__DEFINE_SYSCALL3(ioctl, int, int fd, unsigned int cmd, unsigned long arg);
 __DEFINE_SYSCALL3(fcntl, int, int fd, unsigned int cmd, unsigned long arg);
 __DEFINE_SYSCALL5(_newselect, int, int n, fd_set *inp, fd_set *outp, fd_set *exp, struct timeval *tvp);
 //#define sys_pipe(pipefd) __SYSCALL(pipe, 1, pipefd)
