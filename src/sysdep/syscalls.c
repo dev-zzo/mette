@@ -25,15 +25,15 @@ __DEFINE_SYSCALL0(getpid, int);
 // file system
 
 //#define sys_chdir(path) __SYSCALL(chdir, 1, path)
-//#define sys_unlink(path) __SYSCALL(unlink, 1, path)
-//#define sys_chmod(path, mode) __SYSCALL(chmod, 2, path, mode)
+__DEFINE_SYSCALL1(unlink, int, const char *path);
+__DEFINE_SYSCALL2(chmod, int, const char *path, unsigned long mode);
 //#define sys_fchmod(fd, mode) __SYSCALL(fchmod, 2, fd, mode)
 //#define sys_stat(path, sbuf) __SYSCALL(stat, 2, path, buf)
 //#define sys_fstat(fd, sbuf) __SYSCALL(fstat, 2, fd, sbuf)
 //#define sys_access(path, mode) __SYSCALL(access, 2, path, mode)
 //#define sys_rename(pathold, pathnew) __SYSCALL(rename, 2, pathold, pathnew)
-//#define sys_mkdir(path, mode) __SYSCALL(mkdir, 2, path, mode)
-//#define sys_rmdir(path) __SYSCALL(rmdir, 1, path)
+__DEFINE_SYSCALL2(mkdir, int, const char *path, unsigned long mode);
+__DEFINE_SYSCALL1(rmdir, int, const char *path);
 //#define sys_truncate(path, length) __SYSCALL(truncate, 2, path, length)
 //#define sys_ftruncate(fd, length) __SYSCALL(ftruncate, 2, fd, length)
 __DEFINE_SYSCALL3(open, int, const char *path, int flags, int mode);

@@ -366,34 +366,24 @@ extern long __attribute__((section(".text.syscalls"))) __sys_check_error();
 		__builtin_unreachable(); \
 	} \
 
-#define __DEFINE_SYSCALL0(name, rtype) \
-	rtype __attribute__((noinline, section(".text.syscalls"))) sys_##name(void) __SYSCALL_BODY(__NR_##name)
-#define __DEFINE_SYSCALL1(name, rtype, ...) \
-	rtype __attribute__((noinline, section(".text.syscalls"))) sys_##name(__VA_ARGS__) __SYSCALL_BODY(__NR_##name)
-#define __DEFINE_SYSCALL2(name, rtype, ...) \
-	rtype __attribute__((noinline, section(".text.syscalls"))) sys_##name(__VA_ARGS__) __SYSCALL_BODY(__NR_##name)
-#define __DEFINE_SYSCALL3(name, rtype, ...) \
-	rtype __attribute__((noinline, section(".text.syscalls"))) sys_##name(__VA_ARGS__) __SYSCALL_BODY(__NR_##name)
-#define __DEFINE_SYSCALL4(name, rtype, ...) \
-	rtype __attribute__((noinline, section(".text.syscalls"))) sys_##name(__VA_ARGS__) __SYSCALL_BODY(__NR_##name)
-#define __DEFINE_SYSCALL5(name, rtype, ...) \
-	rtype __attribute__((noinline, section(".text.syscalls"))) sys_##name(__VA_ARGS__) __SYSCALL_BODY(__NR_##name)
-#define __DEFINE_SYSCALL6(name, rtype, ...) \
-	rtype __attribute__((noinline, section(".text.syscalls"))) sys_##name(__VA_ARGS__) __SYSCALL_BODY(__NR_##name)
+#define __DECLARE_SYSCALLx(name, rtype, ...) \
+	extern rtype __attribute__((section(".text.syscalls"))) sys_##name(__VA_ARGS__)
+#define __DECLARE_SYSCALL0(name, rtype) __DECLARE_SYSCALLx(name, rtype, void)
+#define __DECLARE_SYSCALL1(name, rtype, ...) __DECLARE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DECLARE_SYSCALL2(name, rtype, ...) __DECLARE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DECLARE_SYSCALL3(name, rtype, ...) __DECLARE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DECLARE_SYSCALL4(name, rtype, ...) __DECLARE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DECLARE_SYSCALL5(name, rtype, ...) __DECLARE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DECLARE_SYSCALL6(name, rtype, ...) __DECLARE_SYSCALLx(name, rtype, __VA_ARGS__)
 
-#define __DECLARE_SYSCALL0(name, rtype) \
-	extern rtype __attribute__((noinline, section(".text.syscalls"))) sys_##name(void)
-#define __DECLARE_SYSCALL1(name, rtype, ...) \
-	extern rtype __attribute__((noinline, section(".text.syscalls"))) sys_##name(__VA_ARGS__)
-#define __DECLARE_SYSCALL2(name, rtype, ...) \
-	extern rtype __attribute__((noinline, section(".text.syscalls"))) sys_##name(__VA_ARGS__)
-#define __DECLARE_SYSCALL3(name, rtype, ...) \
-	extern rtype __attribute__((noinline, section(".text.syscalls"))) sys_##name(__VA_ARGS__)
-#define __DECLARE_SYSCALL4(name, rtype, ...) \
-	extern rtype __attribute__((noinline, section(".text.syscalls"))) sys_##name(__VA_ARGS__)
-#define __DECLARE_SYSCALL5(name, rtype, ...) \
-	extern rtype __attribute__((noinline, section(".text.syscalls"))) sys_##name(__VA_ARGS__)
-#define __DECLARE_SYSCALL6(name, rtype, ...) \
-	extern rtype __attribute__((noinline, section(".text.syscalls"))) sys_##name(__VA_ARGS__)
+#define __DEFINE_SYSCALLx(name, rtype, ...) \
+	rtype __attribute__((section(".text.syscalls"))) sys_##name(__VA_ARGS__) __SYSCALL_BODY(__NR_##name)
+#define __DEFINE_SYSCALL0(name, rtype) __DEFINE_SYSCALLx(name, rtype, void)
+#define __DEFINE_SYSCALL1(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DEFINE_SYSCALL2(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DEFINE_SYSCALL3(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DEFINE_SYSCALL4(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DEFINE_SYSCALL5(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DEFINE_SYSCALL6(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
 
 #endif // __mette_syscalls_mips_included
