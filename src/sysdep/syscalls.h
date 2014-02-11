@@ -16,6 +16,7 @@
 #include <stddef.h>
 #include <sys/types.h>
 #include <sys/select.h>
+#include <time.h>
 
 extern int sys_errno;
 
@@ -94,7 +95,7 @@ __DECLARE_SYSCALL5(getsockopt, int, int sockfd, int level, int name, void *val, 
 
 // misc
 
-#define sys_time(tloc) __SYSCALL(time, 1, tloc)
+__DECLARE_SYSCALL1(time, time_t, time_t *tloc);
 
 #endif // __mette_syscalls_included
 

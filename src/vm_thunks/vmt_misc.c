@@ -8,3 +8,12 @@ VM_THUNK(sys_exit)
 	VM_THUNK_ARGS_END
 	sys_exit(args.code);
 }
+
+VM_THUNK(sys_time)
+{
+	time_t tv;
+
+	sys_time(&tv);
+
+	VM_THUNK_RETURN(tv);
+}

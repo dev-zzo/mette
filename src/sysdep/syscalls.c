@@ -76,4 +76,4 @@ __DEFINE_SYSCALL5(getsockopt, int, int sockfd, int level, int name, void *val, s
 
 // misc
 
-//#define sys_time(tloc) __SYSCALL(time, 1, tloc)
+__DEFINE_SYSCALL1(time, time_t, time_t *tloc);
