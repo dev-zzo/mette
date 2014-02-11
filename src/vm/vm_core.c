@@ -25,11 +25,11 @@
 		: "r"(a), "r"(b) \
 		)
 #define TARGET_DIVU(a,b) \
-	r0 = (vm_uoperand_t)(a) / (vm_uoperand_t)(b); \
-	r1 = (vm_uoperand_t)(a) % (vm_uoperand_t)(b);
+	r1 = (vm_uoperand_t)(a) / (vm_uoperand_t)(b); \
+	r0 = (vm_uoperand_t)(a) % (vm_uoperand_t)(b);
 #define TARGET_DIVS(a,b) \
-	r0 = (vm_soperand_t)(a) / (vm_soperand_t)(b); \
-	r1 = (vm_soperand_t)(a) % (vm_soperand_t)(b);
+	r1 = (vm_soperand_t)(a) / (vm_soperand_t)(b); \
+	r0 = (vm_soperand_t)(a) % (vm_soperand_t)(b);
 #endif
 
 #ifdef DEBUG_PRINTS
@@ -77,11 +77,11 @@ op_MULS: {
 	goto push_2;
 }
 op_DIVU: {
-	TARGET_DIVU(ARG1, ARG2);
+	TARGET_DIVU(ARG2, ARG1);
 	goto push_2;
 }
 op_DIVS: {
-	TARGET_DIVS(ARG1, ARG2);
+	TARGET_DIVS(ARG2, ARG1);
 	goto push_2;
 }
 op_AND:
@@ -275,12 +275,9 @@ op_NCALL: {
 }
 
 push_2:
-	ARG2 = r1;
-	ops_out++;
+	vm_stack_push(ctx->dstack, r1);
 push_1:
-	ARG1 = r0;
-	ops_out++;
-	vm_stack_push3(ctx->dstack, buf, ops_out);
+	vm_stack_push(ctx->dstack, r0);
 push_none:
 	
 	ctx->pc = pc;

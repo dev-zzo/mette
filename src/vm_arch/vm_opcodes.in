@@ -29,11 +29,11 @@ static const vm_opcode_info_t opcodes[] = {
 	},
 	{
 		"DIVU", "Division (unsigned/unsigned)",
-		2, 2, /* a b -- rem(a / b) quot(a / b) */
+		2, 2, /* a b -- rem(b / a) quot(b / a) */
 	},
 	{
 		"DIVS", "Division (signed/signed)",
-		2, 2, /* a b -- rem(a / b) quot(a / b) */
+		2, 2, /* a b -- rem(b / a) quot(b / a) */
 	},
 	
 	/* Bitwise operations */
