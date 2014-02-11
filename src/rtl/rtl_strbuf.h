@@ -12,7 +12,7 @@ struct _rtl_strbuf {
 #define STRBUF_DATA(sb) ((char *)(sb) + sizeof(rtl_strbuf_t))
 
 extern rtl_strbuf_t *
-rtl_strbuf_alloc(uint16_t size);
+rtl_strbuf_alloc(unsigned size);
 
 extern void 
 rtl_strbuf_free(rtl_strbuf_t *sb);
@@ -52,5 +52,8 @@ rtl_strbuf_append_char(rtl_strbuf_t *sb, char ch);
 
 extern void
 rtl_strbuf_append_asciiz(rtl_strbuf_t *sb, const char *asciiz);
+
+extern const char *
+rtl_strbuf_to_asciiz(const rtl_strbuf_t *sb);
 
 #endif // __mette_rtl_strbuf_included

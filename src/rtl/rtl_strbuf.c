@@ -5,10 +5,14 @@
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #define max(a,b) ((a) > (b) ? (a) : (b))
 
-rtl_strbuf_t *rtl_strbuf_alloc(uint16_t size)
+rtl_strbuf_t *rtl_strbuf_alloc(unsigned size)
 {
 	rtl_strbuf_t *sb = NULL;
 
+	if (size > 0xFFFF) {
+		size = 0xFFFF;
+	}
+	
 	sb = (rtl_strbuf_t *)rtl_alloc(sizeof(rtl_strbuf_t) + size);
 	sb->length = 0;
 	sb->max_length = (uint16_t)size;
@@ -63,3 +67,16 @@ void rtl_strbuf_append_asciiz(rtl_strbuf_t *sb, const char *asciiz)
 {
 	rtl_strbuf_append_bytes(sb, asciiz, xstrlen(asciiz));
 }
+
+const char *rtl_strbuf_to_asciiz(const rtl_strbuf_t *sb)
+{
+	static char temp_buf[0x10000];
+	unsigned length;
+
+	length = rtl_strbuf_get_length(sb);
+	xmemcpy(temp_buf, rtl_strbuf_get_buffer(sb), length);
+	temp_buf[length] = '\0';
+
+	return temp_buf;
+}
+
