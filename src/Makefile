@@ -22,6 +22,8 @@ LIBS:= \
 SUBTARGETS:= \
 	sysdep \
 	rtl \
+	vm_arch \
+	vma \
 	vm_thunks \
 	vm \
 

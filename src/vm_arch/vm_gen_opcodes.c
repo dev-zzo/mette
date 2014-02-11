@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <ctype.h>
-#include "vm_misc.h"
 #include "vm_opcodes.in"
+
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 static char *sanitize_mnem(const char *text)
 {

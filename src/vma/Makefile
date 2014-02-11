@@ -25,7 +25,7 @@ GENERATED:= \
 include $(SOURCES_ROOT)/Makefile.host.inc
 
 # Override CFLAGS
-CFLAGS+=-I$(SOURCES_ROOT)/vm/
+CFLAGS+=-I$(SOURCES_ROOT)/vm/ -I$(SOURCES_ROOT)/vm_arch/
 
 # Additional rules
 
