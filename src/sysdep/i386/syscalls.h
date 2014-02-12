@@ -358,76 +358,39 @@
 
 // http://simon.baymoo.org/universe/tools/symset/symset.txt
 
-#define __SYSCALL_ARGS_0
-#ifdef PIC
-#define __SYSCALL_ARGS_1(arg1) \
-	__SYSCALL_ARGS_0, "g" (arg1)
-#else
-#define __SYSCALL_ARGS_1(arg1) \
-	__SYSCALL_ARGS_0, "b" (arg1)
-#endif
-#define __SYSCALL_ARGS_2(arg1, arg2) \
-	__SYSCALL_ARGS_1(arg1), "c" (arg2)
-#define __SYSCALL_ARGS_3(arg1, arg2, arg3) \
-	__SYSCALL_ARGS_2(arg1, arg2), "d" (arg3)
-#define __SYSCALL_ARGS_4(arg1, arg2, arg3, arg4) \
-	__SYSCALL_ARGS_3(arg1, arg2, arg3), "S" (arg4)
-#define __SYSCALL_ARGS_5(arg1, arg2, arg3, arg4, arg5) \
-	__SYSCALL_ARGS_4(arg1, arg2, arg3, arg4), "D" (arg5)
-#define __SYSCALL_ARGS_6(arg1, arg2, arg3, arg4, arg5, arg6) \
-	__SYSCALL_ARGS_5(arg1, arg2, arg3, arg4, arg5), "m" (arg6)
-	
-#define LOAD_ARGS_0
-#ifdef PIC
-#define LOAD_ARGS_1 \
-	LOAD_ARGS_0 \
-	"push %%ebx\n\t" \
-	"movl %2, %%ebx\n\t"
-#else
-#define LOAD_ARGS_1 LOAD_ARGS_0
-#endif
-#define LOAD_ARGS_2 LOAD_ARGS_1
-#define LOAD_ARGS_3 LOAD_ARGS_2
-#define LOAD_ARGS_4 LOAD_ARGS_3
-#define LOAD_ARGS_5 LOAD_ARGS_4
-#define LOAD_ARGS_6 \
-	LOAD_ARGS_5 \
-	"push %%ebp\n\t" \
-	"movl %7, %%ebp\n\t"
+#define __DECLARE_SYSCALLx(name, rtype, ...) \
+	extern rtype __attribute__((section(".text.syscalls"))) sys_##name(__VA_ARGS__)
+#define __DECLARE_SYSCALL0(name, rtype) __DECLARE_SYSCALLx(name, rtype, void)
+#define __DECLARE_SYSCALL1(name, rtype, ...) __DECLARE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DECLARE_SYSCALL2(name, rtype, ...) __DECLARE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DECLARE_SYSCALL3(name, rtype, ...) __DECLARE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DECLARE_SYSCALL4(name, rtype, ...) __DECLARE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DECLARE_SYSCALL5(name, rtype, ...) __DECLARE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DECLARE_SYSCALL6(name, rtype, ...) __DECLARE_SYSCALLx(name, rtype, __VA_ARGS__)
 
-#define RESTORE_ARGS_0
-#ifdef PIC
-#define RESTORE_ARGS_1 \
-	RESTORE_ARGS_0 \
-	"pop %%ebx\n\t"
-#else
-#define RESTORE_ARGS_1 RESTORE_ARGS_0
-#endif
-#define RESTORE_ARGS_2 RESTORE_ARGS_1
-#define RESTORE_ARGS_3 RESTORE_ARGS_2
-#define RESTORE_ARGS_4 RESTORE_ARGS_3
-#define RESTORE_ARGS_5 RESTORE_ARGS_4
-#define RESTORE_ARGS_6 \
-	RESTORE_ARGS_5 \
-	"pop %%ebp\n\t"
-
-#define __SYSCALL(name, nr, ...) \
-	(__extension__({ \
-		long __rv; \
+#define __SYSCALL_BODY(nr) \
+	{ \
 		__asm__ __volatile__ \
 		( \
-			LOAD_ARGS_##nr \
-			"int $0x80\n\t" \
-			RESTORE_ARGS_##nr \
-			: "=a" (__rv) \
-			: "0" (__NR_##name) __SYSCALL_ARGS_##nr(__VA_ARGS__) \
+			"jmp __real_syscall\n\t" \
+			: \
+			: "a" (nr) \
 			: "memory", "cc" \
 		); \
-		__rv; \
-	}))
+		__builtin_unreachable(); \
+	}
 
+#define __DEFINE_SYSCALLx(name, rtype, ...) \
+	rtype __attribute__((section(".text.syscalls"), noreturn)) sys_##name(__VA_ARGS__) \
+	__SYSCALL_BODY(__NR_##name)
 
-#define ARCH_WANTS_SOCKETCALL 1
+#define __DEFINE_SYSCALL0(name, rtype) __DEFINE_SYSCALLx(name, rtype, void)
+#define __DEFINE_SYSCALL1(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DEFINE_SYSCALL2(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DEFINE_SYSCALL3(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DEFINE_SYSCALL4(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DEFINE_SYSCALL5(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
+#define __DEFINE_SYSCALL6(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
 
 #define __SOCKETCALL_LOAD_0 \
 	"movl %%esp, %%ecx\n\t"
@@ -482,5 +445,6 @@
 		); \
 		__rv; \
 	}))
+
 
 #endif // __mette_syscalls_i386_included

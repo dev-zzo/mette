@@ -3,6 +3,11 @@
 #include "vm_thunks.h"
 #include <sys/select.h>
 
+unsigned long int __fdelt_chk (unsigned long int __d)
+{
+	return __d;
+}
+
 VM_THUNK(fdset_create)
 {
 	fd_set *fds;

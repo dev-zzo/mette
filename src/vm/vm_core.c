@@ -31,6 +31,18 @@
 	r1 = (vm_soperand_t)(a) / (vm_soperand_t)(b); \
 	r0 = (vm_soperand_t)(a) % (vm_soperand_t)(b);
 #endif
+#if defined(TARGET_ARCH_i386)
+#define TARGET_MULU(a,b,c,d) \
+	(c) = (a) * (b)
+#define TARGET_MULS(a,b,c,d) \
+	(c) = (a) * (b)
+#define TARGET_DIVU(a,b) \
+	r1 = (vm_uoperand_t)(a) / (vm_uoperand_t)(b); \
+	r0 = (vm_uoperand_t)(a) % (vm_uoperand_t)(b);
+#define TARGET_DIVS(a,b) \
+	r1 = (vm_soperand_t)(a) / (vm_soperand_t)(b); \
+	r0 = (vm_soperand_t)(a) % (vm_soperand_t)(b);
+#endif
 
 #ifdef DEBUG_PRINTS
 #include "vm_opcodes.names.tab"

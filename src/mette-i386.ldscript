@@ -1,0 +1,116 @@
+/* http://www.delorie.com/gnu/docs/binutils/ld_6.html */
+
+OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386")
+OUTPUT_ARCH(i386)
+ENTRY(__start)
+SEARCH_DIR("/usr/i686-linux-gnu/lib32"); SEARCH_DIR("=/usr/local/lib32"); SEARCH_DIR("=/lib32"); SEARCH_DIR("=/usr/lib32"); SEARCH_DIR("=/usr/local/lib/i386-linux-gnu"); SEARCH_DIR("=/usr/local/lib"); SEARCH_DIR("=/lib/i386-linux-gnu"); SEARCH_DIR("=/lib"); SEARCH_DIR("=/usr/lib/i386-linux-gnu"); SEARCH_DIR("=/usr/lib");
+
+PHDRS
+{
+  headers PT_PHDR PHDRS ;
+  text PT_LOAD ;
+  data PT_LOAD ;
+}
+
+SECTIONS
+{
+  . = SEGMENT_START("headers", 0x00400000);
+  .phdrs          : { } :headers
+
+  /* Read-only sections, merged into text segment: */
+  . = SEGMENT_START("text", 0x00400000 + SIZEOF_HEADERS);
+  .text           :
+  {
+    _ftext = . ;
+    *(.text.unlikely .text.*_unlikely)
+    *(.text.exit .text.exit.*)
+    *(.text.startup .text.startup.*)
+    *(.text.hot .text.hot.*)
+    *(.text .stub .text.* .gnu.linkonce.t.*)
+  } :text =0
+  PROVIDE (__etext = .);
+  PROVIDE (_etext = .);
+  PROVIDE (etext = .);
+
+
+  .rodata         : { *(.rodata .rodata.* .gnu.linkonce.r.*) } :data
+  .rodata1        : { *(.rodata1) }
+  .sdata2         : { *(.sdata2 .sdata2.* .gnu.linkonce.s2.*) }
+  .sbss2          : { *(.sbss2 .sbss2.* .gnu.linkonce.sb2.*) }
+
+  .preinit_array     :
+  {
+    PROVIDE_HIDDEN (__preinit_array_start = .);
+    KEEP (*(.preinit_array))
+    PROVIDE_HIDDEN (__preinit_array_end = .);
+  }
+  .init_array     :
+  {
+    PROVIDE_HIDDEN (__init_array_start = .);
+    KEEP (*(SORT(.init_array.*)))
+    KEEP (*(.init_array))
+    PROVIDE_HIDDEN (__init_array_end = .);
+  }
+  .fini_array     :
+  {
+    PROVIDE_HIDDEN (__fini_array_start = .);
+    KEEP (*(SORT(.fini_array.*)))
+    KEEP (*(.fini_array))
+    PROVIDE_HIDDEN (__fini_array_end = .);
+  }
+
+  .data           :
+  {
+    _fdata = . ;
+    *(.data .data.* .gnu.linkonce.d.*)
+    SORT(CONSTRUCTORS)
+  } :data
+  .data1          : { *(.data1) } :data
+  /* We want the small data sections together, so single-instruction offsets
+     can access them all, and initialized data all before uninitialized, so
+     we can shorten the on-disk segment size.  */
+  .sdata          : { *(.sdata .sdata.* .gnu.linkonce.s.*) } :data
+
+  /* METTE: VM thunks section */
+  .vm.thunks         : { KEEP (*(.vm.thunks)) } :data
+  PROVIDE (vm_thunks_end = .);
+
+  _edata = .; PROVIDE (edata = .);
+
+
+  __bss_start = .;
+  _fbss = .;
+  .sbss           :
+  {
+    *(.dynsbss)
+    *(.sbss .sbss.* .gnu.linkonce.sb.*)
+    *(.scommon)
+  } :data
+  .bss            :
+  {
+   *(.dynbss)
+   *(.bss .bss.* .gnu.linkonce.b.*)
+   *(COMMON)
+   /* Align here to ensure that the .bss section occupies space up to
+      _end.  Align after .bss to ensure correct alignment even if the
+      .bss section disappears because there are no input sections.
+      FIXME: Why do we need it? When there is no .bss section, we don't
+      pad the .data section.  */
+   . = ALIGN(. != 0 ? 32 / 8 : 1);
+  } :data
+  . = ALIGN(32 / 8);
+  . = ALIGN(32 / 8);
+  _end = .; PROVIDE (end = .);
+
+  /* Clean up a bit */
+  /DISCARD/      0 :
+  {
+    *(.reginfo)
+    *(.comment)
+    *(.mdebug.*)
+    *(.gnu.attributes)
+    *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*)
+    *(.pdr)
+  }
+
+}
