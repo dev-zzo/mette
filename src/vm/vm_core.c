@@ -63,10 +63,10 @@ op_invalid:
 	vm_panic("vm_step: unknown opcode.");
 
 op_ADD:
-	r0 = ARG1 + ARG2;
+	r0 = ARG2 + ARG1;
 	goto push_1;
 op_SUB:
-	r0 = ARG1 - ARG2;
+	r0 = ARG2 - ARG1;
 	goto push_1;
 op_MULU: {
 	TARGET_MULU(ARG1, ARG2, r0, r1);
@@ -129,15 +129,15 @@ op_LDC_1:
 op_LDC_2: 
 	r0 = 2;
 	goto push_1;
-op_LDC_8_U:
+op_LDC_UB:
 	r0 = (vm_uoperand_t)*(uint8_t *)(pc);
 	pc += 1;
 	goto push_1;
-op_LDC_8_S:
+op_LDC_SB:
 	r0 = (vm_soperand_t)*(int8_t *)(pc);
 	pc += 1;
 	goto push_1;
-op_LDC_32:
+op_LDC_W:
 	r0 = vm_fetch32_ua(pc);
 	pc += 4;
 	goto push_1;
@@ -146,29 +146,32 @@ op_LEA:
 	pc += 4;
 	r0 += (vm_uoperand_t)pc;
 	goto push_1;
-op_LDM_8_U:
+op_LDM_UB:
 	r0 = (vm_uoperand_t)*(uint8_t *)(ARG1);
 	goto push_1;
-op_LDM_8_S:
+op_LDM_SB:
 	r0 = (vm_soperand_t)*(int8_t *)(ARG1);
 	goto push_1;
-op_LDM_16_U:
+op_LDM_UH:
 	r0 = (vm_uoperand_t)*(uint16_t *)(ARG1);
 	goto push_1;
-op_LDM_16_S:
+op_LDM_SH:
 	r0 = (vm_soperand_t)*(int16_t *)(ARG1);
 	goto push_1;
-op_LDM_32:
+op_LDM_W:
 	r0 = *(vm_operand_t *)(ARG1);
 	goto push_1;
-op_STM_8:
+op_STM_B:
 	*(uint8_t *)(ARG1) = (uint8_t)ARG2;
+	DBGPRINT("vm_step: %08x -> %08x\n", ARG2, ARG1);
 	goto push_none;
-op_STM_16:
+op_STM_H:
 	*(uint16_t *)(ARG1) = (uint16_t)ARG2;
+	DBGPRINT("vm_step: %08x -> %08x\n", ARG2, ARG1);
 	goto push_none;
-op_STM_32:
+op_STM_W:
 	*(vm_operand_t *)(ARG1) = ARG2;
+	DBGPRINT("vm_step: %08x -> %08x\n", ARG2, ARG1);
 	goto push_none;
 op_LOCALS: {
 	uint8_t count = *(uint8_t *)(pc);

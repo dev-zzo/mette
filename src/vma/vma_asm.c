@@ -350,14 +350,14 @@ static unsigned vma_pass1_insn_estimate_size(vma_context_t *ctx, vma_insn_t *ins
 		case INSN_LDC_0:
 		case INSN_LDC_1:
 		case INSN_LDC_2:
-		case INSN_LDM_8_U:
-		case INSN_LDM_8_S:
-		case INSN_LDM_16_U:
-		case INSN_LDM_16_S:
-		case INSN_LDM_32:
-		case INSN_STM_8:
-		case INSN_STM_16:
-		case INSN_STM_32:
+		case INSN_LDM_UB:
+		case INSN_LDM_SB:
+		case INSN_LDM_UH:
+		case INSN_LDM_SH:
+		case INSN_LDM_W:
+		case INSN_STM_B:
+		case INSN_STM_H:
+		case INSN_STM_W:
 		case INSN_DUP:
 		case INSN_SWAP:
 		case INSN_POP:
@@ -366,8 +366,8 @@ static unsigned vma_pass1_insn_estimate_size(vma_context_t *ctx, vma_insn_t *ins
 		case INSN_IJMP:
 			return 1;
 
-		case INSN_LDC_8_U:
-		case INSN_LDC_8_S:
+		case INSN_LDC_UB:
+		case INSN_LDC_SB:
 		case INSN_LOCALS:
 		case INSN_LDLOC:
 		case INSN_STLOC:
@@ -379,7 +379,7 @@ static unsigned vma_pass1_insn_estimate_size(vma_context_t *ctx, vma_insn_t *ins
 		case INSN_NCALL:
 			return 1 + 2;
 			
-		case INSN_LDC_32:
+		case INSN_LDC_W:
 		case INSN_LEA:
 		case INSN_CALL:
 			return 1 + 4;
@@ -523,8 +523,8 @@ void vma_emit_insn(vma_context_t *ctx, vma_insn_t *insn)
 			ctx->lookup_stack = &ctx->globals;
 			break;
 
-		case INSN_LDC_8_U:
-		case INSN_LDC_8_S:
+		case INSN_LDC_UB:
+		case INSN_LDC_SB:
 		case INSN_LOCALS:
 		case INSN_LDLOC:
 		case INSN_STLOC:
@@ -553,7 +553,7 @@ void vma_emit_insn(vma_context_t *ctx, vma_insn_t *insn)
 			vma_output_u16(insn->u.symref.u.sym->u.id);
 			break;
 			
-		case INSN_LDC_32:
+		case INSN_LDC_W:
 			vma_passx_evaluate_expr(ctx, insn->u.expr);
 			vma_output_u32(insn->u.expr->value);
 			break;

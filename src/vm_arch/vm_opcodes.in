@@ -13,19 +13,19 @@ static const vm_opcode_info_t opcodes[] = {
 
 	{
 		"ADD", "Addition",
-		2, 1, /* a b -- (a + b) */
+		2, 1, /* a b -- (b + a) */
 	},
 	{
 		"SUB", "Subtraction",
-		2, 1, /* a b -- (a - b) */
+		2, 1, /* a b -- (b - a) */
 	},
 	{
 		"MULU", "Multiplication (unsigned*unsigned)",
-		2, 2, /* a b -- hi(a * b) lo(a * b) */
+		2, 2, /* a b -- hi(b * a) lo(b * a) */
 	},
 	{
 		"MULS", "Multiplication (signed*signed)",
-		2, 2, /* a b -- hi(a * b) lo(a * b) */
+		2, 2, /* a b -- hi(b * a) lo(b * a) */
 	},
 	{
 		"DIVU", "Division (unsigned/unsigned)",
@@ -105,15 +105,15 @@ static const vm_opcode_info_t opcodes[] = {
 		0, 1,
 	},
 	{
-		"LDC.8.U", "Load an unsigned byte on the stack",
+		"LDC.UB", "Load an unsigned byte on the stack",
 		0, 1,
 	},
 	{
-		"LDC.8.S", "Load a signed byte on the stack",
+		"LDC.SB", "Load a signed byte on the stack",
 		0, 1,
 	},
 	{
-		"LDC.32", "Load a 32-bit value on the stack",
+		"LDC.W", "Load a 32-bit value on the stack",
 		0, 1,
 	},
 	{
@@ -124,38 +124,38 @@ static const vm_opcode_info_t opcodes[] = {
 	/* Memory access: loads */
 	
 	{
-		"LDM.8.U", "Load a 8-bit unsigned from memory",
+		"LDM.UB", "Load a 8-bit unsigned from memory",
 		1, 1,
 	},
 	{
-		"LDM.8.S", "Load a 8-bit signed from memory",
+		"LDM.SB", "Load a 8-bit signed from memory",
 		1, 1,
 	},
 	{
-		"LDM.16.U", "Load a 16-bit unsigned from memory",
+		"LDM.UH", "Load a 16-bit unsigned from memory",
 		1, 1,
 	},
 	{
-		"LDM.16.S", "Load a 16-bit signed from memory",
+		"LDM.SH", "Load a 16-bit signed from memory",
 		1, 1,
 	},
 	{
-		"LDM.32", "Load a 32-bit from memory",
+		"LDM.W", "Load a 32-bit from memory",
 		1, 1,
 	},
 	
 	/* Memory access: stores */
 
 	{
-		"STM.8", "Store a 8-bit to memory",
+		"STM.B", "Store a 8-bit to memory",
 		2, 0, /* addr value -- */
 	},
 	{
-		"STM.16", "Store a 16-bit to memory",
+		"STM.H", "Store a 16-bit to memory",
 		2, 0, /* addr value -- */
 	},
 	{
-		"STM.32", "Store a 32-bit to memory",
+		"STM.W", "Store a 32-bit to memory",
 		2, 0, /* addr value -- */
 	},
 	

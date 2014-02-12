@@ -72,9 +72,9 @@ static void append_insn(vma_context_t *ctx, vma_insn_t *insn);
 %token OP_ADD OP_SUB OP_MULU OP_MULS OP_DIVU OP_DIVS 
 %token OP_AND OP_OR OP_XOR OP_NOT OP_LSL OP_LSR OP_ASR 
 %token OP_CMP_LT OP_CMP_GT OP_CMP_B OP_CMP_A OP_CMP_EQ
-%token OP_LDC_0 OP_LDC_1 OP_LDC_2 OP_LDC_8_U OP_LDC_8_S OP_LDC_32 OP_LEA 
-%token OP_LDM_8_U OP_LDM_8_S OP_LDM_16_U OP_LDM_16_S OP_LDM_32 
-%token OP_STM_8 OP_STM_16 OP_STM_32 
+%token OP_LDC_0 OP_LDC_1 OP_LDC_2 OP_LDC_UB OP_LDC_SB OP_LDC_W OP_LEA 
+%token OP_LDM_UB OP_LDM_SB OP_LDM_UH OP_LDM_SH OP_LDM_W 
+%token OP_STM_B OP_STM_H OP_STM_W 
 %token OP_LOCALS OP_LDLOC OP_STLOC 
 %token OP_DUP OP_SWAP OP_POP 
 %token OP_BR OP_BR_L OP_BR_T OP_BR_F 
@@ -218,30 +218,30 @@ machine_insn
 		{ $$ = vma_insn_build(INSN_LDC_1); }
 	| OP_LDC_2
 		{ $$ = vma_insn_build(INSN_LDC_2); }
-	| OP_LDC_8_U expr
-		{ $$ = vma_insn_build(INSN_LDC_8_U); $$->u.expr = $2; }
-	| OP_LDC_8_S expr
-		{ $$ = vma_insn_build(INSN_LDC_8_S); $$->u.expr = $2; }
-	| OP_LDC_32 expr
-		{ $$ = vma_insn_build(INSN_LDC_32); $$->u.expr = $2; }
+	| OP_LDC_UB expr
+		{ $$ = vma_insn_build(INSN_LDC_UB); $$->u.expr = $2; }
+	| OP_LDC_SB expr
+		{ $$ = vma_insn_build(INSN_LDC_SB); $$->u.expr = $2; }
+	| OP_LDC_W expr
+		{ $$ = vma_insn_build(INSN_LDC_W); $$->u.expr = $2; }
 	| OP_LEA expr
 		{ $$ = vma_insn_build(INSN_LEA); $$->u.expr = $2; }
-	| OP_LDM_8_U
-		{ $$ = vma_insn_build(INSN_LDM_8_U); }
-	| OP_LDM_8_S
-		{ $$ = vma_insn_build(INSN_LDM_8_S); }
-	| OP_LDM_16_U
-		{ $$ = vma_insn_build(INSN_LDM_16_U); }
-	| OP_LDM_16_S
-		{ $$ = vma_insn_build(INSN_LDM_16_S); }
-	| OP_LDM_32
-		{ $$ = vma_insn_build(INSN_LDM_32); }
-	| OP_STM_8
-		{ $$ = vma_insn_build(INSN_STM_8); }
-	| OP_STM_16
-		{ $$ = vma_insn_build(INSN_STM_16); }
-	| OP_STM_32
-		{ $$ = vma_insn_build(INSN_STM_32); }
+	| OP_LDM_UB
+		{ $$ = vma_insn_build(INSN_LDM_UB); }
+	| OP_LDM_SB
+		{ $$ = vma_insn_build(INSN_LDM_SB); }
+	| OP_LDM_UH
+		{ $$ = vma_insn_build(INSN_LDM_UH); }
+	| OP_LDM_SH
+		{ $$ = vma_insn_build(INSN_LDM_SH); }
+	| OP_LDM_W
+		{ $$ = vma_insn_build(INSN_LDM_W); }
+	| OP_STM_B
+		{ $$ = vma_insn_build(INSN_STM_B); }
+	| OP_STM_H
+		{ $$ = vma_insn_build(INSN_STM_H); }
+	| OP_STM_W
+		{ $$ = vma_insn_build(INSN_STM_W); }
 	| OP_LOCALS expr
 		{ $$ = vma_insn_build(INSN_LOCALS); $$->u.expr = $2; }
 	| OP_LDLOC expr
