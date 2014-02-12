@@ -2,6 +2,7 @@
 #include "rtl_memory.h"
 #include "rtl_strbuf.h"
 #include "rtl_print.h"
+#include "xstring.h"
 
 /* rtl_memory */
 
@@ -19,7 +20,7 @@ VM_THUNK(rtl_realloc)
 {
 	void *ptr;
 	VM_THUNK_ARGS_START
-		VM_THUNK_ARG(void * ptr);
+		VM_THUNK_ARG(void *ptr);
 		VM_THUNK_ARG(size_t size);
 	VM_THUNK_ARGS_END
 	ptr = rtl_realloc(args.ptr, args.size);
@@ -32,6 +33,28 @@ VM_THUNK(rtl_free)
 		VM_THUNK_ARG(void *ptr);
 	VM_THUNK_ARGS_END
 	rtl_free(args.ptr);
+}
+
+VM_THUNK(rtl_memset)
+{
+	VM_THUNK_ARGS_START
+		VM_THUNK_ARG(void *dest);
+		VM_THUNK_ARG(int value);
+		VM_THUNK_ARG(size_t size);
+	VM_THUNK_ARGS_END
+
+	xmemset(args.dest, args.value, args.size);
+}
+
+VM_THUNK(rtl_memcpy)
+{
+	VM_THUNK_ARGS_START
+		VM_THUNK_ARG(void *dest);
+		VM_THUNK_ARG(const void *src);
+		VM_THUNK_ARG(size_t size);
+	VM_THUNK_ARGS_END
+
+	xmemcpy(args.dest, args.src, args.size);
 }
 
 /* rtl_strbuf */
