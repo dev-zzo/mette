@@ -30,7 +30,7 @@
 			"movl	%0, %%eax" "\n\t" \
 			"movl	%1, %%ebx" "\n\t" \
 			"lea	8(%%ebp), %%ecx" "\n\t" \
-			"int	$80" "\n\t" \
+			"int	$0x80" "\n\t" \
 			: \
 			: "i"(__NR_socketcall), "i" (nr) \
 		); \
@@ -74,17 +74,24 @@ long real_syscall()
 	__asm__ __volatile__
 	(
 		".globl __real_syscall" "\n\t"
-		"__real_syscall:" "\n\t"
+	"__real_syscall:" "\n\t"
 		"pushl	%ebx" "\n\t"
-		"pushl	%ebp" "\n\t"
-		"movl	(4*4)(%ebp), %ebx" "\n\t"
-		"movl	(5*4)(%ebp), %ecx" "\n\t"
-		"movl	(6*4)(%ebp), %edx" "\n\t"
-		"movl	(7*4)(%ebp), %esi" "\n\t"
-		"movl	(8*4)(%ebp), %edi" "\n\t"
-		"movl	(9*4)(%ebp), %ebp" "\n\t"
-		"int	$80" "\n\t"
-		"popl	%ebp" "\n\t"
+		"pushl	%ecx" "\n\t"
+		"pushl	%edx" "\n\t"
+		"pushl	%esi" "\n\t"
+		"pushl	%edi" "\n\t"
+		"movl	(7*4)(%esp), %ebx" "\n\t"
+		"movl	(8*4)(%esp), %ecx" "\n\t"
+		"movl	(9*4)(%esp), %edx" "\n\t"
+		"movl	(10*4)(%esp), %esi" "\n\t"
+		"movl	(11*4)(%esp), %edi" "\n\t"
+		"movl	(12*4)(%esp), %ebp" "\n\t"
+		"int	$0x80" "\n\t"
+		"popl	%edi" "\n\t"
+		"popl	%esi" "\n\t"
+		"popl	%edx" "\n\t"
+		"popl	%ecx" "\n\t"
 		"popl	%ebx" "\n\t"
+		/* pop ebp is provided by the compiler within epilog. */
 	);
 }

@@ -102,15 +102,5 @@ SECTIONS
   . = ALIGN(32 / 8);
   _end = .; PROVIDE (end = .);
 
-  /* Clean up a bit */
-  /DISCARD/      0 :
-  {
-    *(.reginfo)
-    *(.comment)
-    *(.mdebug.*)
-    *(.gnu.attributes)
-    *(.note.GNU-stack) *(.gnu_debuglink) *(.gnu.lto_*)
-    *(.pdr)
-  }
 
 }
