@@ -9,7 +9,14 @@
 #define DEBUG_PRINTS
 #include "rtl_debug.h"
 
-#if TARGET_IS_BE == 0
+#if TARGET_IS_BE
+
+#define rtl_ntohs(x) (x)
+#define rtl_htons(x) (x)
+#define rtl_ntohl(x) (x)
+#define rtl_htonl(x) (x)
+
+#else
 
 static unsigned short rtl_htons(unsigned short x)
 {
@@ -27,13 +34,6 @@ static unsigned int rtl_htonl(unsigned int x)
 }
 
 #define rtl_ntohl(x) rtl_htonl(x)
-
-#else
-
-#define rtl_ntohs(x) (x)
-#define rtl_htons(x) (x)
-#define rtl_ntohl(x) (x)
-#define rtl_htonl(x) (x)
 
 #endif
 
