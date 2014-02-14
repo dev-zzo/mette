@@ -18,56 +18,115 @@ SHUT_WR		.const 1	# No more transmissions.
 SHUT_RDWR	.const 2	# No more receptions or transmissions.
 
 
+SIOCGIFNAME		.const 0x8910
+SIOCGIFCONF		.const 0x8912
+SIOCGIFHWADDR	.const 0x8927
+
 comm_port .const 9771
 
+#####################################################################
 start:
-	call main
-	ncall sys_exit
-# End of start routine
+	.sub # ( -- )
 
-main:
-	.sub
+	lea		@@banner_text
+	call	log
+
+	call	get_hwaddr
+	br.f	@@exit
+
+	lea		comm_hwaddr
+	ldc.ub	5
+	dup
+	ldm.ub
+	swap
+	ldc.1
+	sub
+	dup
+	ldm.ub
+	swap
+	ldc.1
+	sub
+	dup
+	ldm.ub
+	swap
+	ldc.1
+	sub
+	dup
+	ldm.ub
+	swap
+	ldc.1
+	sub
+	dup
+	ldm.ub
+	swap
+	ldc.1
+	sub
+	ldm.ub
+	lea		@@hwaddr_text
+	ldc.1
+	ncall	rtl_print_fd
+	pop
+
+	call	comm_loop
+
+@@exit:
+	ldc.0
+	ncall	sys_exit
+
+@@banner_text:
+	.defs	"mette p2p core starting up.\n\0"
+@@hwaddr_text:
+	.defs	"hw addr: %02x %02x %02x %02x %02x %02x\n\0"
+
+	.endsub
+# End of start routine
+#####################################################################
+
+#####################################################################
+comm_loop:
+	.sub # ( -- )
+
+@@sockfd	.const 0
+@@peer		.const 1
 	locals	2
 
 	# Create a UDP socket.
-	ldc.8.u	IPPROTO_UDP # protocol
-	ldc.8.u	SOCK_DGRAM # type
+	ldc.ub	IPPROTO_UDP
+	ldc.ub	SOCK_DGRAM
 	ncall	socket_create
 	dup
-	stloc	0
+	stloc	@@sockfd
 
 	ldc.0
 	cmp.gt	# 0 > x
 	br.f	@@socket_create_ok
 	lea		@@socket_creation_failed_text
-	br		@@print_error_and_exit
+	call	log_fatal
 
 @@socket_create_ok:
 	# Bind to 0.0.0.0:comm_port.
-	ldc.32	comm_port # port
+	ldc.w	comm_port # port
 	ldc.0	# ip
 	ncall	sockaddr_create
 	dup
-	stloc	1
-	ldloc	0
+	stloc	@@peer
+	ldloc	@@sockfd
 	ncall	socket_bind
 
 	ldc.0
 	cmp.gt
 	br.f	@@socket_bind_ok
 	lea		@@socket_bind_failed_text
-	br		@@print_error_and_exit
+	call	log_fatal
 
 @@socket_bind_ok:
-	# The socket is connectionless, so no listen.
 	lea		@@loop_enter_text
-	ldc.2
-	ncall	rtl_print_fd
+	call	log
 
 @@recv_loop:
-	ldloc	1 # sockaddr*
-	ldc.32	0x1000 # maxlength
-	ldloc	0 # sockfd
+	ldloc	@@peer
+	ldc.w	0x1000 # maxlength
+	ldloc	@@sockfd
 	ncall	socket_recvfrom
 
 	dup
@@ -76,48 +135,39 @@ main:
 	cmp.eq
 	br.f	@@recv_ok
 	lea		@@socket_recv_failed_text
-	br		@@print_error_and_exit
+	call	log_fatal
 
 @@recv_ok:
 	# Process the packet
-	ldloc	1
-	ldloc	0
+	ldloc	@@peer
+	ldloc	@@sockfd
 	call	comm_process_packet
 
 	ncall	rtl_free
 
 	# See if we are still running.
 	lea		comm_running
-	ldm.8.u
+	ldm.ub
 	ldc.0
 	cmp.eq
 	br.f	@@recv_loop
 
 	# Exiting.
 	lea		@@loop_leave_text
-	ldc.2
-	ncall	rtl_print_fd
+	call	log
 
 	# Close the socket.
-	ldc.8.u	SHUT_RDWR
-	ldloc	0
+	ldc.ub	SHUT_RDWR
+	ldloc	@@sockfd
 	ncall	socket_shutdown
 
-	ldloc	0
+	ldloc	@@sockfd
 	ncall	io_close
 
 	lea		@@done_text
-	ldc.2
-	ncall	rtl_print_fd
+	call	log
 
 	ret
-
-@@print_error_and_exit:
-	ldc.2
-	ncall	rtl_print_fd
-	pop
-	ldc.1
-	ncall	sys_exit
 
 @@socket_creation_failed_text:
 	.defs	"main: failed to create socket.\n\0"
@@ -131,11 +181,16 @@ main:
 	.defs	"main: leaving processing loop.\n\0"
 @@done_text:
 	.defs	"main: done!\n\0"
-	.endsub
-# End of main routine
 
+	.endsub
+
+# End of main routine
+#####################################################################
+
+#####################################################################
 comm_process_packet:
 	.sub # ( fd from packet -- )
+
 	pop
 	pop
 	lea		incoming_packet_text
@@ -143,11 +198,233 @@ comm_process_packet:
 	ncall	rtl_print_fd
 	pop
 	ret
+
 	.endsub
 
 incoming_packet_text:
 	.defs	"comm_process_packet: got: %b\n\0"
 # End of comm_process_packet routine
+#####################################################################
+
+#####################################################################
+log_fatal:
+	.sub
+
+	call	log
+	ldc.1
+	ncall	sys_exit
+
+	.endsub
+# End of log_fatal routine
+#####################################################################
+
+#####################################################################
+log:
+	.sub # ( format ... -- )
+
+	# Output the time stamp
+	ncall	sys_time
+
+	# ( x -- )
+	ldc.ub	60
+	divu
+	swap # ( emins ss ... -- )
+
+	ldc.ub	60
+	divu
+	swap # ( ehrs mm ss ... -- )
+
+	# Hours
+	ldc.ub	24
+	divu
+	swap # ( edays hh mm ss ... -- )
+	pop
+
+	lea		@@ts_format
+	ldc.1
+	ncall	rtl_print_fd
+	pop
+
+	# Output the text
+	ldc.1
+	ncall	rtl_print_fd
+	pop
+	ret
+
+@@ts_format:
+	.defs	"[%02d:%02d:%02d] \0"
+
+	.endsub
+# End of log routine
+#####################################################################
+
+
+get_hwaddr:
+	.sub # ( -- status )
+
+@@sockfd	.const 0
+@@ifconf	.const 1
+@@buffer	.const 2
+	locals	3
+
+	ldc.ub	IPPROTO_UDP
+	ldc.ub	SOCK_DGRAM
+	ncall	socket_create
+	stloc	@@sockfd
+
+	ldc.ub	4+4
+	ncall	rtl_alloc
+	stloc	@@ifconf
+
+	ldc.ub	(16+16)*4
+	ncall	rtl_alloc
+	dup
+	stloc	@@buffer
+
+	ldloc	@@ifconf
+	ldc.ub	4
+	add
+	stm.w
+	ldc.ub	4+4
+	ldloc	@@ifconf
+	stm.w
+
+	ldloc	@@ifconf
+	ldc.w	SIOCGIFCONF
+	ldloc	@@sockfd
+	ncall	io_ioctl
+	br.f	@@ok1
+	lea		@@SIOCGIFCONF_failed
+	call	log_fatal
+
+@@ok1:
+	ldloc	@@ifconf
+	ldm.w
+	lea		@@num_ifaces
+	call	log
+
+@@leave:
+	ldloc	@@buffer
+	ncall	rtl_free
+	ldloc	@@ifconf
+	ncall	rtl_free
+	ret
+
+@@SIOCGIFCONF_failed:
+	.defs	"SIOCGIFCONF failed\n\0"
+@@num_ifaces:
+	.defs	"Interfaces: %d\n\0"
+
+	.endsub
+
+
+#####################################################################
+get_hwaddr2:
+	.sub # ( -- status )
+
+@@sockfd	.const 0
+@@index		.const 1
+@@buffer	.const 2
+@@data		.const 3
+	locals	4
+
+	ldc.ub	6
+	ldc.0
+	lea		comm_hwaddr
+	ncall	rtl_memset
+
+	ldc.ub	IPPROTO_UDP
+	ldc.ub	SOCK_DGRAM
+	ncall	socket_create
+	stloc	@@sockfd
+
+	ldc.ub	16
+	stloc	@@index
+
+	ldc.ub	16 + 16 # should be sizeof(struct ifreq)
+	ncall	rtl_alloc
+	dup
+	stloc	@@buffer
+	ldc.ub	16
+	add
+	stloc	@@data
+
+@@loop:
+	ldloc	@@index
+	lea		@@text1
+	ldc.1
+	ncall	rtl_print_fd
+	pop
+
+	# buffer->ifr_ifindex = index
+	ldloc	@@index
+	ldloc	@@data
+	stm.w
+
+	# get the iface name
+	ldloc	@@buffer
+	ldc.w	SIOCGIFNAME
+	ldloc	@@sockfd
+	ncall	io_ioctl
+	br.t	@@loop_next
+
+@@get_hwaddr:
+	# get the iface hwaddr
+	ldloc	@@buffer
+	ldc.w	SIOCGIFHWADDR
+	ldloc	@@sockfd
+	ncall	io_ioctl
+	br.f	@@check_hwaddr
+	lea		@@SIOCGIFHWADDR_failed
+	call	log_fatal
+
+@@check_hwaddr:
+	# check whether this is a loopback (all zeros)
+	ldloc	@@data
+	ldm.w
+	br.f	@@loop_next
+
+	# store the hw address
+	ldc.ub	6
+	ldloc	@@data
+	lea		comm_hwaddr
+	ncall	rtl_memcpy
+	# found.
+	ldc.1
+	br		@@loop_end
+
+@@loop_next:
+	# Next index
+	ldloc	@@index
+	ldc.1
+	sub
+	dup
+	stloc	@@index
+	br.t	@@loop
+	# not found.
+	ldc.0
+
+@@loop_end:
+
+	ldloc	@@buffer
+	ncall	rtl_free
+
+	ldloc	@@sockfd
+	ncall	io_close
+
+	ret
+
+@@text1:
+	.defs	"Trying index %d\n\0"
+
+@@SIOCGIFNAME_failed:
+	.defs	"SIOCGIFNAME failed.\n\0"
+@@SIOCGIFHWADDR_failed:
+	.defs	"SIOCGIFHWADDR failed.\n\0"
+
+	.endsub
+# End of get_hwaddr routine
+#####################################################################
 
 #
 # .data section start
@@ -156,10 +433,11 @@ incoming_packet_text:
 comm_running:
 	.defb	1
 
-
 #
 # .bss section start
 #
 
 comm_socket:
 	.resw	1
+comm_hwaddr:
+	.resb	6

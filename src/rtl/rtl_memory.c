@@ -2,7 +2,7 @@
 #include "syscalls.h"
 #include <stdint.h>
 
-//#define DEBUG_PRINTS
+#define DEBUG_PRINTS
 #include "rtl_debug.h"
 
 /*
@@ -44,6 +44,8 @@ static void *arena_brk;
 static int xmem_grow(size_t units, struct slot *last_free)
 {
 	struct slot *new_slot;
+	void *new_brk;
+	void *new_arena_brk;
 
 	if (!arena_brk) {
 		arena_brk = DSEG_END;
@@ -52,20 +54,27 @@ static int xmem_grow(size_t units, struct slot *last_free)
 	}
 	
 	new_slot = arena_brk;
-	arena_brk = (struct slot *)sys_brk(arena_brk + ALIGN(units * UNIT_SIZE, PAGE_SIZE));
-	if ((void *)new_slot == arena_brk) {
+	new_brk = arena_brk + ALIGN(units * UNIT_SIZE, PAGE_SIZE);
+	new_arena_brk = (struct slot *)sys_brk(new_brk);
+	if ((void *)new_slot == new_arena_brk) {
 		/* Seems that brk(2) has failed. Sorry. */
 		DBGPRINT("xmem_grow: brk() failed.\n");
 		return 0;
 	}
-	DBGPRINT("xmem_grow: arena break: %08x -> %08x.\n", new_slot, arena_brk);
+	if (new_brk != new_arena_brk) {
+		DBGPRINT("xmem_grow: brk() returned an unexpected value.");
+		return 0;
+	}
+	arena_brk = new_arena_brk;
+
+	DBGPRINT("xmem_grow: arena break: %08x -> %08x.\n", new_slot, new_arena_brk);
 	
 	if (last_free) {
 		/* Simply append to the last free slot. */
 		last_free->next_slot = new_slot;
 	} else {
 		/* This is now the list head. */
-		new_slot->next_slot = (struct slot *)arena_brk;
+		new_slot->next_slot = (struct slot *)new_arena_brk;
 		new_slot->next_free = NULL;
 		free_anchor = new_slot;
 	}

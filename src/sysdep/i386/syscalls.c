@@ -85,7 +85,7 @@ long real_syscall()
 		"movl	(9*4)(%esp), %edx" "\n\t"
 		"movl	(10*4)(%esp), %esi" "\n\t"
 		"movl	(11*4)(%esp), %edi" "\n\t"
-		"movl	(12*4)(%esp), %ebp" "\n\t"
+		//"movl	(12*4)(%esp), %ebp" "\n\t"
 		"int	$0x80" "\n\t"
 		"popl	%edi" "\n\t"
 		"popl	%esi" "\n\t"

@@ -18,7 +18,7 @@ include Makefile.local
 endif
 ifeq ($(TARGET_ARCH), i386)
   TOOLS_PATH:=
-  CFLAGS_FOR_TARGET:=-DTARGET_IS_BE=0
+  CFLAGS_FOR_TARGET:=-DTARGET_IS_BE=0 -g
 endif
 
 # Target build tools
@@ -30,7 +30,7 @@ export SIZE_FOR_TARGET:=$(TOOLS_PATH)size
 
 # Target build options
 CFLAGS_FOR_TARGET:=-Os -std=c99 -ffreestanding -Werror -I./ -DTARGET_ARCH_$(TARGET_ARCH)=1 $(CFLAGS_FOR_TARGET)
-LDFLAGS_FOR_TARGET:=-s -static $(LDFLAGS_FOR_TARGET)
+LDFLAGS_FOR_TARGET:=-g -static $(LDFLAGS_FOR_TARGET)
 export CFLAGS_FOR_TARGET
 export LDFLAGS_FOR_TARGET
 

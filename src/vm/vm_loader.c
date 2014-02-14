@@ -7,6 +7,8 @@
 #define DEBUG_PRINTS
 #include "rtl_debug.h"
 
+#define MOAR_CHECKS 1
+
 vm_module_t *vm_load_fd(int fd)
 {
 	vm_module_t *module;
@@ -27,17 +29,43 @@ vm_module_t *vm_load_fd(int fd)
 		vm_panic("vm_load_fd: invalid input.");
 	}
 
-	vm_read(fd, &module_memsize, 4);
-	vm_read(fd, &module_filesize, 4);
-	vm_read(fd, &ep_offset, 4);
-	vm_read(fd, &ncalls_count, 2);
+	bytes_read = vm_read(fd, &module_memsize, 4);
+#if MOAR_CHECKS
+	if (bytes_read != 4) {
+		vm_panic("vm_load_fd: failed reading the data.");
+	}
+#endif
+
+	bytes_read = vm_read(fd, &module_filesize, 4);
+#if MOAR_CHECKS
+	if (bytes_read != 4) {
+		vm_panic("vm_load_fd: failed reading the data.");
+	}
+#endif
+
+	bytes_read = vm_read(fd, &ep_offset, 4);
+#if MOAR_CHECKS
+	if (bytes_read != 4) {
+		vm_panic("vm_load_fd: failed reading the data.");
+	}
+#endif
+
+	bytes_read = vm_read(fd, &ncalls_count, 2);
+#if MOAR_CHECKS
+	if (bytes_read != 2) {
+		vm_panic("vm_load_fd: failed reading the data.");
+	}
+#endif
+
 	vm_lseek(fd, 0x20, SEEK_SET); /* Just filling for now */
-#ifdef TARGET_IS_BE
+
+#if TARGET_IS_BE
 	module_memsize = vm_bswap32(module_memsize);
 	module_filesize = vm_bswap32(module_filesize);
 	ep_offset = vm_bswap32(ep_offset);
 	ncalls_count = vm_bswap16(ncalls_count);
 #endif
+
 	DBGPRINT("vm_load_fd: image size in memory: %08x\n", module_memsize);
 	DBGPRINT("vm_load_fd: image size in file: %08x\n", module_filesize);
 	DBGPRINT("vm_load_fd: native calls count: %d\n", ncalls_count);
@@ -76,7 +104,7 @@ vm_module_t *vm_load_fd(int fd)
 			vm_thunk_t thunk;
 
 			hash = (uint32_t)module->ncalls_table[index];
-#ifdef TARGET_IS_BE
+#if TARGET_IS_BE
 			hash = vm_bswap32(hash);
 #endif
 			DBGPRINT("vm_load_fd: looking up %08x... ", hash);
