@@ -3,7 +3,7 @@
 #
 
 # Main target in this dir
-TARGET:=mette-vm.a
+LIBTARGET:=mette-vm.a
 
 # What to build from
 SOURCES:= \

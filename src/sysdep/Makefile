@@ -2,15 +2,15 @@
 # Makefile for VM system dependent library
 #
 
-TARGET:=mette-sysdep.a
+LIBTARGET:=mette-sysdep.a
 
 SOURCES:= \
 	syscalls.c \
-	$(TARGET_ARCH)/syscalls.c \
+	syscalls-$(TARGET_ARCH).c \
 	xstring.c \
 
 ASMSOURCES:= \
-	$(TARGET_ARCH)/startup.S \
+	startup-$(TARGET_ARCH).S \
 
 # Include either target or host
 include $(SOURCES_ROOT)/Makefile.target.inc

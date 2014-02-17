@@ -3,7 +3,7 @@
 #
 
 # Main target in this dir
-TARGET:=mette-rtl.a
+LIBTARGET:=mette-rtl.a
 
 # What to build from
 SOURCES:= \

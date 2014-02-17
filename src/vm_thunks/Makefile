@@ -3,7 +3,7 @@
 #
 
 # Main target in this dir
-TARGET:=mette-vmt.a
+LIBTARGET:=mette-vmt.a
 
 # What to build from
 SOURCES_RAW:= \

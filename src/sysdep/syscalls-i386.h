@@ -353,6 +353,10 @@
 #define __NR_process_vm_readv	347
 #define __NR_process_vm_writev	348
 
+// Patch the defines to use new syscall numbers...
+#undef __NR_mmap
+#define __NR_mmap __NR_mmap2
+
 // Some ideas shamelessly stolen from:
 // http://www.scs.stanford.edu/histar/src/pkg/uclibc/libc/sysdeps/linux/i386/bits/syscalls.h
 
@@ -381,7 +385,7 @@
 	}
 
 #define __DEFINE_SYSCALLx(name, rtype, ...) \
-	rtype __attribute__((section(".text.syscalls"), noreturn)) sys_##name(__VA_ARGS__) \
+	rtype __attribute__((section(".text.syscalls"))) sys_##name(__VA_ARGS__) \
 	__SYSCALL_BODY(__NR_##name)
 
 #define __DEFINE_SYSCALL0(name, rtype) __DEFINE_SYSCALLx(name, rtype, void)
@@ -391,60 +395,5 @@
 #define __DEFINE_SYSCALL4(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
 #define __DEFINE_SYSCALL5(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
 #define __DEFINE_SYSCALL6(name, rtype, ...) __DEFINE_SYSCALLx(name, rtype, __VA_ARGS__)
-
-#define __SOCKETCALL_LOAD_0 \
-	"movl %%esp, %%ecx\n\t"
-#define __SOCKETCALL_LOAD_1 \
-	"push %3\n\t" \
-	__SOCKETCALL_LOAD_0
-#define __SOCKETCALL_LOAD_2 \
-	"push %4\n\t" \
-	__SOCKETCALL_LOAD_1
-#define __SOCKETCALL_LOAD_3() \
-	"push %5\n\t" \
-	__SOCKETCALL_LOAD_2
-#define __SOCKETCALL_LOAD_4 \
-	"push %6\n\t" \
-	__SOCKETCALL_LOAD_3
-#define __SOCKETCALL_LOAD_5 \
-	"push %7\n\t" \
-	__SOCKETCALL_LOAD_4
-#define __SOCKETCALL_LOAD_6 \
-	"push %8\n\t" \
-	__SOCKETCALL_LOAD_5
-
-#define __SOCKETCALL_RESTORE(nr) \
-	"addl $(" #nr " * 4), %%esp\n\t"
-
-#define __SOCKETCALL_ARGS_0
-#define __SOCKETCALL_ARGS_1(arg1) \
-	__SOCKETCALL_ARGS_0, "g" (arg1)
-#define __SOCKETCALL_ARGS_2(arg1, arg2) \
-	__SOCKETCALL_ARGS_1(arg1), "g" (arg2)
-#define __SOCKETCALL_ARGS_3(arg1, arg2, arg3) \
-	__SOCKETCALL_ARGS_2(arg1, arg2), "g" (arg3)
-#define __SOCKETCALL_ARGS_4(arg1, arg2, arg3, arg4) \
-	__SOCKETCALL_ARGS_3(arg1, arg2, arg3), "g" (arg4)
-#define __SOCKETCALL_ARGS_5(arg1, arg2, arg3, arg4, arg5) \
-	__SOCKETCALL_ARGS_4(arg1, arg2, arg3, arg4), "g" (arg5)
-#define __SOCKETCALL_ARGS_6(arg1, arg2, arg3, arg4, arg5, arg6) \
-	__SOCKETCALL_ARGS_5(arg1, arg2, arg3, arg4, arg5), "g" (arg6)
-
-#define __SOCKETCALL(name, nr, ...) \
-	(__extension__({ \
-		long __rv; \
-		__asm__ __volatile__ \
-		( \
-			"movl %2, %%ebx\n\t" \
-			__SOCKETCALL_LOAD_##nr() \
-			"int $0x80\n\t" \
-			__SOCKETCALL_RESTORE(nr) \
-			: "=a" (__rv) \
-			: "0" (__NR_socketcall), "i" (name) __SOCKETCALL_ARGS_##nr(__VA_ARGS__) \
-			: "%ebx", "%ecx", "memory", "cc" \
-		); \
-		__rv; \
-	}))
-
 
 #endif // __mette_syscalls_i386_included

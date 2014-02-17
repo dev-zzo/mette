@@ -8,27 +8,26 @@
 
 .PHONY: all $(SUBTARGETS)
 
-all: prebuild $(SUBTARGETS) $(TARGET)
+all: prebuild $(SUBTARGETS) $(TARGET) $(LIBTARGET)
+
+prebuild:
+	mkdir -p $(BUILD_DIR)
 
 $(SUBTARGETS): 
 	$(MAKE) -C $@ all
 
 ifneq ($(MAKECMDGOALS),distclean)
-include $(SOURCES:.c=.d)
+include $(patsubst %.c, $(BUILD_DIR)/%.d, $(SOURCES))
 endif
 
-%.d: %.c
-	-$(CC) -MM -MG $(CFLAGS) $< | sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' > $@;
+$(BUILD_DIR)/%.d: %.c
+	-$(CC) -MM -MG $(CFLAGS) $< | sed 's,\($*\)\.o[ :]*,$(BUILD_DIR)/\1.o $@ : ,g' > $@;
 
 $(BUILD_DIR)/%.o: %.c
-	mkdir -p `dirname $@`
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(BUILD_DIR)/%.o: %.S
-	mkdir -p `dirname $@`
 	$(CC) -c $(CFLAGS) -o $@ $<
-
-prebuild:
 
 OBJECTS:= \
 	$(OBJECTS) \
@@ -38,22 +37,22 @@ OBJECTS:= \
 REAL_OBJECTS:=$(patsubst %, $(BUILD_DIR)/%, $(OBJECTS))
 REAL_LIBS:=$(patsubst %, $(TARGET_DIR)/%, $(LIBS))
 REAL_TARGET:=$(TARGET_DIR)/$(TARGET)
+REAL_LIBTARGET:=$(TARGET_DIR)/$(LIBTARGET)
 
-.PHONY: $(TARGET)
+.PHONY: $(TARGET) $(LIBTARGET)
 
 $(TARGET): $(REAL_TARGET)
 
 $(REAL_TARGET): $(REAL_OBJECTS) $(REAL_LIBS)
-ifeq ($(suffix $(TARGET)), .a)
-	$(AR) rcs $@ $^
-	$(SIZE) $@
-else
 	$(LD) $(LDFLAGS) -o $@ $^ $(REAL_LIBS)
-ifeq ("$(LD)", "$(LD_FOR_TARGET)")
 	$(SIZE) $@
 	objdump -h $@
-endif
-endif
+
+$(LIBTARGET): $(REAL_LIBTARGET)
+
+$(REAL_LIBTARGET): $(REAL_OBJECTS)
+	$(AR) rcs $@ $^
+	$(SIZE) $@
 
 #
 # Cleaning
@@ -64,6 +63,6 @@ endif
 clean:
 
 distclean:
-	$(RM) $(TARGET) *.d $(SOURCES:.c=.i) $(SOURCES:.c=.s) $(GENERATED)
+	$(RM) $(GENERATED)
 	for target in $(SUBTARGETS) ; do $(MAKE) -C $$target $@ ; done
 

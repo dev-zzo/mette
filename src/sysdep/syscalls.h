@@ -6,10 +6,10 @@
 
 // ==================== BEGIN ARCH-SPECIFIC CODE ==============================
 #if defined(TARGET_ARCH_i386)
-#include "i386/syscalls.h"
+#include "syscalls-i386.h"
 #endif
 #if defined(TARGET_ARCH_mips)
-#include "mips/syscalls.h"
+#include "syscalls-mips.h"
 #endif
 // =================== END ARCH-SPECIFIC CODE =================================
 
