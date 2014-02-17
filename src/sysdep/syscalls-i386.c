@@ -27,12 +27,16 @@
 	{ \
 		__asm__ __volatile__ \
 		( \
-			"movl	%0, %%eax" "\n\t" \
-			"movl	%1, %%ebx" "\n\t" \
-			"lea	8(%%ebp), %%ecx" "\n\t" \
+			"lea	2*4(%%ebp), %%ecx" "\n\t" \
 			"int	$0x80" "\n\t" \
+			"cmpl	$-4095, %%eax" "\n\t" \
+			"jb		1f" "\n\t" \
+			"neg	%%eax" "\n\t" \
+			"movl	%%eax, sys_errno" "\n\t" \
+			"movl	$-1, %%eax" "\n\t" \
+			"1:" "\n\t" \
 			: \
-			: "i"(__NR_socketcall), "i" (nr) \
+			: "a"(__NR_socketcall), "b" (nr) \
 		); \
 	}
 
