@@ -294,7 +294,7 @@ static int vma_passx_evaluate_expr(vma_context_t *ctx, vma_expr_t *expr)
 					}
 					break;
 			}
-			break;
+			return 1;
 
 		case EXPR_NEG:
 		case EXPR_NOT:
