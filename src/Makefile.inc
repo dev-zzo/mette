@@ -51,7 +51,7 @@ else
 	$(LD) $(LDFLAGS) -o $@ $^ $(REAL_LIBS)
 ifeq ("$(LD)", "$(LD_FOR_TARGET)")
 	$(SIZE) $@
-	objdump -x $@
+	objdump -h $@
 endif
 endif
 

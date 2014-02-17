@@ -48,8 +48,9 @@ static int xmem_grow(size_t units, struct slot *last_free)
 	void *new_arena_brk;
 
 	if (!arena_brk) {
-		arena_brk = DSEG_END;
-		first_slot = (struct slot *)DSEG_END;
+		new_brk = (void *)ALIGN((unsigned)sys_brk(0), PAGE_SIZE);
+		arena_brk = new_brk;
+		first_slot = (struct slot *)new_brk;
 		DBGPRINT("xmem_grow: first start, arena break: %08X.\n", arena_brk);
 	}
 	
@@ -62,7 +63,7 @@ static int xmem_grow(size_t units, struct slot *last_free)
 		return 0;
 	}
 	if (new_brk != new_arena_brk) {
-		DBGPRINT("xmem_grow: brk() returned an unexpected value.");
+		DBGPRINT("xmem_grow: brk() returned an unexpected value.\n");
 		return 0;
 	}
 	arena_brk = new_arena_brk;
