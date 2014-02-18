@@ -40,7 +40,7 @@ ID		{ALPHA}{ALNUM}*
 
  /* Numbers: integers */
 ((0x|0X){HEXDIGIT}+)|(0{OCTDIGIT}+)|({DIGIT}+) {
-	yylval.const_int = strtol(yytext, NULL, 0);
+	yylval.const_int = strtoul(yytext, NULL, 0);
 	return INTEGER;
 }
 
