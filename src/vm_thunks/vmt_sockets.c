@@ -37,6 +37,24 @@ static unsigned int rtl_htonl(unsigned int x)
 
 #endif
 
+VM_THUNK(rtl_nswapl)
+{
+	VM_THUNK_ARGS_START
+		VM_THUNK_ARG(unsigned long x);
+	VM_THUNK_ARGS_END
+
+	VM_THUNK_RETURN(rtl_ntohl(args.x));
+}
+
+VM_THUNK(rtl_nswaps)
+{
+	VM_THUNK_ARGS_START
+		VM_THUNK_ARG(unsigned long x);
+	VM_THUNK_ARGS_END
+
+	VM_THUNK_RETURN(rtl_ntohs(args.x));
+}
+
 
 VM_THUNK(sockaddr_create)
 {
