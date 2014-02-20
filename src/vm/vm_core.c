@@ -44,6 +44,41 @@
 	r0 = (vm_soperand_t)(a) % (vm_soperand_t)(b);
 #endif
 
+typedef struct _vm_callframe_t vm_callframe_t;
+struct _vm_callframe_t {
+	uint8_t *return_pc;
+	vm_locals_t *locals;
+	vm_operand_t *dstack_top; /* For debugging */
+};
+
+static void vm_save_frame(vm_context_t *ctx, uint8_t *pc)
+{
+	vm_callframe_t *frame;
+
+	frame = vm_alloc(sizeof(*frame));
+	frame->return_pc = pc;
+	frame->locals = ctx->locals;
+	frame->dstack_top = vm_stack_top(ctx->dstack);
+
+	vm_stack_push(ctx->cstack, (vm_operand_t)frame);
+
+	ctx->locals = NULL;
+}
+
+static uint8_t *vm_restore_frame(vm_context_t *ctx)
+{
+	vm_callframe_t *frame;
+	uint8_t *pc;
+
+	vm_free(ctx->locals);
+	frame = (vm_callframe_t *)vm_stack_pop(ctx->cstack);
+	ctx->locals = frame->locals;
+	pc = frame->return_pc;
+	vm_free(frame);
+
+	return pc;
+}
+
 #ifdef DEBUG_PRINTS
 #include "vm_opcodes.names.tab"
 #endif
@@ -155,8 +190,10 @@ op_LDC_W:
 	goto push_1;
 op_LEA:
 	r0 = vm_fetch32_ua(pc);
+	DBGPRINT("vm_step: PCREL offset %08x -> ", r0);
 	pc += 4;
 	r0 += (vm_uoperand_t)pc;
+	DBGPRINT("%08x\n", r0);
 	goto push_1;
 op_LDM_UB:
 	r0 = (vm_uoperand_t)*(uint8_t *)(ARG1);
@@ -251,25 +288,25 @@ op_BR_F: {
 op_CALL: {
 	int32_t offset = (int32_t)vm_fetch32_ua(pc);
 	pc += 4;
-	vm_stack_push(ctx->cstack, (vm_operand_t)pc);
-	vm_stack_push(ctx->cstack, (vm_operand_t)ctx->locals);
-	ctx->locals = NULL;
+	vm_save_frame(ctx, pc);
 	pc += offset;
+	DBGPRINT("\n");
 	goto push_none;
 }
 op_RET: {
-	if (ctx->locals) {
-		vm_free(ctx->locals);
-	}
-	vm_stack_pop3(ctx->cstack, buf, 2);
-	ctx->locals = (void *)ARG1;
-	pc = (uint8_t *)ARG2;
+	vm_callframe_t *frame;
+
+	vm_free(ctx->locals);
+	frame = (vm_callframe_t *)vm_stack_pop(ctx->cstack);
+	ctx->locals = frame->locals;
+	pc = frame->return_pc;
+
+	DBGPRINT("vm_step: stack balance on return: %d\n\n", frame->dstack_top - vm_stack_top(ctx->dstack));
+	vm_free(frame);
 	goto push_none;
 }
 op_ICALL: {
-	vm_stack_push(ctx->cstack, (vm_operand_t)pc);
-	vm_stack_push(ctx->cstack, (vm_operand_t)ctx->locals);
-	ctx->locals = NULL;
+	vm_save_frame(ctx, pc);
 	pc = (uint8_t *)ARG1;
 	goto push_none;
 }

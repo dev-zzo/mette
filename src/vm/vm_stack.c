@@ -3,7 +3,7 @@
 #include "vm_misc.h"
 #include "vm_internal.h"
 
-//#define DEBUG_PRINTS
+#define DEBUG_PRINTS
 #include "rtl_debug.h"
 
 typedef struct _vm_stack {
@@ -55,11 +55,18 @@ void vm_stack_push3(vm_stack_t *stack, const vm_operand_t *src, unsigned count)
 
 	while (offset < count) {
 		top[offset] = src[offset];
-		DBGPRINT("vm_stack_push: %08x\n", top[offset]);
+		DBGPRINT("vm_stack_push: %08x -> %08x\n", top[offset], &top[offset]);
 		++offset;
 	}
 
 	stack->top = top;
+}
+
+vm_operand_t vm_stack_pop(vm_stack_t *stack)
+{
+	vm_operand_t v;
+	vm_stack_pop3(stack, &v, 1);
+	return v;
 }
 
 void vm_stack_pop3(vm_stack_t *stack, vm_operand_t *dst, unsigned count)
@@ -73,9 +80,14 @@ void vm_stack_pop3(vm_stack_t *stack, vm_operand_t *dst, unsigned count)
 
 	while (offset < count) {
 		dst[offset] = top[offset];
-		DBGPRINT("vm_stack_pop: %08x\n", top[offset]);
+		DBGPRINT("vm_stack_pop:  %08x <- %08x\n", top[offset], &top[offset]);
 		++offset;
 	}
 
 	stack->top = top + count;
+}
+
+vm_operand_t *vm_stack_top(vm_stack_t *stack)
+{
+	return stack->top;
 }
